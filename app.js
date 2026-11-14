@@ -570,6 +570,32 @@ function renderAnalysis(markdown) {
     insightGrid.className = "insight-grid";
     let tileIndex = 0;
     const layoutPattern = ["feature","half","half","wide","narrow","full"];
+    const makeInsightTile = (html, layout) => {
+      const tile = document.createElement("article");
+      tile.className = "insight-tile";
+      tile.dataset.layout = layout || layoutPattern[tileIndex % layoutPattern.length];
+      tile.dataset.index = String(tileIndex + 1);
+      const topline = document.createElement("div");
+      topline.className = "insight-tile-topline";
+      const marker = document.createElement("span");
+      marker.className = "insight-tile-marker";
+      marker.setAttribute("aria-hidden","true");
+      marker.textContent = ["✳","↗","◇","⌁","◈","⊙"][tileIndex % 6];
+      const label = document.createElement("span");
+      label.className = "insight-tile-label";
+      label.textContent = "FIELD NOTE";
+      const serial = document.createElement("span");
+      serial.className = "insight-tile-serial";
+      serial.textContent = "INTEL / " + String(tileIndex + 1).padStart(2,"0");
+      topline.append(marker,label,serial);
+      const body = document.createElement("div");
+      body.className = "tile-body";
+      body.innerHTML = html;
+      tile.append(topline,body);
+      tileIndex++;
+      addTileExpansion(tile, body);
+      return tile;
+    };
     [...parsed.content.children].forEach(block => {
       if (/^H[2-4]$/.test(block.tagName)) {
         const label = document.createElement("div");
@@ -580,34 +606,14 @@ function renderAnalysis(markdown) {
       }
       if (block.tagName === "UL" || block.tagName === "OL") {
         [...block.children].forEach(item => {
-          const tile = document.createElement("article");
-          tile.className = "insight-tile";
-          tile.dataset.layout = layoutPattern[tileIndex++ % layoutPattern.length];
-          const body = document.createElement("div");
-          body.className = "tile-body";
-          body.innerHTML = item.innerHTML;
-          tile.append(body);
-          addTileExpansion(tile, body);
-          insightGrid.append(tile);
+          insightGrid.append(makeInsightTile(item.innerHTML));
         });
         return;
       }
-      const tile = document.createElement("article");
-      tile.className = "insight-tile";
-      tile.dataset.layout = layoutPattern[tileIndex++ % layoutPattern.length];
-      const body = document.createElement("div");
-      body.className = "tile-body";
-      body.innerHTML = block.outerHTML;
-      tile.append(body);
-      addTileExpansion(tile, body);
-      insightGrid.append(tile);
+      insightGrid.append(makeInsightTile(block.outerHTML));
     });
     if (!insightGrid.children.length) {
-      const tile = document.createElement("article");
-      tile.className = "insight-tile";
-      tile.dataset.layout = "feature";
-      tile.textContent = "No additional detail provided.";
-      insightGrid.append(tile);
+      insightGrid.append(makeInsightTile("No additional detail provided.","feature"));
     }
     content.append(insightGrid);
     const categoryMeta = document.createElement("span");
