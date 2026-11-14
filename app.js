@@ -139,13 +139,23 @@ function renderAnalysis(markdown) {
 
   if ("IntersectionObserver" in window) {
     const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    },{rootMargin:"0px 0px -9% 0px",threshold:0.08});
+    output.querySelectorAll(".analysis-card").forEach(card => observer.observe(card));
+
+    const activeObserver = new IntersectionObserver(entries => {
       const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
       if (!visible) return;
       nav.querySelectorAll(".analysis-nav-link").forEach(link => {
         link.classList.toggle("is-active",link.textContent === visible.target.querySelector("h3")?.textContent);
       });
     },{rootMargin:"-15% 0px -70% 0px",threshold:[0,.2,.5]});
-    output.querySelectorAll(".analysis-card").forEach(card => observer.observe(card));
+    output.querySelectorAll(".analysis-card").forEach(card => activeObserver.observe(card));
   }
 }
 
