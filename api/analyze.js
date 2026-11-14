@@ -57,6 +57,14 @@ STRICT READABILITY RULES
 - Rank actions by urgency and strategic value. Separate immediate preservation steps from later litigation steps.
 - Ask up to 10 questions only when each answer could materially change the analysis; prioritize the questions that alter outcome, jurisdiction, procedure, evidence or available moves.
 - Use compact tables only when they improve comparison; avoid wide tables that become unreadable on phones.
+
+- OPTIONAL CHARTS FOR THE INTERFACE: When the supplied record supports a useful visual comparison, include up to 3 compact fenced blocks using the exact language tag `stratos-chart`. These are rendered as charts inside the relevant category. Supported JSON formats:
+  - Numeric comparison: `{"type":"bar","title":"...","unit":"items","items":[{"label":"...","value":3},{"label":"...","value":1}],"note":"..." }`
+  - Procedural sequence: `{"type":"timeline","title":"...","steps":[{"label":"...","status":"completed|current|conditional|unknown","detail":"..." }] ,"note":"..." }`
+  - Use bar charts only for real, comparable counts or quantities expressly supported by the supplied facts/documents. Never turn qualitative likelihood, confidence, risk or legal judgment into numbers, scores, percentages or probabilities. Never manufacture data to make a chart.
+  - Use timelines only for a procedure or sequence actually supported by the identified court, rules, case stage or supplied facts. Mark uncertain stages as unknown or conditional. Do not imply a deadline or mandatory step unless verified.
+  - If the record does not support a reliable chart, do not include one. A clear written explanation is better than a misleading visual. Keep each chart small and phone-readable.
+
 - Visual-card output: each A–L heading is a PARENT INFORMATION CATEGORY. Under it, write one distinct material finding per bullet/item so the interface can render each finding as its own compact insight tile. Never combine unrelated findings in one bullet. Each tile begins with a concise bold MAIN POINT (one or two sentences maximum), followed where relevant by compact bold-labeled detail lines: POSSIBLE MOVES; COUNTERS; PREVENTIVE PREPARATION; OUTCOME CONDITIONS (specific facts/events that make an outcome more or less likely); UNEXPECTED / ADAPTIVE MOVES (credible opponent actions not yet anticipated); TRIGGER / TIMING; PREREQUISITES; RISKS / SECOND-ORDER EFFECTS. Include only applicable categories, but do not omit material options merely to keep tiles short. Keep a compact summary first, then supporting detail that the interface can expand. Keep distinct actions and conditions separate. Use brief subheadings to group related findings. Avoid long essays, repeated explanations and dense tables. Never invent a move or outcome merely to fill a category.
 - Keep the analysis tied to this specific matter. Comprehensive means all material supported branches, not endless speculative lists.
 
