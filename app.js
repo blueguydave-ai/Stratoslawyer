@@ -226,15 +226,25 @@ function setFocusedCard(target) {
     tile.classList.toggle("is-dimmed",Boolean(chosenTile)&&tile!==chosenTile);
   });
 }
+let focusVisualMode=false;
 const viewModeToggle=document.getElementById("view-mode-toggle");
+function updateViewModeControl(){
+  viewModeToggle.setAttribute("aria-pressed",String(focusVisualMode));
+  viewModeToggle.setAttribute("aria-label",focusVisualMode?"Switch to standard mode":"Enable focus visual mode");
+  viewModeToggle.querySelector(".mode-label").textContent=focusVisualMode?"Standard mode":"Focus visual mode";
+  viewModeToggle.querySelector(".mode-glyph").textContent=focusVisualMode?"◇":"◈";
+}
 viewModeToggle.addEventListener("click",()=>{
-  const active=results.classList.toggle("focus-mode");
-  viewModeToggle.setAttribute("aria-pressed",String(active));
-  viewModeToggle.querySelector(".mode-label").textContent=active?"Standard mode":"Focus visual mode";
-  viewModeToggle.querySelector(".mode-glyph").textContent=active?"◇":"◈";
+  focusVisualMode=!focusVisualMode;
+  results.classList.toggle("focus-mode",focusVisualMode);
+  updateViewModeControl();
   clearCardFocus();
-  if(active){const first=output.querySelector(".analysis-card");if(first)setFocusedCard(first);}
+  if(focusVisualMode&&!results.hidden){
+    const first=output.querySelector(".analysis-card");
+    if(first)setFocusedCard(first);
+  }
 });
+updateViewModeControl();
 output.addEventListener("click",event=>{
   if(!results.classList.contains("focus-mode")) return;
   const tile=event.target.closest(".insight-tile");
@@ -416,7 +426,12 @@ analyzeButton.addEventListener("click", async () => {
     progressTitle.textContent = "Preparing your case intelligence...";
     progressDetail.textContent = "Outcome branches and opposing moves have been mapped against the supplied record.";
     renderAnalysis(data.analysis);
+    results.classList.toggle("focus-mode",focusVisualMode);
     results.hidden = false;
+    if(focusVisualMode)setTimeout(()=>{
+      const first=output.querySelector(".analysis-card");
+      if(first)setFocusedCard(first);
+    },180);
     setTimeout(() => results.scrollIntoView({behavior:"smooth",block:"start"}),150);
   } catch(error) {
     clearTimeout(stageTimer);
