@@ -1501,6 +1501,14 @@ html[data-theme="light"] .results.focus-mode .analysis-card.is-focused{
   color:var(--muted);font:9px 'DM Mono',monospace;letter-spacing:1px;
 }
 .waiting-quote.is-writing{border-color:rgba(200,169,110,.29)}
+/* A persistent, blinking insertion cursor makes the typewriter effect unmistakable. */
+.waiting-quote-text::after{
+  content:"";display:inline-block;width:1.5px;height:1.02em;margin-left:3px;
+  vertical-align:-.16em;background:var(--gold);
+  animation:waiting-cursor-blink .9s steps(2,start) infinite;
+}
+@keyframes waiting-cursor-blink{to{visibility:hidden}}
+html[data-theme="light"] .waiting-quote-text::after{background:#987642}
 .waiting-quote.is-writing .waiting-quote-text{animation:quote-write-arrive .55s ease both}
 @keyframes quote-write-arrive{
   from{opacity:.25;transform:translateY(4px)}
