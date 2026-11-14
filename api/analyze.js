@@ -74,10 +74,6 @@ export default async function handler(req, res) {
     return jsonError(res, 502, "Could not verify your sign-in session. Please try again.");
   }
 
-    res.setHeader("Allow", "POST");
-    return jsonError(res, 405, "Method not allowed.");
-  }
-
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return jsonError(res, 503, "The analysis service is not configured yet. Add GEMINI_API_KEY in Vercel environment variables.");
 
