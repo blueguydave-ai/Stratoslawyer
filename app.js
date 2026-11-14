@@ -38,57 +38,110 @@ const output = document.getElementById("analysis-output");
 const selectedFiles = [];
 
 const waitingInsights = [
-  "Most problems are shaped by the places our attention has not yet reached — and by the things it refuses to leave.",
-  "An idea is not a strategy until it changes what someone actually does.",
-  "A fact can be true and still be irrelevant. Strategy begins by asking what changes because it is true.",
-  "The obvious move is often obvious to both sides. Look for the assumption that makes it seem inevitable.",
-  "Do not confuse activity with progress. A move matters because of what it changes, not how much effort it consumes.",
-  "Every advantage has a condition. Find the condition before you build your plan around the advantage.",
-  "The strongest question is sometimes not 'What should happen next?' but 'What would make the next move unnecessary?'",
-  "A missing fact is not an empty space. It is a live uncertainty that can change the entire decision.",
-  "Think one move beyond the response: what will the other side do after you do what you are planning?",
-  "A good plan does not hide uncertainty. It gives uncertainty a name, a test, and a response.",
-  "What you fail to preserve today may become the option you cannot exercise tomorrow.",
-  "Do not merely list possibilities. Identify the event that would make each possibility real.",
-  "The same action can be wise at one stage and damaging at another. Timing is part of the strategy.",
-  "When two explanations fit the facts, do not marry the more convenient one. Find the evidence that separates them.",
-  "Clarity is not having an answer for everything. It is knowing what is known, what is assumed, and what must happen next."
+  "People often defend the version of events that makes their choices look inevitable. Ask what their account quietly needs you not to examine.",
+  "A decision is a door that closes other doors. Before choosing, notice which options disappear simply because time passes.",
+  "The most useful piece of information is not always the missing fact. It may be the fact that would make every other fact mean something different.",
+  "An opponent's strongest position may depend on a weakness they cannot afford to acknowledge.",
+  "Do not mistake a confident explanation for a complete one. Confidence describes the speaker; completeness describes the evidence.",
+  "Some problems survive because everyone keeps solving the version that is easiest to describe.",
+  "A deadline does more than limit time. It changes the value of every option still available.",
+  "The first story that fits the facts can become a trap when later facts are forced to fit it.",
+  "An advantage that cannot be preserved is often only a temporary feeling of strength.",
+  "Ask what must be true for the other side's position to work. Then test those conditions one by one.",
+  "Silence is not always consent, and activity is not always resistance. Context gives conduct its meaning.",
+  "A weak point becomes strategically important when it connects to something the decision-maker must resolve.",
+  "The best next move may be the smallest move that makes the next uncertainty observable.",
+  "Every plan contains a prediction. Name it, or it will disguise itself as a fact.",
+  "Do not spend effort disproving a claim that does not matter to the outcome.",
+  "Two people can agree on every event and still disagree about what those events prove.",
+  "The order in which facts are discovered can shape the story people believe. Revisit the facts in a different order.",
+  "A useful question does not merely request information; it separates two competing explanations.",
+  "Sometimes the costliest assumption is the one nobody thought needed to be stated.",
+  "An option has value before it is used. Preserve it long enough to learn whether it is needed.",
+  "Where incentives change, behaviour may change with them. Study what each person stands to gain next.",
+  "An unanswered question is not automatically a weakness. It becomes one when a decision depends on its answer.",
+  "Do not confuse a plausible sequence with a proven sequence. A gap between events may contain the whole dispute.",
+  "The strongest response may be to change the question everyone is trying to answer.",
+  "Every system has a point where its formal rules meet human discretion. Learn where that boundary actually lies.",
+  "A strategy that works only if nobody reacts is not a strategy; it is a hope with steps attached.",
+  "Look for the quiet dependency: the person, document, assumption or event without which the plan cannot proceed.",
+  "An early concession can be intelligent when it protects something more valuable. Know the exchange rate.",
+  "People reveal priorities through what they protect when resources become scarce.",
+  "Do not let the volume of evidence obscure the difference between evidence that exists and evidence that proves.",
+  "The timing of a fact can matter as much as its content. Ask when it became known and who knew it.",
+  "A forecast is useful only when you can identify what would prove it wrong.",
+  "Sometimes the apparent obstacle is performing a useful function: it is preventing a worse move.",
+  "Separate what can be changed from what can only be managed. Mixing the two wastes attention.",
+  "A position may be legally available yet practically costly. Analyse both realities without confusing them.",
+  "Before escalating, identify the precise change you expect escalation to produce.",
+  "The person who controls the sequence of decisions may shape the result without controlling the final decision.",
+  "A clean explanation is not necessarily the true explanation. Reality often leaves seams.",
+  "One verified detail can be worth more than ten confident impressions.",
+  "Do not ask only who benefits from an outcome. Ask who had the ability, opportunity and reason to bring it about.",
+  "The safest plan is not always the most passive one. Inaction also creates consequences.",
+  "A useful contingency is specific enough to act on and modest enough to remain realistic.",
+  "An argument can be logically sound and still fail because it answers a question nobody needs to decide.",
+  "Look for the moment when a reversible choice becomes irreversible. That is often where attention belongs.",
+  "Good preparation does not eliminate surprise. It reduces the number of surprises that can become disasters.",
+  "The other side's mistake is not your advantage until you understand whether it can be corrected.",
+  "Evidence has a lifecycle: creation, custody, interpretation, challenge and use. Weakness can enter at any stage.",
+  "Do not optimise for appearing decisive. Optimise for making the next decision better informed.",
+  "A small inconsistency can be noise; a pattern of inconsistencies may reveal the structure beneath the story.",
+  "The purpose of analysis is not to make uncertainty disappear. It is to stop uncertainty from making decisions invisibly.",
+  "Sometimes the decisive move is to preserve the ability to choose again."
 ];
+const waitingInsightSlots = [...(waitingInsight?.querySelectorAll(".waiting-quote") || [])];
 let waitingInsightTimer = null;
-let waitingInsightOrder = [];
-let waitingInsightPosition = 0;
+let waitingInsightPrevious = [];
+let waitingInsightRound = 0;
 function stopWaitingInsights(){
-  if(waitingInsightTimer){clearInterval(waitingInsightTimer);waitingInsightTimer=null;}
-  if(waitingInsight)waitingInsight.classList.remove("is-changing");
+  if(waitingInsightTimer){clearTimeout(waitingInsightTimer);waitingInsightTimer=null;}
+  waitingInsightSlots.forEach(slot=>slot.classList.remove("is-writing"));
+}
+function shuffledInsights(){
+  const pool=waitingInsights.map((_,i)=>i).filter(i=>!waitingInsightPrevious.includes(i));
+  for(let i=pool.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]]=[pool[j],pool[i]];
+  }
+  return pool;
+}
+function typeInsight(slot,index,delay){
+  const textNode=slot.querySelector(".waiting-quote-text");
+  const counter=slot.querySelector(".waiting-quote-index");
+  if(!textNode||!counter)return;
+  const fullText=waitingInsights[index];
+  textNode.textContent="";
+  counter.textContent=String(index+1).padStart(2,"0")+" / 50";
+  slot.classList.remove("is-writing");
+  window.setTimeout(()=>{
+    slot.classList.add("is-writing");
+    let cursor=0;
+    const write=()=>{
+      if(!slot.isConnected)return;
+      textNode.textContent=fullText.slice(0,cursor);
+      cursor=Math.min(fullText.length,cursor+(fullText.length>115?2:1));
+      if(cursor<fullText.length)window.setTimeout(write,24);
+    };
+    write();
+  },delay);
 }
 function startWaitingInsights(){
   stopWaitingInsights();
-  if(!waitingInsight||!waitingInsightText||!waitingInsightIndex)return;
-  waitingInsightOrder=waitingInsights.map((_,i)=>i);
-  for(let i=waitingInsightOrder.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [waitingInsightOrder[i],waitingInsightOrder[j]]=[waitingInsightOrder[j],waitingInsightOrder[i]];
-  }
-  waitingInsightPosition=0;
-  const showNext=()=>{
-    const index=waitingInsightOrder[waitingInsightPosition];
-    waitingInsight.classList.remove("is-changing");
-    waitingInsightText.textContent=waitingInsights[index];
-    waitingInsightIndex.textContent=String(index+1).padStart(2,"0")+" / "+waitingInsights.length;
-    void waitingInsightText.offsetWidth;
-    waitingInsight.classList.add("is-changing");
-    waitingInsightPosition++;
-    if(waitingInsightPosition>=waitingInsightOrder.length){
-      waitingInsightOrder=waitingInsights.map((_,i)=>i).filter(i=>i!==index);
-      for(let i=waitingInsightOrder.length-1;i>0;i--){
-        const j=Math.floor(Math.random()*(i+1));
-        [waitingInsightOrder[i],waitingInsightOrder[j]]=[waitingInsightOrder[j],waitingInsightOrder[i]];
-      }
-      waitingInsightPosition=0;
-    }
+  if(!waitingInsight||waitingInsightSlots.length!==3)return;
+  waitingInsightPrevious=[];
+  waitingInsightRound=0;
+  const showSet=()=>{
+    const order=shuffledInsights();
+    const chosen=order.slice(0,3);
+    waitingInsightPrevious=chosen;
+    waitingInsightSlots.forEach((slot,i)=>typeInsight(slot,chosen[i],i*520));
+    waitingInsightRound++;
+    // Deliberately varied pauses: the display never ticks at a predictable pace.
+    const pause=26000+Math.floor(Math.random()*15001);
+    waitingInsightTimer=setTimeout(showSet,pause);
   };
-  showNext();
-  waitingInsightTimer=setInterval(showNext,6500);
+  showSet();
 }
 
 // Light the Analyse button when the structured intake is substantially complete.
