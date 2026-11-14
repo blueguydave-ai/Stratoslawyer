@@ -130,8 +130,8 @@ function typeInsight(slot,index,delay,generation){
     const write=()=>{
       if(generation!==waitingInsightGeneration||!slot.isConnected)return;
       textNode.textContent=fullText.slice(0,cursor);
-      cursor=Math.min(fullText.length,cursor+(fullText.length>115?2:1));
-      if(cursor<fullText.length)scheduleInsightTask(write,24,generation);
+      cursor=Math.min(fullText.length,cursor+1);
+      if(cursor<fullText.length)scheduleInsightTask(write,48,generation);
     };
     write();
   },delay,generation);
@@ -146,9 +146,9 @@ function startWaitingInsights(){
     const order=shuffledInsights();
     const chosen=order.slice(0,3);
     waitingInsightPrevious=chosen;
-    waitingInsightSlots.forEach((slot,i)=>typeInsight(slot,chosen[i],i*520,generation));
+    waitingInsightSlots.forEach((slot,i)=>typeInsight(slot,chosen[i],i*900,generation));
     // A variable pause keeps the next set from feeling like a fixed carousel.
-    const pause=26000+Math.floor(Math.random()*15001);
+    const pause=45000+Math.floor(Math.random()*15001);
     waitingInsightTimer=scheduleInsightTask(showSet,pause,generation);
   };
   showSet();
