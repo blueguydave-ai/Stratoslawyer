@@ -72,6 +72,35 @@ function slugify(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 }
 
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let scrollRevealObserver = null;
+function observeScrollElements(elements) {
+  if (!elements?.length) return;
+  if (prefersReducedMotion || !("IntersectionObserver" in window)) {
+    elements.forEach(element => element.classList.add("is-visible"));
+    return;
+  }
+  if (!scrollRevealObserver) {
+    scrollRevealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        // Toggle in both directions so the entrance animation replays on every return.
+        entry.target.classList.toggle("is-visible", entry.isIntersecting);
+      });
+    },{rootMargin:"0px 0px -7% 0px",threshold:0.02});
+  }
+  elements.forEach(element => {
+    element.classList.add("scroll-reveal");
+    scrollRevealObserver.observe(element);
+  });
+}
+function initializePageReveals() {
+  const targets = [
+    ...document.querySelectorAll(".intro,.workspace,.intake-group,.progress-panel,.results-heading,.results-warning,.analysis-nav,.page-footer")
+  ];
+  observeScrollElements(targets);
+}
+initializePageReveals();
+
 function renderAnalysis(markdown) {
   const nav = document.getElementById("analysis-nav");
   nav.replaceChildren();
@@ -139,23 +168,16 @@ function renderAnalysis(markdown) {
   });
 
   const cards = [...output.querySelectorAll(".analysis-card")];
+  observeScrollElements(cards);
   if ("IntersectionObserver" in window) {
-    requestAnimationFrame(() => {
-      const revealObserver = new IntersectionObserver(entries => {
-        entries.forEach(entry => entry.target.classList.toggle("is-visible", entry.isIntersecting));
-      },{rootMargin:"0px 0px -8% 0px",threshold:[0,0.04,0.18]});
-      cards.forEach(card => revealObserver.observe(card));
-      const activeObserver = new IntersectionObserver(entries => {
-        const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
-        if (!visible) return;
-        nav.querySelectorAll(".analysis-nav-link").forEach(link => {
-          link.classList.toggle("is-active",link.textContent === visible.target.querySelector("h3")?.textContent);
-        });
-      },{rootMargin:"-12% 0px -68% 0px",threshold:[0,0.12,0.35]});
-      cards.forEach(card => activeObserver.observe(card));
-    });
-  } else {
-    cards.forEach(card => card.classList.add("is-visible"));
+    const activeObserver = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
+      if (!visible) return;
+      nav.querySelectorAll(".analysis-nav-link").forEach(link => {
+        link.classList.toggle("is-active",link.textContent === visible.target.querySelector("h3")?.textContent);
+      });
+    },{rootMargin:"-12% 0px -68% 0px",threshold:[0,0.12,0.35]});
+    cards.forEach(card => activeObserver.observe(card));
   }
 }
 
