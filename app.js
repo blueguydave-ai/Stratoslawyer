@@ -450,23 +450,57 @@ function focusIntakeGroup(group) {
   updateSlideCue(workspace, groups.indexOf(group), groups.length);
   slideCardToCenter(group,intakeAccordions);
 }
+let focusedCategoryIndex=0;
+let focusedPointIndex=0;
 function setFocusedCard(target) {
   if(!results.classList.contains("focus-mode")) return;
+  const categories=[...output.querySelectorAll(".analysis-card")];
   const category=target.closest(".analysis-card");
   if(!category) return;
+  focusedCategoryIndex=categories.indexOf(category);
+  const tiles=[...category.querySelectorAll(".insight-tile")];
+  const requestedTile=target.classList.contains("insight-tile")?target:null;
+  focusedPointIndex=requestedTile?Math.max(0,tiles.indexOf(requestedTile)):0;
   slideCardToCenter(category,output);
-  const categories=[...output.querySelectorAll(".analysis-card")];
-  categories.forEach(card=>{
+  categories.forEach((card,index)=>{
     card.classList.toggle("is-focused",card===category);
     card.classList.toggle("is-dimmed",card!==category);
+    card.querySelectorAll(".insight-tile").forEach((tile,tileIndex)=>{
+      const selected=card===category&&tileIndex===focusedPointIndex;
+      tile.classList.toggle("is-focused",selected);
+      tile.classList.toggle("is-dimmed",!selected);
+    });
   });
-  updateSlideCue(results.querySelector(".analysis-layout"), categories.indexOf(category), categories.length);
-  const chosenTile=target.classList.contains("insight-tile")?target:null;
-  category.querySelectorAll(".insight-tile").forEach(tile=>{
-    tile.classList.toggle("is-focused",tile===chosenTile);
-    tile.classList.toggle("is-dimmed",Boolean(chosenTile)&&tile!==chosenTile);
-  });
+  updateSlideCue(results.querySelector(".analysis-layout"),focusedCategoryIndex,categories.length);
+  updateFocusControls();
 }
+function updateFocusControls(){
+  const categories=[...output.querySelectorAll(".analysis-card")];
+  const category=categories[focusedCategoryIndex];
+  const tiles=category?[...category.querySelectorAll(".insight-tile")]:[];
+  const nextPoint=focusControls?.querySelector("[data-focus-next-point]");
+  const nextCategory=focusControls?.querySelector("[data-focus-next-category]");
+  if(nextPoint) nextPoint.disabled=!tiles.length||focusedPointIndex>=tiles.length-1;
+  if(nextCategory) nextCategory.disabled=categories.length<2;
+  if(nextPoint) nextPoint.textContent=tiles.length?("Next point ("+Math.min(focusedPointIndex+1,tiles.length)+"/"+tiles.length+")"):"Next point";
+  if(nextCategory) nextCategory.textContent="Next category ("+Math.min(focusedCategoryIndex+1,categories.length)+"/"+categories.length+")";
+}
+const focusControls=document.createElement("div");
+focusControls.className="focus-controls";
+focusControls.innerHTML='<button type="button" data-focus-next-point>Next point</button><button type="button" data-focus-next-category>Next category</button>';
+focusControls.hidden=true;
+focusControls.querySelector("[data-focus-next-point]").addEventListener("click",()=>{
+  const category=output.querySelectorAll(".analysis-card")[focusedCategoryIndex];
+  if(!category)return;
+  const tiles=category.querySelectorAll(".insight-tile");
+  if(focusedPointIndex<tiles.length-1)setFocusedCard(tiles[focusedPointIndex+1]);
+});
+focusControls.querySelector("[data-focus-next-category]").addEventListener("click",()=>{
+  const categories=output.querySelectorAll(".analysis-card");
+  if(!categories.length)return;
+  const next=(focusedCategoryIndex+1)%categories.length;
+  setFocusedCard(categories[next]);
+});
 let focusVisualMode=false;
 const viewModeToggle=document.getElementById("view-mode-toggle");
 function updateViewModeControl(){
@@ -479,6 +513,7 @@ viewModeToggle.addEventListener("click",()=>{
   focusVisualMode=!focusVisualMode;
   workspace.classList.toggle("focus-mode",focusVisualMode);
   results.classList.toggle("focus-mode",focusVisualMode);
+  focusControls.hidden=!focusVisualMode;
   document.body.classList.toggle("focus-visual-active",focusVisualMode);
   if(!focusVisualMode) document.querySelectorAll(".focus-slide-cue").forEach(cue=>cue.classList.remove("is-active"));
   updateViewModeControl();
@@ -531,7 +566,7 @@ function renderAnalysis(markdown) {
   const sections = [];
 
   if (!matches.length) {
-    sections.push({ title:"Case analysis", body:normalized });
+    sections.push({ title:"Case details", body:normalized });
   } else {
     if (normalized.slice(0,matches[0].index).trim()) {
       sections.push({title:"Overview",body:normalized.slice(0,matches[0].index)});
@@ -545,7 +580,23 @@ function renderAnalysis(markdown) {
 
   const outputFragment = document.createDocumentFragment();
   const navFragment = document.createDocumentFragment();
+  const plainCategoryNames = [
+    "Possible outcomes",
+    "What the other side may do",
+    "How you can respond",
+    "Evidence and witnesses",
+    "Weak points and missing facts",
+    "What the law does not allow",
+    "What may happen next",
+    "Court rules and procedure",
+    "What you can do at each stage",
+    "What to do first",
+    "Questions that need answers",
+    "Information still needed"
+  ];
   sections.forEach((section,index) => {
+    const headingMatch = section.title.match(/^([A-L])\\s*[.):-]?\\s*/i);
+    if (headingMatch) section.title = plainCategoryNames[headingMatch[1].toUpperCase().charCodeAt(0)-65] || section.title.replace(/^([A-L])\\s*[.):-]?\\s*/i,"");
     const id = "analysis-" + (slugify(section.title) || index);
     const card = document.createElement("section");
     card.className = "analysis-card";
@@ -577,17 +628,10 @@ function renderAnalysis(markdown) {
       tile.dataset.index = String(tileIndex + 1);
       const topline = document.createElement("div");
       topline.className = "insight-tile-topline";
-      const marker = document.createElement("span");
-      marker.className = "insight-tile-marker";
-      marker.setAttribute("aria-hidden","true");
-      marker.textContent = ["✳","↗","◇","⌁","◈","⊙"][tileIndex % 6];
       const label = document.createElement("span");
       label.className = "insight-tile-label";
-      label.textContent = "FIELD NOTE";
-      const serial = document.createElement("span");
-      serial.className = "insight-tile-serial";
-      serial.textContent = "INTEL / " + String(tileIndex + 1).padStart(2,"0");
-      topline.append(marker,label,serial);
+      label.textContent = "POINT " + String(tileIndex + 1).padStart(2,"0");
+      topline.append(label);
       const body = document.createElement("div");
       body.className = "tile-body";
       body.innerHTML = html;
@@ -618,7 +662,7 @@ function renderAnalysis(markdown) {
     content.append(insightGrid);
     const categoryMeta = document.createElement("span");
     categoryMeta.className = "category-meta";
-    categoryMeta.textContent = "INTELLIGENCE CATEGORY";
+    categoryMeta.textContent = "CASE REVIEW";
     heading.append(categoryMeta);
     card.append(heading,content);
     outputFragment.append(card);
@@ -640,7 +684,10 @@ function renderAnalysis(markdown) {
   // Commit the complete layout in one DOM write instead of forcing repeated viewport work.
   output.append(outputFragment);
   nav.append(navFragment);
+  const layout=results.querySelector(".analysis-layout");
+  if(!focusControls.isConnected) layout.append(focusControls);
   const cards = [...output.querySelectorAll(".analysis-card")];
+  if(focusVisualMode&&cards.length)setFocusedCard(cards[0]);
   // Results are revealed immediately after renderAnalysis returns. Start observing
   // on the next frame so the cards are measured in their visible layout.
   requestAnimationFrame(() => revealAllWithin(results));
