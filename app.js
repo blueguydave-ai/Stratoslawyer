@@ -234,19 +234,33 @@ function slideCardToCenter(card,container) {
   if(!card || !container) return;
   const previousFrame=focusScrollFrames.get(container);
   if(previousFrame) cancelAnimationFrame(previousFrame);
+
+  // Temporarily disable native snap: it otherwise competes with the animated
+  // scroll position and can pull the card away from the exact centre.
+  container.classList.add("is-centering-card");
   const containerRect=container.getBoundingClientRect();
   const cardRect=card.getBoundingClientRect();
-  const target=container.scrollLeft+(cardRect.left-containerRect.left)-(container.clientWidth-cardRect.width)/2;
+  const visibleLeft=containerRect.left+container.clientLeft;
+  const targetRaw=container.scrollLeft+(cardRect.left-visibleLeft)-(container.clientWidth-cardRect.width)/2;
+  const maxScroll=Math.max(0,container.scrollWidth-container.clientWidth);
+  const target=Math.max(0,Math.min(maxScroll,targetRaw));
   const start=container.scrollLeft;
   const distance=target-start;
-  if(prefersReducedMotion || Math.abs(distance)<2){container.scrollLeft=target;return;}
-  const duration=Math.min(1050,Math.max(620,Math.abs(distance)*.9));
+
+  const finish=()=>{
+    container.scrollLeft=target;
+    container.classList.remove("is-centering-card");
+    focusScrollFrames.delete(container);
+  };
+  if(prefersReducedMotion || Math.abs(distance)<1.5){finish();return;}
+
+  const duration=Math.min(1150,Math.max(680,Math.abs(distance)*1.05));
   const started=performance.now();
   const animate=now=>{
     const progress=Math.min(1,(now-started)/duration);
     container.scrollLeft=start+distance*easeFocusScroll(progress);
     if(progress<1) focusScrollFrames.set(container,requestAnimationFrame(animate));
-    else focusScrollFrames.delete(container);
+    else finish();
   };
   focusScrollFrames.set(container,requestAnimationFrame(animate));
 }
@@ -429,7 +443,8 @@ function renderAnalysis(markdown) {
     link.textContent = section.title;
     link.dataset.target = id;
     link.addEventListener("click",() => {
-      card.scrollIntoView({behavior:"smooth",block:"start"});
+      if(results.classList.contains("focus-mode")) setFocusedCard(card);
+      else card.scrollIntoView({behavior:"smooth",block:"start"});
       nav.querySelectorAll(".analysis-nav-link").forEach(item => item.classList.remove("is-active"));
       link.classList.add("is-active");
     });
