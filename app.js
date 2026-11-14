@@ -90,9 +90,21 @@ const waitingInsights = [
 const waitingInsightSlots = [...(waitingInsight?.querySelectorAll(".waiting-quote") || [])];
 let waitingInsightTimer = null;
 let waitingInsightPrevious = [];
-let waitingInsightRound = 0;
+let waitingInsightGeneration = 0;
+const waitingInsightTimeouts = new Set();
+function scheduleInsightTask(callback,delay,generation){
+  const timer=window.setTimeout(()=>{
+    waitingInsightTimeouts.delete(timer);
+    if(generation===waitingInsightGeneration)callback();
+  },delay);
+  waitingInsightTimeouts.add(timer);
+  return timer;
+}
 function stopWaitingInsights(){
-  if(waitingInsightTimer){clearTimeout(waitingInsightTimer);waitingInsightTimer=null;}
+  waitingInsightGeneration++;
+  if(waitingInsightTimer){clearTimeout(waitingInsightTimer);waitingInsightTimeouts.delete(waitingInsightTimer);waitingInsightTimer=null;}
+  waitingInsightTimeouts.forEach(timer=>clearTimeout(timer));
+  waitingInsightTimeouts.clear();
   waitingInsightSlots.forEach(slot=>slot.classList.remove("is-writing"));
 }
 function shuffledInsights(){
@@ -103,7 +115,7 @@ function shuffledInsights(){
   }
   return pool;
 }
-function typeInsight(slot,index,delay){
+function typeInsight(slot,index,delay,generation){
   const textNode=slot.querySelector(".waiting-quote-text");
   const counter=slot.querySelector(".waiting-quote-index");
   if(!textNode||!counter)return;
@@ -111,32 +123,33 @@ function typeInsight(slot,index,delay){
   textNode.textContent="";
   counter.textContent=String(index+1).padStart(2,"0")+" / 50";
   slot.classList.remove("is-writing");
-  window.setTimeout(()=>{
+  scheduleInsightTask(()=>{
+    if(generation!==waitingInsightGeneration||!slot.isConnected)return;
     slot.classList.add("is-writing");
     let cursor=0;
     const write=()=>{
-      if(!slot.isConnected)return;
+      if(generation!==waitingInsightGeneration||!slot.isConnected)return;
       textNode.textContent=fullText.slice(0,cursor);
       cursor=Math.min(fullText.length,cursor+(fullText.length>115?2:1));
-      if(cursor<fullText.length)window.setTimeout(write,24);
+      if(cursor<fullText.length)scheduleInsightTask(write,24,generation);
     };
     write();
-  },delay);
+  },delay,generation);
 }
 function startWaitingInsights(){
   stopWaitingInsights();
   if(!waitingInsight||waitingInsightSlots.length!==3)return;
   waitingInsightPrevious=[];
-  waitingInsightRound=0;
+  const generation=waitingInsightGeneration;
   const showSet=()=>{
+    if(generation!==waitingInsightGeneration)return;
     const order=shuffledInsights();
     const chosen=order.slice(0,3);
     waitingInsightPrevious=chosen;
-    waitingInsightSlots.forEach((slot,i)=>typeInsight(slot,chosen[i],i*520));
-    waitingInsightRound++;
-    // Deliberately varied pauses: the display never ticks at a predictable pace.
+    waitingInsightSlots.forEach((slot,i)=>typeInsight(slot,chosen[i],i*520,generation));
+    // A variable pause keeps the next set from feeling like a fixed carousel.
     const pause=26000+Math.floor(Math.random()*15001);
-    waitingInsightTimer=setTimeout(showSet,pause);
+    waitingInsightTimer=scheduleInsightTask(showSet,pause,generation);
   };
   showSet();
 }
