@@ -14,6 +14,25 @@ const intakeAccordions = document.querySelector(".intake-accordions");
 const output = document.getElementById("analysis-output");
 const selectedFiles = [];
 
+// Light the Analyse button when the structured intake is substantially complete.
+// Unknown or genuinely unavailable facts can remain blank; analysis is never blocked.
+function updateAnalyzeReadiness() {
+  const completedFields = intakeFieldIds.filter(id => {
+    const field = document.getElementById(id);
+    return Boolean(field && String(field.value || "").trim());
+  }).length;
+  const isReady = completedFields >= Math.ceil(intakeFieldIds.length * 0.5);
+  analyzeButton.classList.toggle("is-intake-ready", isReady);
+  analyzeButton.setAttribute("data-intake-progress", `${completedFields}/${intakeFieldIds.length}`);
+}
+intakeAccordions.addEventListener("input", event => {
+  if (event.target && intakeFieldIds.includes(event.target.id)) updateAnalyzeReadiness();
+});
+intakeAccordions.addEventListener("change", event => {
+  if (event.target && intakeFieldIds.includes(event.target.id)) updateAnalyzeReadiness();
+});
+updateAnalyzeReadiness();
+
 const allowedTypes = new Set(["application/pdf","text/plain","text/markdown","image/jpeg","image/png","image/webp"]);
 const formatSize = bytes => bytes < 1024 * 1024 ? Math.round(bytes / 1024) + " KB" : (bytes / 1024 / 1024).toFixed(1) + " MB";
 
