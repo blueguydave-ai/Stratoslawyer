@@ -87,8 +87,8 @@ function renderAnalysis(markdown) {
 
   marked.setOptions({ gfm:true, breaks:false, headerIds:false, mangle:false });
   const normalized = markdown
-    .replace(/^([A-K]\.\s+.+)$/gm, "## $1")
-    .replace(/^\*\*([A-K]\.\s+.+?)\*\*$/gm, "## $1");
+    .replace(/^([A-M]\.\s+.+)$/gm, "## $1")
+    .replace(/^\*\*([A-M]\.\s+.+?)\*\*$/gm, "## $1");
   const headingPattern = /^##\s+(.+)$/gm;
   const matches = [...normalized.matchAll(headingPattern)];
   const sections = [];
@@ -146,7 +146,7 @@ function renderAnalysis(markdown) {
           observer.unobserve(entry.target);
         }
       });
-    },{rootMargin:"0px 0px -9% 0px",threshold:0.08});
+    },{rootMargin:"0px 0px -5% 0px",threshold:0.04});
     output.querySelectorAll(".analysis-card").forEach(card => observer.observe(card));
   } else {
     output.querySelectorAll(".analysis-card").forEach(card => card.classList.add("is-visible"));
@@ -177,7 +177,7 @@ analyzeButton.addEventListener("click", async () => {
   progressPanel.scrollIntoView({behavior:"smooth",block:"center"});
   const stageTimer = setTimeout(() => {
     progressTitle.textContent = "Stress-testing both sides...";
-    progressDetail.textContent = "Looking for evidence gaps, contradictions, procedural risks and plausible opposing arguments.";
+    progressDetail.textContent = "Mapping outcome branches, opponent moves, lawful counters, evidence risks and second-order effects.";
   },4500);
   try {
     const files = await Promise.all(selectedFiles.map(async file => ({name:file.name,mimeType:file.type,data:await fileAsDataUrl(file)})));
@@ -190,7 +190,7 @@ analyzeButton.addEventListener("click", async () => {
     if (!response.ok) throw new Error(data.error || "Analysis failed. Please try again.");
     clearTimeout(stageTimer);
     progressTitle.textContent = "Preparing your case intelligence...";
-    progressDetail.textContent = "The first analysis is ready.";
+    progressDetail.textContent = "Outcome branches and opposing moves have been mapped against the supplied record.";
     renderAnalysis(data.analysis);
     results.hidden = false;
     setTimeout(() => results.scrollIntoView({behavior:"smooth",block:"start"}),150);
