@@ -76,28 +76,43 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
 let scrollRevealObserver = null;
 function observeScrollElements(elements) {
   if (!elements?.length) return;
+  const candidates = [...new Set(elements)].filter(element =>
+    element instanceof HTMLElement &&
+    !element.matches("script,style,template,[hidden]") &&
+    element.getClientRects().length
+  );
   if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-    elements.forEach(element => element.classList.add("is-visible"));
+    candidates.forEach(element => element.classList.add("is-visible"));
     return;
   }
   if (!scrollRevealObserver) {
     scrollRevealObserver = new IntersectionObserver(entries => {
       entries.forEach(entry => {
-        // Toggle in both directions so the entrance animation replays on every return.
+        // Reversing visibility replays the entrance every time the element returns.
         entry.target.classList.toggle("is-visible", entry.isIntersecting);
       });
-    },{rootMargin:"0px 0px -7% 0px",threshold:0.02});
+    }, {rootMargin:"0px 0px -5% 0px", threshold:0.01});
   }
-  elements.forEach(element => {
+  candidates.forEach((element,index) => {
+    if (element.classList.contains("scroll-reveal")) return;
     element.classList.add("scroll-reveal");
+    element.style.setProperty("--reveal-delay", Math.min(index % 14, 10) * 18 + "ms");
     scrollRevealObserver.observe(element);
   });
 }
+function revealAllWithin(root) {
+  if (!root) return;
+  observeScrollElements([root, ...root.querySelectorAll("*")]);
+}
 function initializePageReveals() {
-  const targets = [
-    ...document.querySelectorAll(".intro,.workspace,.intake-group,.progress-panel,.results-heading,.results-warning,.analysis-nav,.page-footer")
-  ];
-  observeScrollElements(targets);
+  // Every rendered interface element participates, not just the large panels.
+  revealAllWithin(document.querySelector(".topbar"));
+  revealAllWithin(document.querySelector(".shell"));
+  document.querySelectorAll(".intake-group").forEach(group => {
+    group.addEventListener("toggle", () => {
+      if (group.open) requestAnimationFrame(() => revealAllWithin(group));
+    });
+  });
 }
 initializePageReveals();
 
@@ -170,7 +185,10 @@ function renderAnalysis(markdown) {
   const cards = [...output.querySelectorAll(".analysis-card")];
   // Results are revealed immediately after renderAnalysis returns. Start observing
   // on the next frame so the cards are measured in their visible layout.
-  requestAnimationFrame(() => observeScrollElements(cards));
+  requestAnimationFrame(() => {
+    revealAllWithin(nav);
+    revealAllWithin(output);
+  });
   if ("IntersectionObserver" in window) {
     const activeObserver = new IntersectionObserver(entries => {
       const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
