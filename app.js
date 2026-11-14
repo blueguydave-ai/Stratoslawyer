@@ -331,7 +331,11 @@ function renderAnalysis(markdown) {
       insightGrid.append(tile);
     }
     content.append(insightGrid);
-    const categoryMeta = document.createElement("span");\n    categoryMeta.className = "category-meta";\n    categoryMeta.textContent = "INTELLIGENCE CATEGORY";\n    heading.append(categoryMeta);\n    card.append(heading,content);
+    const categoryMeta = document.createElement("span");
+    categoryMeta.className = "category-meta";
+    categoryMeta.textContent = "INTELLIGENCE CATEGORY";
+    heading.append(categoryMeta);
+    card.append(heading,content);
     outputFragment.append(card);
 
     const link = document.createElement("button");
