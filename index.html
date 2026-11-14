@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
@@ -61,7 +63,7 @@
     <section id="results" class="results" hidden>
       <div class="results-heading"><div><div class="step-label">02 / CASE INTELLIGENCE</div><h2>Your case, examined.</h2></div><button id="new-analysis" class="secondary-button">New analysis ↗</button></div>
       <div class="results-warning"><span>!</span><p>Preparation support, not a substitute for professional judgment. Independently verify authorities, current rules, filing requirements and deadlines before acting.</p></div>
-      <article id="analysis-output" class="analysis-output"></article>
+      <div class="analysis-layout"><nav id="analysis-nav" class="analysis-nav" aria-label="Analysis sections"></nav><div id="analysis-output" class="analysis-output" aria-live="polite"></div></div>
     </section>
 
     <footer class="page-footer"><span>STRATOSLAWYER</span><span>BUILT FOR THE COMPLEXITY OF NIGERIAN PRACTICE</span></footer>
