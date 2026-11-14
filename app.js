@@ -104,28 +104,43 @@ function observeScrollElements(elements) {
     !element.matches("script,style,template,[hidden]") &&
     !element.closest("[hidden]")
   );
-  if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-    candidates.forEach(element => element.classList.add("is-visible"));
+  if (!candidates.length) return;
+
+  // Respect the device accessibility preference. If motion is reduced, never
+  // leave content waiting for an observer that intentionally will not animate.
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !("IntersectionObserver" in window)) {
+    candidates.forEach(element => {
+      element.classList.add("scroll-reveal", "is-visible");
+    });
     return;
   }
+
   if (!scrollRevealObserver) {
-    scrollRevealObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        // Keep observing after exit so the entrance replays on re-entry.
-        entry.target.classList.toggle("is-visible", entry.isIntersecting);
+    try {
+      scrollRevealObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          // Re-entering the viewport replays the entrance; leaving resets it.
+          entry.target.classList.toggle("is-visible", entry.isIntersecting);
+        });
+      }, { root:null, rootMargin:"0px 0px -8% 0px", threshold:0.01 });
+    } catch (error) {
+      candidates.forEach(element => {
+        element.classList.add("scroll-reveal", "is-visible");
       });
-    }, {rootMargin:"0px 0px -6% 0px", threshold:0.05});
+      return;
+    }
   }
 
-  const fresh = candidates.filter(element => !element.classList.contains("scroll-reveal"));
-  fresh.forEach(element => {
-    element.classList.add("scroll-reveal");
-    element.classList.remove("is-visible");
+  candidates.forEach(element => {
+    if (!element.classList.contains("scroll-reveal")) {
+      element.classList.add("scroll-reveal");
+      element.classList.remove("is-visible");
+    }
   });
 
-  // Let the browser paint the hidden starting state before observing.
-  // Otherwise an already-intersecting card can become visible in the same
-  // frame it receives its reveal class, leaving no transition to animate.
+  // Two frames guarantee that the hidden starting state is painted before
+  // observation can reveal an element already inside the viewport.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       candidates.forEach(element => {
