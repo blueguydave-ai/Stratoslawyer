@@ -777,3 +777,31 @@ button:focus-visible,
   .pulse-label i,
   .progress-track span { animation: none !important; }
 }
+
+
+/* FOCUS VISUAL MODE — horizontal category carousel with adjacent-card context. */
+.results-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+.view-mode-hint{margin:7px 0 0;color:#89939f;font-size:11px;line-height:1.5}
+.view-mode-toggle{display:inline-flex;align-items:center;gap:9px;min-height:38px;padding:0 13px;border:1px solid rgba(210,190,151,.3);border-radius:7px;background:linear-gradient(135deg,rgba(200,169,110,.12),rgba(132,164,196,.055));color:#e9d9b8;font:600 10px var(--font);letter-spacing:.025em;cursor:pointer;transition:background .25s,border-color .25s,transform .25s}
+.view-mode-toggle:hover,.view-mode-toggle[aria-pressed="true"]{background:rgba(200,169,110,.19);border-color:rgba(220,194,149,.58)}
+.mode-glyph{font-size:17px;line-height:1;color:#d9bd8a}
+.category-sigil{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border:1px solid rgba(211,187,143,.28);border-radius:13px 13px 13px 4px;background:radial-gradient(circle at 35% 25%,rgba(220,195,150,.16),rgba(200,169,110,.025) 70%);color:#d8bd8b;box-shadow:inset 0 1px rgba(255,255,255,.07),0 5px 18px rgba(0,0,0,.16)}
+.category-sigil svg{width:27px;height:27px}
+.category-meta{margin-left:auto;color:#788493;font:8px 'DM Mono',monospace;letter-spacing:.12em;white-space:nowrap}
+.analysis-card-heading{display:flex;align-items:center}
+.analysis-card-heading h3{flex:1;min-width:0}
+.insight-tile{transition:opacity .42s cubic-bezier(.2,.75,.25,1),transform .42s cubic-bezier(.2,.75,.25,1),border-color .25s,box-shadow .25s}
+.tile-body{transition:max-height .38s cubic-bezier(.2,.75,.25,1)}
+.insight-tile.is-collapsible:not(.is-expanded) .tile-body{max-height:112px}
+.tile-expand{min-height:30px}
+.results.focus-mode .analysis-output{display:flex;align-items:stretch;gap:18px;overflow-x:auto;overflow-y:visible;padding:16px max(18px,calc((100% - 880px)/2)) 30px;scroll-snap-type:x mandatory;scroll-padding-inline:18px;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(200,169,110,.3) transparent}
+.results.focus-mode .analysis-card{flex:0 0 min(84%,900px);width:min(84%,900px);scroll-snap-align:center;opacity:.52;transform:scale(.965);transform-origin:center center;transition:opacity .46s cubic-bezier(.2,.75,.25,1),transform .46s cubic-bezier(.2,.75,.25,1),border-color .3s,box-shadow .3s}
+.results.focus-mode .analysis-card.is-focused{opacity:1;transform:scale(1);border-color:rgba(222,192,139,.5);box-shadow:0 24px 68px rgba(0,0,0,.38),0 0 0 1px rgba(200,169,110,.1),inset 0 1px rgba(255,255,255,.09);z-index:2}
+.results.focus-mode .analysis-card.is-dimmed{opacity:.34;transform:scale(.94)}
+.results.focus-mode .insight-tile.is-dimmed{opacity:.28;transform:scale(.985)}
+.results.focus-mode .insight-tile.is-focused{opacity:1;transform:scale(1.012);border-color:rgba(220,190,140,.48);box-shadow:0 12px 30px rgba(0,0,0,.28),0 0 0 1px rgba(200,169,110,.09)}
+.results.focus-mode .analysis-card-heading:after{content:"FOCUSED";position:absolute;right:18px;bottom:7px;color:rgba(225,200,157,.55);font:7px 'DM Mono',monospace;letter-spacing:.16em}
+.results.focus-mode .analysis-card.is-dimmed .analysis-card-heading:after{content:""}
+@media(max-width:760px){.results-actions{width:100%;justify-content:space-between;margin-top:12px}.results.focus-mode .analysis-output{gap:12px;padding:12px 7vw 24px}.results.focus-mode .analysis-card{flex-basis:86vw;width:86vw;transform:scale(.955)}.results.focus-mode .analysis-card.is-dimmed{transform:scale(.925)}.results.focus-mode .analysis-card.is-focused{transform:scale(1)}.category-sigil{width:36px;height:36px;flex-basis:36px;border-radius:11px 11px 11px 3px}.category-sigil svg{width:23px;height:23px}.category-meta{display:none}}
+@media(max-width:430px){.results-actions{gap:7px}.view-mode-toggle{font-size:9px;padding:0 10px}.results.focus-mode .analysis-card{flex-basis:88vw;width:88vw}}
+@media(prefers-reduced-motion:reduce){.view-mode-toggle,.insight-tile,.tile-body,.results.focus-mode .analysis-card{transition:none!important}.results.focus-mode .analysis-card,.results.focus-mode .analysis-card.is-focused,.results.focus-mode .analysis-card.is-dimmed,.results.focus-mode .insight-tile,.results.focus-mode .insight-tile.is-focused,.results.focus-mode .insight-tile.is-dimmed{transform:none!important}}
