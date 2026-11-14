@@ -67,8 +67,86 @@ function fileAsDataUrl(file) {
     reader.readAsDataURL(file);
   });
 }
-function escapeHtml(text) {
-  return text.replace(/[&<>"']/g,char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+function slugify(value) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+}
+
+function renderAnalysis(markdown) {
+  const nav = document.getElementById("analysis-nav");
+  nav.replaceChildren();
+  output.replaceChildren();
+
+  if (!window.marked || !window.DOMPurify) {
+    const fallback = document.createElement("pre");
+    fallback.className = "analysis-fallback";
+    fallback.textContent = markdown;
+    output.append(fallback);
+    return;
+  }
+
+  marked.setOptions({ gfm:true, breaks:false, headerIds:false, mangle:false });
+  const normalized = markdown
+    .replace(/^([A-K]\.\s+.+)$/gm, "## $1")
+    .replace(/^\*\*([A-K]\.\s+.+?)\*\*$/gm, "## $1");
+  const headingPattern = /^##\s+(.+)$/gm;
+  const matches = [...normalized.matchAll(headingPattern)];
+  const sections = [];
+
+  if (!matches.length) {
+    sections.push({ title:"Case analysis", body:normalized });
+  } else {
+    if (normalized.slice(0,matches[0].index).trim()) {
+      sections.push({title:"Overview",body:normalized.slice(0,matches[0].index)});
+    }
+    matches.forEach((match,index) => {
+      const bodyStart = match.index + match[0].length;
+      const bodyEnd = index + 1 < matches.length ? matches[index+1].index : normalized.length;
+      sections.push({title:match[1].replace(/^\*\*|\*\*$/g,"").trim(),body:normalized.slice(bodyStart,bodyEnd).trim()});
+    });
+  }
+
+  sections.forEach((section,index) => {
+    const id = "analysis-" + (slugify(section.title) || index);
+    const card = document.createElement("section");
+    card.className = "analysis-card";
+    card.id = id;
+    card.style.setProperty("--reveal-order", Math.min(index,12));
+    const heading = document.createElement("div");
+    heading.className = "analysis-card-heading";
+    const number = document.createElement("span");
+    number.className = "analysis-card-number";
+    number.textContent = String(index+1).padStart(2,"0");
+    const title = document.createElement("h3");
+    title.textContent = section.title;
+    heading.append(number,title);
+    const content = document.createElement("div");
+    content.className = "analysis-card-content";
+    content.innerHTML = DOMPurify.sanitize(marked.parse(section.body || "_No additional detail provided._"));
+    card.append(heading,content);
+    output.append(card);
+
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "analysis-nav-link" + (index===0 ? " is-active" : "");
+    link.textContent = section.title;
+    link.addEventListener("click",() => {
+      card.scrollIntoView({behavior:"smooth",block:"start"});
+      nav.querySelectorAll(".analysis-nav-link").forEach(item => item.classList.remove("is-active"));
+      link.classList.add("is-active");
+    });
+    nav.append(link);
+  });
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
+      if (!visible) return;
+      nav.querySelectorAll(".analysis-nav-link").forEach(link => {
+        link.classList.toggle("is-active",link.textContent === visible.target.querySelector("h3")?.textContent);
+      });
+    },{rootMargin:"-15% 0px -70% 0px",threshold:[0,.2,.5]});
+    output.querySelectorAll(".analysis-card").forEach(card => observer.observe(card));
+  }
 }
 
 analyzeButton.addEventListener("click", async () => {
