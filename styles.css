@@ -470,3 +470,75 @@ body::after {
     will-change: auto !important;
   }
 }
+
+
+/* CASE INTELLIGENCE: parent category + compact individual insight tiles. */
+.analysis-card {
+  padding: 0;
+  overflow: hidden;
+}
+.analysis-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 19px;
+  margin: 0;
+  border-bottom: 1px solid rgba(226,232,240,.09);
+  background: linear-gradient(100deg,rgba(200,169,110,.075),rgba(132,164,196,.025) 68%,transparent);
+}
+.analysis-card-heading h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.analysis-card-content {
+  padding: 14px;
+}
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 9px;
+}
+.insight-subheading {
+  grid-column: 1 / -1;
+  padding: 9px 2px 1px;
+  color: #d8bd8b;
+  font: 600 10px/1.4 "DM Mono",monospace;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.insight-tile {
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid rgba(213,224,238,.105);
+  border-radius: 9px;
+  background: linear-gradient(145deg,rgba(255,255,255,.045),rgba(7,11,16,.24));
+  box-shadow: inset 0 1px rgba(255,255,255,.035);
+}
+.insight-tile p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: #cbd2dc;
+}
+.insight-tile p + p { margin-top: 7px; }
+.insight-tile strong { color: #f0dfbd; }
+.insight-tile ul,.insight-tile ol { margin: 0; padding-left: 16px; }
+.insight-tile li { margin: 0; font-size: 11.5px; line-height: 1.6; }
+.insight-tile li + li { margin-top: 5px; }
+.insight-tile blockquote {
+  margin: 0;
+  padding-left: 10px;
+  border-left: 2px solid rgba(200,169,110,.45);
+  color: #b9c2ce;
+}
+.insight-tile table { margin: 0; font-size: 10.5px; }
+.insight-tile pre { overflow-x: auto; margin: 0; }
+@media(max-width:640px) {
+  .analysis-card-heading { padding: 14px 14px; }
+  .analysis-card-heading h3 { font-size: 14px; }
+  .analysis-card-content { padding: 10px; }
+  .insight-grid { grid-template-columns: minmax(0,1fr); gap: 7px; }
+  .insight-tile { padding: 11px 12px; }
+  .insight-tile p,.insight-tile li { font-size: 11.5px; }
+}
