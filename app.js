@@ -168,7 +168,9 @@ function renderAnalysis(markdown) {
   });
 
   const cards = [...output.querySelectorAll(".analysis-card")];
-  observeScrollElements(cards);
+  // Results are revealed immediately after renderAnalysis returns. Start observing
+  // on the next frame so the cards are measured in their visible layout.
+  requestAnimationFrame(() => observeScrollElements(cards));
   if ("IntersectionObserver" in window) {
     const activeObserver = new IntersectionObserver(entries => {
       const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
