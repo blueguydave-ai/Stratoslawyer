@@ -805,3 +805,8 @@ button:focus-visible,
 @media(max-width:760px){.results-actions{width:100%;justify-content:space-between;margin-top:12px}.results.focus-mode .analysis-output{gap:12px;padding:12px 7vw 24px}.results.focus-mode .analysis-card{flex-basis:86vw;width:86vw;transform:scale(.955)}.results.focus-mode .analysis-card.is-dimmed{transform:scale(.925)}.results.focus-mode .analysis-card.is-focused{transform:scale(1)}.category-sigil{width:36px;height:36px;flex-basis:36px;border-radius:11px 11px 11px 3px}.category-sigil svg{width:23px;height:23px}.category-meta{display:none}}
 @media(max-width:430px){.results-actions{gap:7px}.view-mode-toggle{font-size:9px;padding:0 10px}.results.focus-mode .analysis-card{flex-basis:88vw;width:88vw}}
 @media(prefers-reduced-motion:reduce){.view-mode-toggle,.insight-tile,.tile-body,.results.focus-mode .analysis-card{transition:none!important}.results.focus-mode .analysis-card,.results.focus-mode .analysis-card.is-focused,.results.focus-mode .analysis-card.is-dimmed,.results.focus-mode .insight-tile,.results.focus-mode .insight-tile.is-focused,.results.focus-mode .insight-tile.is-dimmed{transform:none!important}}
+
+
+/* Keep the viewing-mode control available from the intake screen onward. */
+.workspace-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap}
+@media(max-width:680px){.section-head{align-items:flex-start;flex-direction:column}.workspace-head-actions{width:100%;justify-content:space-between}.workspace-head-actions .private-note{font-size:9px}.workspace-head-actions .view-mode-toggle{min-height:40px}}
