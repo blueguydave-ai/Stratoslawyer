@@ -28,11 +28,68 @@ const errorMessage = document.getElementById("error-message");
 const progressPanel = document.getElementById("progress-panel");
 const progressTitle = document.getElementById("progress-title");
 const progressDetail = document.getElementById("progress-detail");
+const waitingInsight = document.getElementById("waiting-insight");
+const waitingInsightText = document.getElementById("waiting-insight-text");
+const waitingInsightIndex = document.getElementById("waiting-insight-index");
 const results = document.getElementById("results");
 const workspace = document.querySelector(".workspace");
 const intakeAccordions = document.querySelector(".intake-accordions");
 const output = document.getElementById("analysis-output");
 const selectedFiles = [];
+
+const waitingInsights = [
+  "Most problems are shaped by the places our attention has not yet reached — and by the things it refuses to leave.",
+  "An idea is not a strategy until it changes what someone actually does.",
+  "A fact can be true and still be irrelevant. Strategy begins by asking what changes because it is true.",
+  "The obvious move is often obvious to both sides. Look for the assumption that makes it seem inevitable.",
+  "Do not confuse activity with progress. A move matters because of what it changes, not how much effort it consumes.",
+  "Every advantage has a condition. Find the condition before you build your plan around the advantage.",
+  "The strongest question is sometimes not 'What should happen next?' but 'What would make the next move unnecessary?'",
+  "A missing fact is not an empty space. It is a live uncertainty that can change the entire decision.",
+  "Think one move beyond the response: what will the other side do after you do what you are planning?",
+  "A good plan does not hide uncertainty. It gives uncertainty a name, a test, and a response.",
+  "What you fail to preserve today may become the option you cannot exercise tomorrow.",
+  "Do not merely list possibilities. Identify the event that would make each possibility real.",
+  "The same action can be wise at one stage and damaging at another. Timing is part of the strategy.",
+  "When two explanations fit the facts, do not marry the more convenient one. Find the evidence that separates them.",
+  "Clarity is not having an answer for everything. It is knowing what is known, what is assumed, and what must happen next."
+];
+let waitingInsightTimer = null;
+let waitingInsightOrder = [];
+let waitingInsightPosition = 0;
+function stopWaitingInsights(){
+  if(waitingInsightTimer){clearInterval(waitingInsightTimer);waitingInsightTimer=null;}
+  if(waitingInsight)waitingInsight.classList.remove("is-changing");
+}
+function startWaitingInsights(){
+  stopWaitingInsights();
+  if(!waitingInsight||!waitingInsightText||!waitingInsightIndex)return;
+  waitingInsightOrder=waitingInsights.map((_,i)=>i);
+  for(let i=waitingInsightOrder.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [waitingInsightOrder[i],waitingInsightOrder[j]]=[waitingInsightOrder[j],waitingInsightOrder[i]];
+  }
+  waitingInsightPosition=0;
+  const showNext=()=>{
+    const index=waitingInsightOrder[waitingInsightPosition];
+    waitingInsight.classList.remove("is-changing");
+    waitingInsightText.textContent=waitingInsights[index];
+    waitingInsightIndex.textContent=String(index+1).padStart(2,"0")+" / "+waitingInsights.length;
+    void waitingInsightText.offsetWidth;
+    waitingInsight.classList.add("is-changing");
+    waitingInsightPosition++;
+    if(waitingInsightPosition>=waitingInsightOrder.length){
+      waitingInsightOrder=waitingInsights.map((_,i)=>i).filter(i=>i!==index);
+      for(let i=waitingInsightOrder.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [waitingInsightOrder[i],waitingInsightOrder[j]]=[waitingInsightOrder[j],waitingInsightOrder[i]];
+      }
+      waitingInsightPosition=0;
+    }
+  };
+  showNext();
+  waitingInsightTimer=setInterval(showNext,6500);
+}
 
 // Light the Analyse button when the structured intake is substantially complete.
 // Unknown or genuinely unavailable facts can remain blank; analysis is never blocked.
@@ -540,6 +597,7 @@ analyzeButton.addEventListener("click", async () => {
   analyzeButton.querySelector("span:first-child").textContent = "Analysing...";
   progressPanel.hidden = false;
   requestAnimationFrame(() => revealAllWithin(progressPanel));
+  startWaitingInsights();
   progressTitle.textContent = "Reading the material...";
   progressDetail.textContent = "Identifying the legal environment and reconstructing the case.";
   progressPanel.scrollIntoView({behavior:"smooth",block:"center"});
@@ -557,6 +615,7 @@ analyzeButton.addEventListener("click", async () => {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Analysis failed. Please try again.");
     clearTimeout(stageTimer);
+    stopWaitingInsights();
     progressPanel.hidden = true;
     progressTitle.textContent = "Preparing your case intelligence...";
     progressDetail.textContent = "Outcome branches and opposing moves have been mapped against the supplied record.";
@@ -570,6 +629,7 @@ analyzeButton.addEventListener("click", async () => {
     setTimeout(() => results.scrollIntoView({behavior:"smooth",block:"start"}),150);
   } catch(error) {
     clearTimeout(stageTimer);
+    stopWaitingInsights();
     showError(error.message || "Something went wrong. Please try again.");
     progressPanel.hidden = true;
   } finally {
@@ -579,6 +639,7 @@ analyzeButton.addEventListener("click", async () => {
 });
 document.getElementById("new-analysis").addEventListener("click",() => {
   results.hidden = true;
+  stopWaitingInsights();
   progressPanel.hidden = true;
   if(focusVisualMode){
     const first=intakeAccordions.querySelector(".intake-group");
