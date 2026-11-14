@@ -121,8 +121,8 @@ export default async function handler(req, res) {
   if (files.length > 6) return jsonError(res, 400, "For this first version, attach no more than 6 files at a time.");
 
   const safeContext = caseContext && typeof caseContext === "object" && !Array.isArray(caseContext) ? caseContext : {};
-  const contextText = Object.entries(safeContext).map(([key,value]) => `${key}: ${String(value).slice(0,4000)}`).join("\\n");
-  const parts = [{ text: "STRUCTURED CASE INTAKE (user-supplied; verify, do not assume):\\n" + (contextText || "No structured fields supplied.") + "\\n\\nLAWYER'S FURTHER CASE DESCRIPTION:\\n" + (description.trim() || "No further description supplied. Analyse attached materials and identify unknowns.") }];
+  const contextText = Object.entries(safeContext).map(([key,value]) => `${key}: ${String(value).slice(0,4000)}`).join("\n");
+  const parts = [{ text: "STRUCTURED CASE INTAKE (user-supplied; verify, do not assume):\n" + (contextText || "No structured fields supplied.") + "\n\nLAWYER'S FURTHER CASE DESCRIPTION:\n" + (description.trim() || "No further description supplied. Analyse attached materials and identify unknowns.") }];
 
   let totalBytes = 0;
   const allowed = new Set(["application/pdf", "text/plain", "text/markdown", "image/jpeg", "image/png", "image/webp"]);
