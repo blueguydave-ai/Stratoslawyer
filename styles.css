@@ -766,3 +766,14 @@ button:focus-visible,
   .insight-grid { grid-template-columns: minmax(0,1fr); }
   .insight-tile[data-layout] { grid-column: 1 / -1; }
 }
+
+
+/* MOBILE + ACCESSIBILITY PERFORMANCE GUARDRAILS */
+@media (max-width: 760px) {
+  body { background-attachment: scroll; }
+  .ambient { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-label i,
+  .progress-track span { animation: none !important; }
+}
