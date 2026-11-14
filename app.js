@@ -26,7 +26,7 @@ const recoveryMessage = document.getElementById("recovery-message");
 
 let authMode = "login";
 let currentSession = null;
-let isRecoveringPassword = false;
+let isRecoveringPassword = new URLSearchParams(window.location.search).get("mode") === "recovery" || /(?:^|[&#])type=recovery(?:&|$)/.test(window.location.hash.slice(1));
 
 function showAuthMessage(message, isError = false) {
   authMessage.textContent = message;
@@ -70,16 +70,34 @@ if (!authClient) {
   authSubmit.disabled = true;
   authToggle.disabled = true;
   forgotPassword.disabled = true;
+  recoverySubmit.disabled = true;
 } else {
-  authClient.auth.getSession().then(({data,error}) => {
-    if (error) showAuthMessage(error.message, true);
-    applySession(data?.session || null);
-  });
+  if (isRecoveringPassword) {
+    authPanel.hidden = true;
+    recoveryPanel.hidden = false;
+    workspace.hidden = true;
+    accountBar.hidden = true;
+    recoverySubmit.disabled = true;
+    recoveryMessage.textContent = "Verifying your password-reset link...";
+  }
+
+  // Subscribe before handling the initial session so recovery redirects are not missed.
   authClient.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY") {
       isRecoveringPassword = true;
       recoveryMessage.textContent = "Your recovery link is valid. Choose a new password.";
       recoveryMessage.classList.remove("is-error");
+      recoverySubmit.disabled = false;
+    } else if (event === "INITIAL_SESSION" && isRecoveringPassword) {
+      if (session?.access_token) {
+        recoverySubmit.disabled = false;
+        recoveryMessage.textContent = "Your recovery link is valid. Choose a new password.";
+        recoveryMessage.classList.remove("is-error");
+      } else {
+        recoverySubmit.disabled = true;
+        recoveryMessage.textContent = "This reset link could not be verified or has expired. Request a new reset email and open it in the same browser where you requested it.";
+        recoveryMessage.classList.add("is-error");
+      }
     }
     applySession(session);
   });
@@ -144,6 +162,8 @@ recoveryForm.addEventListener("submit", async event => {
     if (error) throw error;
     isRecoveringPassword = false;
     recoveryPanel.hidden = true;
+    recoverySubmit.disabled = false;
+    window.history.replaceState({}, document.title, window.location.pathname);
     applySession(currentSession);
     showAuthMessage("Your password has been updated. You are now signed in.");
   } catch (error) {
