@@ -34,38 +34,62 @@
       </div>
       <p class="helper">Give the system the case frame you know. Leave unknown fields blank; it should identify gaps rather than force assumptions.</p>
 
-      <div class="intake-grid">
-        <div class="intake-field"><label class="field-label" for="case-type">Case type</label><select id="case-type"><option value="">Let the system identify it</option><option>Civil / Commercial</option><option>Criminal</option><option>Constitutional / Fundamental rights</option><option>Land / Property</option><option>Family / Matrimonial</option><option>Employment / Labour</option><option>Tax / Revenue</option><option>Election petition</option><option>Administrative / Regulatory</option><option>Arbitration / ADR</option><option>Appeal</option><option>Other / Mixed</option></select></div>
-        <div class="intake-field"><label class="field-label" for="case-role">Your client's position</label><select id="case-role"><option value="">Not specified</option><option>Claimant / Plaintiff / Applicant</option><option>Defendant / Respondent</option><option>Accused person</option><option>Prosecution</option><option>Appellant</option><option>Interested party / Other</option></select></div>
-        <div class="intake-field"><label class="field-label" for="case-stage">Current procedural stage</label><select id="case-stage"><option value="">Not sure / Please infer</option><option>Pre-action / Investigation</option><option>Pre-action notice / Demand</option><option>Commencement / Filing</option><option>Service / Response</option><option>Interlocutory applications</option><option>Pleadings / Issues joined</option><option>Case management / Pre-trial</option><option>Hearing / Trial</option><option>Ruling / Judgment pending</option><option>Judgment delivered</option><option>Enforcement / Execution</option><option>Appeal</option><option>Settlement / ADR</option></select></div>
-        <div class="intake-field"><label class="field-label" for="court">Court / tribunal</label><input id="court" type="text" placeholder="e.g. High Court of Lagos State, NICN, FHC"></div>
-        <div class="intake-field"><label class="field-label" for="jurisdiction">State / judicial division</label><input id="jurisdiction" type="text" placeholder="e.g. Lagos State, Ikeja Judicial Division"></div>
-        <div class="intake-field"><label class="field-label" for="next-date">Next hearing / deadline</label><input id="next-date" type="text" placeholder="Date, event or unknown"></div>
-        <div class="intake-field"><label class="field-label" for="relief">Reliefs / charges / orders sought</label><input id="relief" type="text" placeholder="What is each side asking the court to do?"></div>
-        <div class="intake-field"><label class="field-label" for="opponent-conduct">Known opposing-party conduct</label><input id="opponent-conduct" type="text" placeholder="Applications, denials, delays, settlement position..."></div>
-        <div class="intake-field"><label class="field-label" for="parties">Parties & roles</label><input id="parties" type="text" placeholder="Use roles or initials; avoid unnecessary personal data"></div>
-        <div class="intake-field"><label class="field-label" for="opponent-position">Opponent's pleaded / stated position</label><input id="opponent-position" type="text" placeholder="Their defence, denial, counterclaim or stated version"></div>
-        <div class="intake-field"><label class="field-label" for="orders-documents">Existing orders & filed documents</label><input id="orders-documents" type="text" placeholder="Court orders, pleadings, affidavits, notices, rulings..."></div>
-        <div class="intake-field"><label class="field-label" for="client-objective">Client's objective</label><input id="client-objective" type="text" placeholder="Best realistic result, acceptable settlement, urgent protection..."></div>
-      </div>
-      <div class="evidence-grid">
-        <div class="evidence-panel"><div class="evidence-title"><span>01</span><strong>Your side</strong><small>CLIENT / APPLICANT / DEFENCE</small></div>
-          <label class="field-label" for="own-evidence">Available evidence</label><textarea id="own-evidence" rows="3" placeholder="Contracts, messages, receipts, recordings, photographs, records, physical exhibits..."></textarea>
-          <label class="field-label" for="own-witnesses">Witnesses / deponents</label><textarea id="own-witnesses" rows="3" placeholder="Who can testify? What can each person prove? Any affidavit deponents?"></textarea>
-        </div>
-        <div class="evidence-panel opponent-panel"><div class="evidence-title"><span>02</span><strong>Opposing side</strong><small>KNOWN OR ANTICIPATED</small></div>
-          <label class="field-label" for="opponent-evidence">Their available evidence</label><textarea id="opponent-evidence" rows="3" placeholder="Documents, messages, records, physical evidence, material they claim to have..."></textarea>
-          <label class="field-label" for="opponent-witnesses">Their witnesses / deponents</label><textarea id="opponent-witnesses" rows="3" placeholder="Known witnesses, affidavit deponents, roles, likely testimony or credibility concerns..."></textarea>
-        </div>
-      </div>
-      <label class="field-label" for="case-description">Further details <span>ADD ANYTHING ELSE THAT MAY CHANGE THE ANALYSIS</span></label>
-      <textarea id="case-description" rows="5" placeholder="Set out the facts in your own words. Include disputed events, dates, prior proceedings, orders, settlement discussions, suspected weaknesses or questions. Legal terminology is not required."></textarea>
-
-      <div class="upload-zone" id="drop-zone" tabindex="0" role="button" aria-label="Choose case documents">
+      <div class="intake-accordions">
+        <details class="intake-group" open>
+          <summary><span class="group-index">01</span><span class="group-copy"><strong>Case identity & objective</strong><small>What is the dispute, who is involved, and what result is sought?</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="intake-grid">
+            <div class="intake-field"><label class="field-label" for="case-type">Case type</label><select id="case-type"><option value="">Let the system identify it</option><option>Civil / Commercial</option><option>Criminal</option><option>Constitutional / Fundamental rights</option><option>Land / Property</option><option>Family / Matrimonial</option><option>Employment / Labour</option><option>Tax / Revenue</option><option>Election petition</option><option>Administrative / Regulatory</option><option>Arbitration / ADR</option><option>Appeal</option><option>Other / Mixed</option></select></div>
+            <div class="intake-field"><label class="field-label" for="case-role">Your client's position</label><select id="case-role"><option value="">Not specified</option><option>Claimant / Plaintiff / Applicant</option><option>Defendant / Respondent</option><option>Accused person</option><option>Prosecution</option><option>Appellant</option><option>Interested party / Other</option></select></div>
+            <div class="intake-field"><label class="field-label" for="parties">Parties & roles</label><input id="parties" type="text" placeholder="Use roles or initials; avoid unnecessary personal data"></div>
+            <div class="intake-field"><label class="field-label" for="relief">Reliefs / charges / orders sought</label><input id="relief" type="text" placeholder="What is each side asking the court to do?"></div>
+            <div class="intake-field"><label class="field-label" for="client-objective">Client's objective</label><input id="client-objective" type="text" placeholder="Best realistic result, acceptable settlement, urgent protection..."></div>
+          </div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">02</span><span class="group-copy"><strong>Court, jurisdiction & procedural stage</strong><small>Identify the forum, applicable process and what has happened so far.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="intake-grid">
+            <div class="intake-field"><label class="field-label" for="case-stage">Current procedural stage</label><select id="case-stage"><option value="">Not sure / Please infer</option><option>Pre-action / Investigation</option><option>Pre-action notice / Demand</option><option>Commencement / Filing</option><option>Service / Response</option><option>Interlocutory applications</option><option>Pleadings / Issues joined</option><option>Case management / Pre-trial</option><option>Hearing / Claimant's case</option><option>Hearing / Defendant's case</option><option>Close of evidence / Final written addresses</option><option>Final written addresses filed / Adoption pending</option><option>Addresses adopted / Judgment pending</option><option>Judgment delivered</option><option>Enforcement / Execution</option><option>Appeal</option><option>Settlement / ADR</option></select></div>
+            <div class="intake-field"><label class="field-label" for="court">Court / tribunal</label><input id="court" type="text" placeholder="e.g. High Court of Oyo State, NICN, FHC"></div>
+            <div class="intake-field"><label class="field-label" for="jurisdiction">State / judicial division</label><input id="jurisdiction" type="text" placeholder="e.g. Oyo State, Ibadan Judicial Division"></div>
+            <div class="intake-field"><label class="field-label" for="next-date">Next hearing / deadline</label><input id="next-date" type="text" placeholder="Date, event or unknown"></div>
+            <div class="intake-field"><label class="field-label" for="orders-documents">Existing orders & filed documents</label><input id="orders-documents" type="text" placeholder="Pleadings, affidavits, rulings, notices, court orders..."></div>
+          </div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">03</span><span class="group-copy"><strong>Opposing party & their position</strong><small>What they say, what they have done, and what they may rely on.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="intake-grid">
+            <div class="intake-field"><label class="field-label" for="opponent-position">Opponent's pleaded / stated position</label><input id="opponent-position" type="text" placeholder="Their defence, denial, counterclaim or stated version"></div>
+            <div class="intake-field"><label class="field-label" for="opponent-conduct">Known opposing-party conduct</label><input id="opponent-conduct" type="text" placeholder="Applications, denials, delays, settlement position..."></div>
+          </div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">04</span><span class="group-copy"><strong>Evidence, witnesses & deponents</strong><small>Compare what each side has, who can prove it, and what remains untested.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="evidence-grid">
+            <div class="evidence-panel"><div class="evidence-title"><span>01</span><strong>Your side</strong><small>CLIENT / APPLICANT / DEFENCE</small></div>
+              <label class="field-label" for="own-evidence">Available evidence</label><textarea id="own-evidence" rows="3" placeholder="Contracts, messages, receipts, recordings, photographs, records, physical exhibits..."></textarea>
+              <label class="field-label" for="own-witnesses">Witnesses / deponents</label><textarea id="own-witnesses" rows="3" placeholder="Who can testify? What can each person prove? Any affidavit deponents?"></textarea>
+            </div>
+            <div class="evidence-panel opponent-panel"><div class="evidence-title"><span>02</span><strong>Opposing side</strong><small>KNOWN OR ANTICIPATED</small></div>
+              <label class="field-label" for="opponent-evidence">Their available evidence</label><textarea id="opponent-evidence" rows="3" placeholder="Documents, messages, records, physical evidence, material they claim to have..."></textarea>
+              <label class="field-label" for="opponent-witnesses">Their witnesses / deponents</label><textarea id="opponent-witnesses" rows="3" placeholder="Known witnesses, affidavit deponents, roles, likely testimony or credibility concerns..."></textarea>
+            </div>
+          </div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">05</span><span class="group-copy"><strong>Further facts & context</strong><small>Anything else that could change the analysis.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="freeform-wrap"><label class="field-label" for="case-description">Further details <span>OPTIONAL — WRITE NATURALLY</span></label><textarea id="case-description" rows="5" placeholder="Set out the facts in your own words. Include disputed events, dates, prior proceedings, orders, settlement discussions, suspected weaknesses or questions. Legal terminology is not required."></textarea></div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">06</span><span class="group-copy"><strong>Case documents</strong><small>Upload pleadings, affidavits, orders, exhibits, correspondence and other relevant records.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="upload-group-content">      <div class="upload-zone" id="drop-zone" tabindex="0" role="button" aria-label="Choose case documents">
         <input id="file-input" type="file" multiple accept=".pdf,.txt,.md,.jpg,.jpeg,.png,.webp,application/pdf,text/plain,image/jpeg,image/png,image/webp">
         <div class="upload-icon">↑</div>
         <div class="upload-copy"><strong>Drop your case documents here</strong><span>or <u>browse files</u></span></div>
         <div class="upload-support">PDF · TXT · MD · JPG · PNG · WEBP <span>MAX 6 FILES · 8 MB EACH</span></div>
+      </div>
+
+          </div>
+        </details>
       </div>
       <div id="file-list" class="file-list" aria-live="polite"></div>
 
