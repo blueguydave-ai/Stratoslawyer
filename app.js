@@ -184,19 +184,20 @@ function addTileExpansion(tile, body) {
   toggle.setAttribute("aria-expanded", "false");
   toggle.addEventListener("click", () => {
     const expanded = !tile.classList.contains("is-expanded");
-    if (expanded) {
-      tile.classList.add("is-expanded");
-      body.style.maxHeight = body.scrollHeight + "px";
-    } else {
-      // Start from the current rendered height, then ease back to the compact height.
-      body.style.maxHeight = body.getBoundingClientRect().height + "px";
-      requestAnimationFrame(() => {
-        tile.classList.remove("is-expanded");
-        body.style.maxHeight = "112px";
-      });
-    }
+    // Always establish the current rendered height as the animation's start.
+    // This prevents a class/style update in the same frame from skipping the transition.
+    body.style.maxHeight = body.getBoundingClientRect().height + "px";
+    void body.offsetHeight;
+    requestAnimationFrame(() => {
+      tile.classList.toggle("is-expanded", expanded);
+      body.style.maxHeight = expanded ? body.scrollHeight + "px" : "112px";
+    });
     toggle.setAttribute("aria-expanded", String(expanded));
     toggle.textContent = expanded ? "Show less" : "Explore details";
+  });
+  body.addEventListener("transitionend", event => {
+    if (event.propertyName !== "max-height") return;
+    if (tile.classList.contains("is-expanded")) body.style.maxHeight = "none";
   });
   tile.append(toggle);
 }
@@ -224,6 +225,22 @@ function makeCategorySigil(index) {
 }
 function clearCardFocus() {
   output.querySelectorAll(".is-focused,.is-dimmed").forEach(card=>card.classList.remove("is-focused","is-dimmed"));
+}
+function updateSlideCue(parent, index, total) {
+  if (!parent) return;
+  let cue = parent.querySelector(":scope > .focus-slide-cue");
+  if (!cue) {
+    cue = document.createElement("div");
+    cue.className = "focus-slide-cue";
+    cue.setAttribute("aria-hidden", "true");
+    parent.append(cue);
+  }
+  const direction = index >= total - 1 ? "left" : "right";
+  cue.dataset.direction = direction;
+  cue.innerHTML = direction === "left"
+    ? '<span class="cue-arrow" aria-hidden="true">←</span><span>slide…</span>'
+    : '<span>slide…</span><span class="cue-arrow" aria-hidden="true">→</span>';
+  cue.classList.toggle("is-active", focusVisualMode && total > 1);
 }
 const focusScrollFrames = new WeakMap();
 function easeFocusScroll(progress) {
@@ -271,6 +288,7 @@ function focusIntakeGroup(group) {
     card.classList.toggle("is-focused",card===group);
     card.classList.toggle("is-dimmed",card!==group);
   });
+  updateSlideCue(workspace, groups.indexOf(group), groups.length);
   slideCardToCenter(group,intakeAccordions);
 }
 function setFocusedCard(target) {
@@ -278,10 +296,12 @@ function setFocusedCard(target) {
   const category=target.closest(".analysis-card");
   if(!category) return;
   slideCardToCenter(category,output);
-  output.querySelectorAll(".analysis-card").forEach(card=>{
+  const categories=[...output.querySelectorAll(".analysis-card")];
+  categories.forEach(card=>{
     card.classList.toggle("is-focused",card===category);
     card.classList.toggle("is-dimmed",card!==category);
   });
+  updateSlideCue(results.querySelector(".analysis-layout"), categories.indexOf(category), categories.length);
   const chosenTile=target.classList.contains("insight-tile")?target:null;
   category.querySelectorAll(".insight-tile").forEach(tile=>{
     tile.classList.toggle("is-focused",tile===chosenTile);
