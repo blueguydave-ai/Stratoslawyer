@@ -482,12 +482,12 @@ function updateFocusControls(){
   const nextCategory=focusControls?.querySelector("[data-focus-next-category]");
   if(nextPoint) nextPoint.disabled=!tiles.length||focusedPointIndex>=tiles.length-1;
   if(nextCategory) nextCategory.disabled=categories.length<2;
-  if(nextPoint) nextPoint.textContent=tiles.length?("Next point ("+Math.min(focusedPointIndex+1,tiles.length)+"/"+tiles.length+")"):"Next point";
+  if(nextPoint) nextPoint.textContent=tiles.length?("Next ("+Math.min(focusedPointIndex+1,tiles.length)+"/"+tiles.length+")"):"Next";
   if(nextCategory) nextCategory.textContent="Next category ("+Math.min(focusedCategoryIndex+1,categories.length)+"/"+categories.length+")";
 }
 const focusControls=document.createElement("div");
 focusControls.className="focus-controls";
-focusControls.innerHTML='<button type="button" data-focus-next-point>Next point</button><button type="button" data-focus-next-category>Next category</button>';
+focusControls.innerHTML='<button type="button" data-focus-next-point>Next</button><button type="button" data-focus-next-category>Next category</button>';
 focusControls.hidden=true;
 focusControls.querySelector("[data-focus-next-point]").addEventListener("click",()=>{
   const category=output.querySelectorAll(".analysis-card")[focusedCategoryIndex];
