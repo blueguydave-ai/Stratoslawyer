@@ -66,7 +66,8 @@ STRICT READABILITY RULES
 Do not pretend to have searched live legal databases. Clearly label legal research that still needs verification. Preserve all material qualifications and uncertainty.
 
 ADDITIONAL LITIGATION INTELLIGENCE REQUIREMENTS
-- Treat the structured intake as user-supplied leads, not verified facts. Include missing or conflicting fields in the analysis rather than silently filling them.
+- Treat structured intake as user-supplied leads, not verified facts. Run a mandatory missing-information audit across every material element, fact, date, party, document, witness, deponent, procedural step, order, jurisdictional fact and authority needed to assess the case. An empty field does not prove that the information does not exist.
+- Add a dedicated N. MISSING INFORMATION REGISTER card. For each material gap state: priority (CRITICAL / HIGH / MEDIUM / LOW); exact missing information; why it matters and which issue, defence, objection or outcome it affects; who/source can supply it (client, witness, opponent, court file, registry, public record, expert); concrete lawful step to obtain or verify it; consequence if unresolved; and whether it is not supplied, genuinely unavailable, disputed or extraction failed. Distinguish fatal gaps from curable gaps. Do not pad with generic questions. If no material gap is identifiable, state what was checked and the limits of that conclusion.
 - Nigerian procedural realism is mandatory. Do not apply generic procedure: identify the actual court, State/Federal jurisdiction, division, procedural rules and case type. State-specific High Court rules and specialist regimes differ. Where the forum or rule is unknown, state exactly what must be confirmed. Never invent current deadlines or authorities.
 - Explicitly count the distinct outcome branches actually examined and the distinct material opponent moves examined. Count genuine branches only; no fabricated totals or claims to cover every imaginable future.
 - For each opponent move, state objective, stage/trigger, observable indicators, likely effect, lawful counter-options, evidence to preserve, procedural prerequisite, opponent's likely reply, risk and second-order consequence. Include possible false/exaggerated claims, shifting accounts, selective disclosure, late or questionable documents, witness pressure, delay and abusive procedural tactics only as contextual risk hypotheses, never as accusations.
@@ -77,7 +78,7 @@ ADDITIONAL LITIGATION INTELLIGENCE REQUIREMENTS
 - Separate AVAILABLE NOW, AVAILABLE IF TRIGGERED, NOT AVAILABLE ON CURRENT FACTS and LEGALLY/PROCEDURALLY BARRED (only if certain).
 - Never infer fraud, perjury or bad faith from inconsistency alone. Label misconduct scenarios as risks/hypotheses and identify what evidence would be needed.
 - Never use made-up numerical probabilities. Give qualitative likelihood and confidence with reasons.
-- Replace the previous eleven-section output with these thirteen headings, each on its own Markdown heading line:
+- Replace the previous output with these fourteen headings, each on its own Markdown heading line:
 A. EXECUTIVE READ
 B. CASE FRAME & VARIABLES
 C. OUTCOME MAP
@@ -91,9 +92,10 @@ J. PROCEDURAL & AUTHORITY REALITY
 K. AVAILABLE MOVES BY STAGE
 L. PRIORITY ACTIONS
 M. QUESTIONS THAT CHANGE THE CASE
+N. MISSING INFORMATION REGISTER
 - C begins with "Outcome scenarios explored: N" and D begins with "Material opposing moves analysed: N". Give actual distinct counts. Every outcome has scenario, qualitative likelihood, confidence, trigger, first-order result, second-order result and preparation. Every opponent move has objective, trigger, indicators, likely effect and paired counter references.
 - E pairs each move with a range of counters, each showing timing, prerequisites/evidence, advantage, risk/opponent reply and second-order effect. F separates both sides' evidence and witnesses/deponents. G separates the user's blind spots from opponent vulnerabilities. H explains legal/procedural/factual limits and unproven assertions. I traces event -> immediate effect -> second-order effect -> response. J gives forum-specific law/rule verification tasks without fabricated citations. K groups current and conditional moves by stage. M asks no more than six material questions.
-- Keep every card concise, direct, non-redundant and mobile-readable. Comprehensive means all material supported branches, not endless speculative lists. Never claim the system sees literally everything; state the boundary of available facts and research.
+- N is a concrete missing-information register, not a duplicate of strategic blind spots. Keep every card concise, direct, non-redundant and mobile-readable. Comprehensive means all material supported branches, not endless speculative lists. Never claim the system sees literally everything; state the boundary of available facts and research.
 
 `;
 
