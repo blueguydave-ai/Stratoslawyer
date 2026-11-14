@@ -17,9 +17,16 @@ const accountBar = document.getElementById("account-bar");
 const accountEmail = document.getElementById("account-email");
 const signOutButton = document.getElementById("sign-out");
 const workspace = document.querySelector(".workspace");
+const recoveryPanel = document.getElementById("recovery-panel");
+const recoveryForm = document.getElementById("recovery-form");
+const recoveryPassword = document.getElementById("recovery-password");
+const recoveryConfirm = document.getElementById("recovery-confirm");
+const recoverySubmit = document.getElementById("recovery-submit");
+const recoveryMessage = document.getElementById("recovery-message");
 
 let authMode = "login";
 let currentSession = null;
+let isRecoveringPassword = false;
 
 function showAuthMessage(message, isError = false) {
   authMessage.textContent = message;
@@ -39,6 +46,14 @@ function setAuthMode(mode) {
 }
 function applySession(session) {
   currentSession = session;
+  if (isRecoveringPassword) {
+    authPanel.hidden = true;
+    recoveryPanel.hidden = false;
+    workspace.hidden = true;
+    accountBar.hidden = true;
+    return;
+  }
+  recoveryPanel.hidden = true;
   const signedIn = Boolean(session?.access_token);
   authPanel.hidden = signedIn;
   workspace.hidden = !signedIn;
@@ -60,7 +75,14 @@ if (!authClient) {
     if (error) showAuthMessage(error.message, true);
     applySession(data?.session || null);
   });
-  authClient.auth.onAuthStateChange((_event, session) => applySession(session));
+  authClient.auth.onAuthStateChange((event, session) => {
+    if (event === "PASSWORD_RECOVERY") {
+      isRecoveringPassword = true;
+      recoveryMessage.textContent = "Your recovery link is valid. Choose a new password.";
+      recoveryMessage.classList.remove("is-error");
+    }
+    applySession(session);
+  });
 }
 
 authToggle.addEventListener("click", () => setAuthMode(authMode === "login" ? "register" : "login"));
@@ -96,6 +118,39 @@ authForm.addEventListener("submit", async event => {
     showAuthMessage(error.message || "Authentication failed. Please try again.", true);
   } finally {
     authSubmit.disabled = false;
+  }
+});
+
+recoveryForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!authClient) return;
+  const password = recoveryPassword.value;
+  if (password.length < 8) {
+    recoveryMessage.textContent = "Your password must be at least 8 characters.";
+    recoveryMessage.classList.add("is-error");
+    return;
+  }
+  if (password !== recoveryConfirm.value) {
+    recoveryMessage.textContent = "The passwords do not match. Please try again.";
+    recoveryMessage.classList.add("is-error");
+    recoveryConfirm.focus();
+    return;
+  }
+  recoverySubmit.disabled = true;
+  recoveryMessage.textContent = "Updating your password...";
+  recoveryMessage.classList.remove("is-error");
+  try {
+    const {error} = await authClient.auth.updateUser({password});
+    if (error) throw error;
+    isRecoveringPassword = false;
+    recoveryPanel.hidden = true;
+    applySession(currentSession);
+    showAuthMessage("Your password has been updated. You are now signed in.");
+  } catch (error) {
+    recoveryMessage.textContent = error.message || "Could not update your password. Request a fresh reset link and try again.";
+    recoveryMessage.classList.add("is-error");
+  } finally {
+    recoverySubmit.disabled = false;
   }
 });
 
