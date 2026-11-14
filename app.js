@@ -194,7 +194,45 @@ function renderAnalysis(markdown) {
     heading.append(number,title);
     const content = document.createElement("div");
     content.className = "analysis-card-content";
-    content.innerHTML = DOMPurify.sanitize(marked.parse(section.body || "_No additional detail provided._"));
+    const safeHtml = DOMPurify.sanitize(marked.parse(section.body || "_No additional detail provided._"));
+    const parsed = document.createElement("template");
+    parsed.innerHTML = safeHtml;
+
+    // Each category remains a connected briefing section; individual findings
+    // become compact tiles inside it, rather than long paragraphs in one card.
+    const insightGrid = document.createElement("div");
+    insightGrid.className = "insight-grid";
+    let subheading = null;
+    [...parsed.content.children].forEach(block => {
+      if (/^H[2-4]$/.test(block.tagName)) {
+        const label = document.createElement("div");
+        label.className = "insight-subheading";
+        label.textContent = block.textContent;
+        insightGrid.append(label);
+        subheading = label;
+        return;
+      }
+      if (block.tagName === "UL" || block.tagName === "OL") {
+        [...block.children].forEach(item => {
+          const tile = document.createElement("article");
+          tile.className = "insight-tile";
+          tile.innerHTML = item.innerHTML;
+          insightGrid.append(tile);
+        });
+        return;
+      }
+      const tile = document.createElement("article");
+      tile.className = "insight-tile";
+      tile.innerHTML = block.outerHTML;
+      insightGrid.append(tile);
+    });
+    if (!insightGrid.children.length) {
+      const tile = document.createElement("article");
+      tile.className = "insight-tile";
+      tile.textContent = "No additional detail provided.";
+      insightGrid.append(tile);
+    }
+    content.append(insightGrid);
     card.append(heading,content);
     output.append(card);
 
