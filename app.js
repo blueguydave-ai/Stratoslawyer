@@ -321,6 +321,7 @@ viewModeToggle.addEventListener("click",()=>{
   workspace.classList.toggle("focus-mode",focusVisualMode);
   results.classList.toggle("focus-mode",focusVisualMode);
   document.body.classList.toggle("focus-visual-active",focusVisualMode);
+  if(!focusVisualMode) document.querySelectorAll(".focus-slide-cue").forEach(cue=>cue.classList.remove("is-active"));
   updateViewModeControl();
   clearCardFocus();
   intakeAccordions.querySelectorAll(".intake-group").forEach(card=>card.classList.remove("is-focused","is-dimmed"));
