@@ -114,7 +114,8 @@ export default async function handler(req, res) {
   if (typeof description !== "string" || !Array.isArray(files)) {
     return jsonError(res, 400, "Invalid request format.");
   }
-  if (!description.trim() && files.length === 0) {
+  const hasCaseContext = caseContext && typeof caseContext === "object" && !Array.isArray(caseContext) && Object.values(caseContext).some(value => String(value || "").trim() && String(value).trim() !== "Not supplied");
+  if (!description.trim() && !hasCaseContext && files.length === 0) {
     return jsonError(res, 400, "Describe the matter or attach at least one supported document.");
   }
   if (files.length > 6) return jsonError(res, 400, "For this first version, attach no more than 6 files at a time.");
@@ -148,7 +149,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         system_instruction: { parts: [{ text: SYSTEM_INSTRUCTIONS }] },
         contents: [{ role: "user", parts }],
-        generationConfig: { temperature: 0.25, maxOutputTokens: 8192 }
+        generationConfig: { temperature: 0.25, maxOutputTokens: 12288 }
       }),
       signal: AbortSignal.timeout(55000)
     });
