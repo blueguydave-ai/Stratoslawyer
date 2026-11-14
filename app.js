@@ -213,6 +213,27 @@ function makeCategorySigil(index) {
 function clearCardFocus() {
   output.querySelectorAll(".is-focused,.is-dimmed").forEach(card=>card.classList.remove("is-focused","is-dimmed"));
 }
+function easeFocusScroll(progress) {
+  // Strong, smooth ease-out curve: quick response, gentle landing.
+  return 1-Math.pow(1-progress,4);
+}
+function slideCardToCenter(card,container) {
+  if(!card || !container) return;
+  const containerRect=container.getBoundingClientRect();
+  const cardRect=card.getBoundingClientRect();
+  const target=container.scrollLeft+(cardRect.left-containerRect.left)-(container.clientWidth-cardRect.width)/2;
+  const start=container.scrollLeft;
+  const distance=target-start;
+  if(prefersReducedMotion || Math.abs(distance)<2){container.scrollLeft=target;return;}
+  const duration=Math.min(880,Math.max(560,Math.abs(distance)*.72));
+  const started=performance.now();
+  const animate=now=>{
+    const progress=Math.min(1,(now-started)/duration);
+    container.scrollLeft=start+distance*easeFocusScroll(progress);
+    if(progress<1)requestAnimationFrame(animate);
+  };
+  requestAnimationFrame(animate);
+}
 function focusIntakeGroup(group) {
   if(!group || !focusVisualMode) return;
   const groups=[...intakeAccordions.querySelectorAll(".intake-group")];
@@ -220,13 +241,13 @@ function focusIntakeGroup(group) {
     card.classList.toggle("is-focused",card===group);
     card.classList.toggle("is-dimmed",card!==group);
   });
-  group.scrollIntoView({behavior:prefersReducedMotion?"auto":"smooth",block:"nearest",inline:"center"});
+  slideCardToCenter(group,intakeAccordions);
 }
 function setFocusedCard(target) {
   if(!results.classList.contains("focus-mode")) return;
   const category=target.closest(".analysis-card");
   if(!category) return;
-  category.scrollIntoView({behavior:prefersReducedMotion?"auto":"smooth",block:"nearest",inline:"center"});
+  slideCardToCenter(category,output);
   output.querySelectorAll(".analysis-card").forEach(card=>{
     card.classList.toggle("is-focused",card===category);
     card.classList.toggle("is-dimmed",card!==category);
