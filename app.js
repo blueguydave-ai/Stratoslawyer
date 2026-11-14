@@ -101,7 +101,7 @@ function observeScrollElements(elements) {
   const candidates = [...new Set(elements)].filter(element =>
     element instanceof HTMLElement &&
     !element.matches("script,style,template,[hidden]") &&
-    element.getClientRects().length
+    !element.closest("[hidden]")
   );
   if (prefersReducedMotion || !("IntersectionObserver" in window)) {
     candidates.forEach(element => element.classList.add("is-visible"));
@@ -113,7 +113,8 @@ function observeScrollElements(elements) {
         // Keep observing after exit so the entrance replays on re-entry.
         entry.target.classList.toggle("is-visible", entry.isIntersecting);
       });
-    }, {rootMargin:"0px 0px -5% 0px", threshold:0.01});
+    // Pre-reveal just before elements enter the viewport so they never pop in late.
+    }, {rootMargin:"0px 0px 28% 0px", threshold:0.01});
   }
   candidates.forEach((element,index) => {
     if (element.classList.contains("scroll-reveal")) return;
@@ -175,6 +176,8 @@ function renderAnalysis(markdown) {
     });
   }
 
+  const outputFragment = document.createDocumentFragment();
+  const navFragment = document.createDocumentFragment();
   sections.forEach((section,index) => {
     const id = "analysis-" + (slugify(section.title) || index);
     const card = document.createElement("section");
@@ -231,7 +234,7 @@ function renderAnalysis(markdown) {
     }
     content.append(insightGrid);
     card.append(heading,content);
-    output.append(card);
+    outputFragment.append(card);
 
     const link = document.createElement("button");
     link.type = "button";
@@ -242,9 +245,12 @@ function renderAnalysis(markdown) {
       nav.querySelectorAll(".analysis-nav-link").forEach(item => item.classList.remove("is-active"));
       link.classList.add("is-active");
     });
-    nav.append(link);
+    navFragment.append(link);
   });
 
+  // Commit the complete layout in one DOM write instead of forcing repeated viewport work.
+  output.append(outputFragment);
+  nav.append(navFragment);
   const cards = [...output.querySelectorAll(".analysis-card")];
   // Results are revealed immediately after renderAnalysis returns. Start observing
   // on the next frame so the cards are measured in their visible layout.
