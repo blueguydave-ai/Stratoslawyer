@@ -963,3 +963,57 @@ body.focus-visual-active .insight-tile.is-dimmed{filter:brightness(.2) saturate(
     transition:none!important;
   }
 }
+
+
+/* Exact animated centering: pause native snap only while JS owns the scroll. */
+.results.focus-mode .analysis-output.is-centering-card,
+.workspace.focus-mode .intake-accordions.is-centering-card {
+  scroll-snap-type: none !important;
+  scroll-behavior: auto !important;
+}
+.results.focus-mode .analysis-card,
+.workspace.focus-mode .intake-group {
+  scroll-snap-stop: normal;
+}
+
+/* In-card typographic focus: a small number of visual anchors, not blanket glow. */
+.insight-tile strong,
+.insight-tile b {
+  color: #f3d99f;
+  text-shadow:
+    0 0 8px rgba(220,180,105,.24),
+    0 0 18px rgba(220,180,105,.10);
+}
+.insight-tile h1,
+.insight-tile h2,
+.insight-tile h3,
+.insight-tile h4 {
+  color: #f0dfbd;
+  text-shadow: 0 0 14px rgba(200,169,110,.16);
+}
+.insight-tile blockquote {
+  border-left-color: rgba(226,190,126,.72);
+  color: #e0d1b2;
+  text-shadow: 0 0 12px rgba(200,169,110,.10);
+}
+.insight-tile li::marker {
+  color: #d8b978;
+  text-shadow: 0 0 8px rgba(220,180,105,.28);
+}
+.insight-subheading {
+  color: #e7c98e;
+  text-shadow: 0 0 12px rgba(200,169,110,.22);
+  letter-spacing: .12em;
+}
+.insight-tile.is-focused strong,
+.insight-tile.is-expanded strong {
+  text-shadow:
+    0 0 9px rgba(235,194,119,.34),
+    0 0 22px rgba(220,180,105,.15);
+}
+@media(prefers-reduced-motion:reduce) {
+  .results.focus-mode .analysis-output.is-centering-card,
+  .workspace.focus-mode .intake-accordions.is-centering-card {
+    scroll-snap-type: none !important;
+  }
+}
