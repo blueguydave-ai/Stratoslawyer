@@ -75,6 +75,7 @@ function slugify(value) {
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let scrollRevealObserver = null;
+let analysisActiveObserver = null;
 
 // Animate meaningful interface units, not every nested text node or icon.
 // This keeps observer targets and composited layers small on mobile devices.
@@ -93,7 +94,6 @@ const revealSelector = [
   ".results-warning",
   ".analysis-card",
   ".insight-tile",
-  ".analysis-nav-link",
   ".page-footer > *"
 ].join(",");
 
@@ -114,14 +114,13 @@ function observeScrollElements(elements) {
         // Keep observing after exit so the entrance replays on re-entry.
         entry.target.classList.toggle("is-visible", entry.isIntersecting);
       });
-    }, {rootMargin:"0px 0px 28% 0px", threshold:0.01});
+    }, {rootMargin:"0px 0px -6% 0px", threshold:0.05});
   }
 
   const fresh = candidates.filter(element => !element.classList.contains("scroll-reveal"));
-  fresh.forEach((element,index) => {
+  fresh.forEach(element => {
     element.classList.add("scroll-reveal");
     element.classList.remove("is-visible");
-    element.style.setProperty("--reveal-delay", "0ms");
   });
 
   // Let the browser paint the hidden starting state before observing.
@@ -156,8 +155,27 @@ function initializePageReveals() {
 }
 initializePageReveals();
 
+function addTileExpansion(tile, body) {
+  const needsExpansion = body.textContent.trim().length > 300 || body.querySelectorAll("li").length > 3;
+  if (!needsExpansion) return;
+  tile.classList.add("is-collapsible");
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "tile-expand";
+  toggle.textContent = "Expand";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.addEventListener("click", () => {
+    const expanded = tile.classList.toggle("is-expanded");
+    toggle.setAttribute("aria-expanded", String(expanded));
+    toggle.textContent = expanded ? "Collapse" : "Expand";
+  });
+  tile.append(toggle);
+}
+
 function renderAnalysis(markdown) {
   const nav = document.getElementById("analysis-nav");
+  if (analysisActiveObserver) analysisActiveObserver.disconnect();
+  if (scrollRevealObserver) output.querySelectorAll(".scroll-reveal").forEach(element => scrollRevealObserver.unobserve(element));
   nav.replaceChildren();
   output.replaceChildren();
 
@@ -166,6 +184,7 @@ function renderAnalysis(markdown) {
     fallback.className = "analysis-fallback";
     fallback.textContent = markdown;
     output.append(fallback);
+    requestAnimationFrame(() => revealAllWithin(results));
     return;
   }
 
@@ -197,7 +216,6 @@ function renderAnalysis(markdown) {
     const card = document.createElement("section");
     card.className = "analysis-card";
     card.id = id;
-    card.style.setProperty("--reveal-order", Math.min(index,12));
     const heading = document.createElement("div");
     heading.className = "analysis-card-heading";
     const number = document.createElement("span");
@@ -216,33 +234,44 @@ function renderAnalysis(markdown) {
     // become compact tiles inside it, rather than long paragraphs in one card.
     const insightGrid = document.createElement("div");
     insightGrid.className = "insight-grid";
-    let subheading = null;
+    let tileIndex = 0;
+    const layoutPattern = ["feature","half","half","wide","narrow","full"];
     [...parsed.content.children].forEach(block => {
       if (/^H[2-4]$/.test(block.tagName)) {
         const label = document.createElement("div");
         label.className = "insight-subheading";
         label.textContent = block.textContent;
         insightGrid.append(label);
-        subheading = label;
         return;
       }
       if (block.tagName === "UL" || block.tagName === "OL") {
         [...block.children].forEach(item => {
           const tile = document.createElement("article");
           tile.className = "insight-tile";
-          tile.innerHTML = item.innerHTML;
+          tile.dataset.layout = layoutPattern[tileIndex++ % layoutPattern.length];
+          const body = document.createElement("div");
+          body.className = "tile-body";
+          body.innerHTML = item.innerHTML;
+          tile.append(body);
+          addTileExpansion(tile, body);
           insightGrid.append(tile);
         });
         return;
       }
       const tile = document.createElement("article");
       tile.className = "insight-tile";
-      tile.innerHTML = block.outerHTML;
+      tile.dataset.layout = layoutPattern[tileIndex++ % layoutPattern.length];
+      const body = document.createElement("div");
+      body.className = "tile-body";
+      body.innerHTML = block.outerHTML;
+      tile.append(body);
+      addTileExpansion(tile, body);
       insightGrid.append(tile);
     });
     if (!insightGrid.children.length) {
       const tile = document.createElement("article");
       tile.className = "insight-tile";
+      tile.dataset.layout = "feature";
       tile.textContent = "No additional detail provided.";
       insightGrid.append(tile);
     }
@@ -254,6 +283,7 @@ function renderAnalysis(markdown) {
     link.type = "button";
     link.className = "analysis-nav-link" + (index===0 ? " is-active" : "");
     link.textContent = section.title;
+    link.dataset.target = id;
     link.addEventListener("click",() => {
       card.scrollIntoView({behavior:"smooth",block:"start"});
       nav.querySelectorAll(".analysis-nav-link").forEach(item => item.classList.remove("is-active"));
@@ -270,14 +300,14 @@ function renderAnalysis(markdown) {
   // on the next frame so the cards are measured in their visible layout.
   requestAnimationFrame(() => revealAllWithin(results));
   if ("IntersectionObserver" in window) {
-    const activeObserver = new IntersectionObserver(entries => {
+    analysisActiveObserver = new IntersectionObserver(entries => {
       const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
       if (!visible) return;
       nav.querySelectorAll(".analysis-nav-link").forEach(link => {
-        link.classList.toggle("is-active",link.textContent === visible.target.querySelector("h3")?.textContent);
+        link.classList.toggle("is-active",link.dataset.target === visible.target.id);
       });
     },{rootMargin:"-12% 0px -68% 0px",threshold:[0,0.12,0.35]});
-    cards.forEach(card => activeObserver.observe(card));
+    cards.forEach(card => analysisActiveObserver.observe(card));
   }
 }
 
@@ -308,6 +338,7 @@ analyzeButton.addEventListener("click", async () => {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Analysis failed. Please try again.");
     clearTimeout(stageTimer);
+    progressPanel.hidden = true;
     progressTitle.textContent = "Preparing your case intelligence...";
     progressDetail.textContent = "Outcome branches and opposing moves have been mapped against the supplied record.";
     renderAnalysis(data.analysis);
