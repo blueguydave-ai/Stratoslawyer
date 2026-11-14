@@ -176,7 +176,7 @@ analyzeButton.addEventListener("click", async () => {
     clearTimeout(stageTimer);
     progressTitle.textContent = "Preparing your case intelligence...";
     progressDetail.textContent = "The first analysis is ready.";
-    output.innerHTML = escapeHtml(data.analysis).replace(/^([A-K]\. [^\n]+)$/gm,"<strong>$1</strong>");
+    renderAnalysis(data.analysis);
     results.hidden = false;
     setTimeout(() => results.scrollIntoView({behavior:"smooth",block:"start"}),150);
   } catch(error) {
