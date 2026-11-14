@@ -42,8 +42,10 @@ function addFiles(files) {
   errorMessage.hidden = true;
   for (const file of files) {
     if (selectedFiles.length >= 6) { showError("You can attach up to 6 files per analysis."); break; }
+    const combinedSize = selectedFiles.reduce((sum,item) => sum + item.size,0) + file.size;
+    if (combinedSize > 2.7 * 1024 * 1024) { showError("The combined upload must stay below 2.7 MB in this first version."); continue; }
     if (!allowedTypes.has(file.type)) { showError(file.name + " is not supported. Use PDF, TXT, MD, JPG, PNG or WebP."); continue; }
-    if (file.size > 8 * 1024 * 1024) { showError(file.name + " is larger than 8 MB."); continue; }
+    if (file.size > 2 * 1024 * 1024) { showError(file.name + " is larger than 2 MB."); continue; }
     if (selectedFiles.some(existing => existing.name === file.name && existing.size === file.size)) continue;
     selectedFiles.push(file);
   }
