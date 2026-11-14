@@ -12,6 +12,7 @@ const authPassword = document.getElementById("auth-password");
 const authSubmit = document.getElementById("auth-submit");
 const authToggle = document.getElementById("auth-toggle");
 const forgotPassword = document.getElementById("forgot-password");
+const resendConfirmation = document.getElementById("resend-confirmation");
 const authMessage = document.getElementById("auth-message");
 const accountBar = document.getElementById("account-bar");
 const accountEmail = document.getElementById("account-email");
@@ -121,8 +122,9 @@ authForm.addEventListener("submit", async event => {
       if (data.session) {
         showAuthMessage("Account created. You're signed in.");
       } else {
-        showAuthMessage("Account created. Check your email to confirm your address, then sign in.");
         setAuthMode("login");
+        resendConfirmation.hidden = false;
+        showAuthMessage("Account created. Your email must be confirmed before you can sign in. Check your inbox and Spam/Junk, then return here to sign in.");
       }
     } else {
       const {error} = await authClient.auth.signInWithPassword({
@@ -171,6 +173,31 @@ recoveryForm.addEventListener("submit", async event => {
     recoveryMessage.classList.add("is-error");
   } finally {
     recoverySubmit.disabled = false;
+  }
+});
+
+resendConfirmation.addEventListener("click", async () => {
+  if (!authClient) return;
+  const email = authEmail.value.trim();
+  if (!email) {
+    showAuthMessage("Enter the email address you used to create your account first.", true);
+    authEmail.focus();
+    return;
+  }
+  resendConfirmation.disabled = true;
+  showAuthMessage("Sending a confirmation email...");
+  try {
+    const { error } = await authClient.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: window.location.origin + "/" }
+    });
+    if (error) throw error;
+    showAuthMessage("If this account still needs confirmation, a new confirmation email has been requested. Check your inbox and Spam/Junk.");
+  } catch (error) {
+    showAuthMessage(error.message || "Could not resend the confirmation email. Wait before trying again.", true);
+  } finally {
+    window.setTimeout(() => { resendConfirmation.disabled = false; }, 60000);
   }
 });
 
