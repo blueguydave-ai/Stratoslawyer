@@ -61,7 +61,6 @@ const waitingInsights = [
   "Do not confuse a plausible sequence with a proven sequence. A gap between events may contain the whole dispute.",
   "The strongest response may be to change the question everyone is trying to answer.",
   "Every system has a point where its formal rules meet human discretion. Learn where that boundary actually lies.",
-  "A strategy that works only if nobody reacts is not a strategy; it is a hope with steps attached.",
   "Look for the quiet dependency: the person, document, assumption or event without which the plan cannot proceed.",
   "An early concession can be intelligent when it protects something more valuable. Know the exchange rate.",
   "People reveal priorities through what they protect when resources become scarce.",
