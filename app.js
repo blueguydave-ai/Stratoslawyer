@@ -114,14 +114,27 @@ function observeScrollElements(elements) {
         // Keep observing after exit so the entrance replays on re-entry.
         entry.target.classList.toggle("is-visible", entry.isIntersecting);
       });
-    // Pre-reveal just before elements enter the viewport so they never pop in late.
     }, {rootMargin:"0px 0px 28% 0px", threshold:0.01});
   }
-  candidates.forEach((element,index) => {
-    if (element.classList.contains("scroll-reveal")) return;
+
+  const fresh = candidates.filter(element => !element.classList.contains("scroll-reveal"));
+  fresh.forEach((element,index) => {
     element.classList.add("scroll-reveal");
-    element.style.setProperty("--reveal-delay", Math.min(index % 8, 7) * 14 + "ms");
-    scrollRevealObserver.observe(element);
+    element.classList.remove("is-visible");
+    element.style.setProperty("--reveal-delay", "0ms");
+  });
+
+  // Let the browser paint the hidden starting state before observing.
+  // Otherwise an already-intersecting card can become visible in the same
+  // frame it receives its reveal class, leaving no transition to animate.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      candidates.forEach(element => {
+        if (element.isConnected && !element.closest("[hidden]")) {
+          scrollRevealObserver.observe(element);
+        }
+      });
+    });
   });
 }
 function revealAllWithin(root) {
