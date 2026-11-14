@@ -226,7 +226,8 @@ output.addEventListener("click",event=>{
   const card=event.target.closest(".analysis-card");
   setFocusedCard(tile||card);
 });
-\nfunction renderAnalysis(markdown) {
+
+function renderAnalysis(markdown) {
   const nav = document.getElementById("analysis-nav");
   if (analysisActiveObserver) analysisActiveObserver.disconnect();
   if (scrollRevealObserver) output.querySelectorAll(".scroll-reveal").forEach(element => scrollRevealObserver.unobserve(element));
