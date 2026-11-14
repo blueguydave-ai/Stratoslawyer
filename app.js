@@ -1,3 +1,134 @@
+const SUPABASE_URL = window.STRATOS_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = window.STRATOS_SUPABASE_PUBLISHABLE_KEY;
+const authClient = window.supabase?.createClient && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+  : null;
+
+const authPanel = document.getElementById("auth-panel");
+const authForm = document.getElementById("auth-form");
+const authName = document.getElementById("auth-name");
+const authEmail = document.getElementById("auth-email");
+const authPassword = document.getElementById("auth-password");
+const authSubmit = document.getElementById("auth-submit");
+const authToggle = document.getElementById("auth-toggle");
+const forgotPassword = document.getElementById("forgot-password");
+const authMessage = document.getElementById("auth-message");
+const accountBar = document.getElementById("account-bar");
+const accountEmail = document.getElementById("account-email");
+const signOutButton = document.getElementById("sign-out");
+const workspace = document.querySelector(".workspace");
+
+let authMode = "login";
+let currentSession = null;
+
+function showAuthMessage(message, isError = false) {
+  authMessage.textContent = message;
+  authMessage.classList.toggle("is-error", isError);
+}
+function setAuthMode(mode) {
+  authMode = mode;
+  const registering = mode === "register";
+  document.getElementById("auth-title").textContent = registering ? "Create your lawyer account." : "Sign in to STRATOSLAWYER.";
+  authName.hidden = !registering;
+  authName.required = registering;
+  authPassword.autocomplete = registering ? "new-password" : "current-password";
+  authSubmit.firstChild.textContent = registering ? "Create account " : "Sign in ";
+  authToggle.textContent = registering ? "Already have an account? Sign in" : "Create an account";
+  forgotPassword.hidden = registering;
+  showAuthMessage("");
+}
+function applySession(session) {
+  currentSession = session;
+  const signedIn = Boolean(session?.access_token);
+  authPanel.hidden = signedIn;
+  workspace.hidden = !signedIn;
+  accountBar.hidden = !signedIn;
+  accountEmail.textContent = signedIn ? (session.user.email || "Signed in") : "";
+  if (!signedIn) {
+    document.getElementById("progress-panel").hidden = true;
+    document.getElementById("results").hidden = true;
+  }
+}
+
+if (!authClient) {
+  showAuthMessage("The Supabase connection is not configured. Please contact the platform administrator.", true);
+  authSubmit.disabled = true;
+  authToggle.disabled = true;
+  forgotPassword.disabled = true;
+} else {
+  authClient.auth.getSession().then(({data,error}) => {
+    if (error) showAuthMessage(error.message, true);
+    applySession(data?.session || null);
+  });
+  authClient.auth.onAuthStateChange((_event, session) => applySession(session));
+}
+
+authToggle.addEventListener("click", () => setAuthMode(authMode === "login" ? "register" : "login"));
+
+authForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!authClient) return;
+  authSubmit.disabled = true;
+  showAuthMessage(authMode === "register" ? "Creating your account..." : "Signing you in...");
+  try {
+    if (authMode === "register") {
+      const {data,error} = await authClient.auth.signUp({
+        email: authEmail.value.trim(),
+        password: authPassword.value,
+        options: { data: { full_name: authName.value.trim() }, emailRedirectTo: window.location.origin + "/" }
+      });
+      if (error) throw error;
+      if (data.session) {
+        showAuthMessage("Account created. You're signed in.");
+      } else {
+        showAuthMessage("Account created. Check your email to confirm your address, then sign in.");
+        setAuthMode("login");
+      }
+    } else {
+      const {error} = await authClient.auth.signInWithPassword({
+        email: authEmail.value.trim(),
+        password: authPassword.value
+      });
+      if (error) throw error;
+      showAuthMessage("Signed in successfully.");
+    }
+  } catch (error) {
+    showAuthMessage(error.message || "Authentication failed. Please try again.", true);
+  } finally {
+    authSubmit.disabled = false;
+  }
+});
+
+forgotPassword.addEventListener("click", async () => {
+  if (!authClient) return;
+  const email = authEmail.value.trim();
+  if (!email) {
+    showAuthMessage("Enter your email address first, then choose Forgot password.", true);
+    authEmail.focus();
+    return;
+  }
+  forgotPassword.disabled = true;
+  try {
+    const {error} = await authClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/"
+    });
+    if (error) throw error;
+    showAuthMessage("If an account exists for that address, a password-reset email will be sent. Follow its instructions.");
+  } catch (error) {
+    showAuthMessage(error.message || "Could not request a password reset.", true);
+  } finally {
+    forgotPassword.disabled = false;
+  }
+});
+
+signOutButton.addEventListener("click", async () => {
+  if (!authClient) return;
+  signOutButton.disabled = true;
+  const {error} = await authClient.auth.signOut();
+  signOutButton.disabled = false;
+  if (error) showAuthMessage(error.message, true);
+});
+
 const input = document.getElementById("file-input");
 const dropZone = document.getElementById("drop-zone");
 const fileList = document.getElementById("file-list");
@@ -76,6 +207,9 @@ analyzeButton.addEventListener("click", async () => {
   results.hidden = true;
   const caseText = description.value.trim();
   if (!caseText && !selectedFiles.length) { showError("Describe the matter or attach at least one supported document to begin."); return; }
+  const {data:sessionData} = await authClient.auth.getSession();
+  const accessToken = sessionData?.session?.access_token;
+  if (!accessToken) { applySession(null); showError("Your session has expired. Please sign in again."); return; }
   analyzeButton.disabled = true;
   analyzeButton.querySelector("span:first-child").textContent = "Analysing...";
   progressPanel.hidden = false;
@@ -90,7 +224,7 @@ analyzeButton.addEventListener("click", async () => {
     const files = await Promise.all(selectedFiles.map(async file => ({name:file.name,mimeType:file.type,data:await fileAsDataUrl(file)})));
     const response = await fetch("/api/analyze",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{"Content-Type":"application/json","Authorization":"Bearer " + accessToken},
       body:JSON.stringify({description:caseText,files})
     });
     const data = await response.json().catch(() => ({}));
