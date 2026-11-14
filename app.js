@@ -185,7 +185,7 @@ forgotPassword.addEventListener("click", async () => {
   forgotPassword.disabled = true;
   try {
     const {error} = await authClient.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + "/"
+      redirectTo: window.location.origin + "/?mode=recovery"
     });
     if (error) throw error;
     showAuthMessage("If an account exists for that address, a password-reset email will be sent. Follow its instructions.");
