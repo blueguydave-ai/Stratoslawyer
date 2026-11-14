@@ -176,13 +176,25 @@ function addTileExpansion(tile, body) {
   const needsExpansion = body.textContent.trim().length > 0;
   if (!needsExpansion) return;
   tile.classList.add("is-collapsible");
+  body.style.maxHeight = "112px";
   const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.className = "tile-expand";
   toggle.textContent = "Explore details";
   toggle.setAttribute("aria-expanded", "false");
   toggle.addEventListener("click", () => {
-    const expanded = tile.classList.toggle("is-expanded");
+    const expanded = !tile.classList.contains("is-expanded");
+    if (expanded) {
+      tile.classList.add("is-expanded");
+      body.style.maxHeight = body.scrollHeight + "px";
+    } else {
+      // Start from the current rendered height, then ease back to the compact height.
+      body.style.maxHeight = body.getBoundingClientRect().height + "px";
+      requestAnimationFrame(() => {
+        tile.classList.remove("is-expanded");
+        body.style.maxHeight = "112px";
+      });
+    }
     toggle.setAttribute("aria-expanded", String(expanded));
     toggle.textContent = expanded ? "Show less" : "Explore details";
   });
@@ -213,26 +225,30 @@ function makeCategorySigil(index) {
 function clearCardFocus() {
   output.querySelectorAll(".is-focused,.is-dimmed").forEach(card=>card.classList.remove("is-focused","is-dimmed"));
 }
+const focusScrollFrames = new WeakMap();
 function easeFocusScroll(progress) {
-  // Strong, smooth ease-out curve: quick response, gentle landing.
-  return 1-Math.pow(1-progress,4);
+  // Quintic ease-out: decisive movement with a soft, controlled landing.
+  return 1-Math.pow(1-progress,5);
 }
 function slideCardToCenter(card,container) {
   if(!card || !container) return;
+  const previousFrame=focusScrollFrames.get(container);
+  if(previousFrame) cancelAnimationFrame(previousFrame);
   const containerRect=container.getBoundingClientRect();
   const cardRect=card.getBoundingClientRect();
   const target=container.scrollLeft+(cardRect.left-containerRect.left)-(container.clientWidth-cardRect.width)/2;
   const start=container.scrollLeft;
   const distance=target-start;
   if(prefersReducedMotion || Math.abs(distance)<2){container.scrollLeft=target;return;}
-  const duration=Math.min(880,Math.max(560,Math.abs(distance)*.72));
+  const duration=Math.min(1050,Math.max(620,Math.abs(distance)*.9));
   const started=performance.now();
   const animate=now=>{
     const progress=Math.min(1,(now-started)/duration);
     container.scrollLeft=start+distance*easeFocusScroll(progress);
-    if(progress<1)requestAnimationFrame(animate);
+    if(progress<1) focusScrollFrames.set(container,requestAnimationFrame(animate));
+    else focusScrollFrames.delete(container);
   };
-  requestAnimationFrame(animate);
+  focusScrollFrames.set(container,requestAnimationFrame(animate));
 }
 function focusIntakeGroup(group) {
   if(!group || !focusVisualMode) return;
