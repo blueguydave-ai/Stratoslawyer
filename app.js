@@ -75,6 +75,30 @@ function slugify(value) {
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let scrollRevealObserver = null;
+
+// Animate meaningful interface units, not every nested text node or icon.
+// This keeps observer targets and composited layers small on mobile devices.
+const revealSelector = [
+  ".topbar > *",
+  ".intro > *",
+  ".workspace > *",
+  ".intake-group",
+  ".intake-group > summary",
+  ".intake-field",
+  ".evidence-panel",
+  ".freeform-wrap",
+  ".upload-zone",
+  ".file-item",
+  ".intake-footer > *",
+  ".error-message",
+  ".progress-panel > *",
+  ".results-heading > *",
+  ".results-warning",
+  ".analysis-card",
+  ".analysis-nav-link",
+  ".page-footer > *"
+].join(",");
+
 function observeScrollElements(elements) {
   if (!elements?.length) return;
   const candidates = [...new Set(elements)].filter(element =>
@@ -89,7 +113,7 @@ function observeScrollElements(elements) {
   if (!scrollRevealObserver) {
     scrollRevealObserver = new IntersectionObserver(entries => {
       entries.forEach(entry => {
-        // Reversing visibility replays the entrance every time the element returns.
+        // Keep observing after exit so the entrance replays on re-entry.
         entry.target.classList.toggle("is-visible", entry.isIntersecting);
       });
     }, {rootMargin:"0px 0px -5% 0px", threshold:0.01});
@@ -97,16 +121,19 @@ function observeScrollElements(elements) {
   candidates.forEach((element,index) => {
     if (element.classList.contains("scroll-reveal")) return;
     element.classList.add("scroll-reveal");
-    element.style.setProperty("--reveal-delay", Math.min(index % 14, 10) * 18 + "ms");
+    element.style.setProperty("--reveal-delay", Math.min(index % 8, 7) * 14 + "ms");
     scrollRevealObserver.observe(element);
   });
 }
 function revealAllWithin(root) {
   if (!root) return;
-  observeScrollElements([root, ...root.querySelectorAll("*")]);
+  const targets = [];
+  if (root instanceof HTMLElement && root.matches(revealSelector)) targets.push(root);
+  if (root.querySelectorAll) targets.push(...root.querySelectorAll(revealSelector));
+  observeScrollElements(targets);
 }
 function initializePageReveals() {
-  // Every rendered interface element participates, not just the large panels.
+  // Observe only purposeful visual units; nested copy and icons animate with their parent.
   revealAllWithin(document.querySelector(".topbar"));
   revealAllWithin(document.querySelector(".shell"));
   document.querySelectorAll(".intake-group").forEach(group => {
