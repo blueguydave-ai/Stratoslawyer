@@ -444,3 +444,29 @@ body::after {
     will-change: auto;
   }
 }
+
+
+/* PERFORMANCE: avoid permanent GPU layers for every animated element. */
+.scroll-reveal,
+.analysis-card {
+  will-change: auto;
+}
+/* Keep the cinematic entrance lightweight: opacity + transform only. */
+.scroll-reveal,
+.analysis-card {
+  filter: none !important;
+  transition-property: opacity, transform;
+}
+.scroll-reveal.is-visible,
+.analysis-card.is-visible {
+  filter: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .scroll-reveal.is-visible,
+  .analysis-card,
+  .analysis-card.is-visible {
+    transition: none !important;
+    will-change: auto !important;
+  }
+}
