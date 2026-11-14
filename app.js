@@ -87,8 +87,8 @@ function renderAnalysis(markdown) {
 
   marked.setOptions({ gfm:true, breaks:false, headerIds:false, mangle:false });
   const normalized = markdown
-    .replace(/^([A-M]\.\s+.+)$/gm, "## $1")
-    .replace(/^\*\*([A-M]\.\s+.+?)\*\*$/gm, "## $1");
+    .replace(/^([A-N]\.\s+.+)$/gm, "## $1")
+    .replace(/^\*\*([A-N]\.\s+.+?)\*\*$/gm, "## $1");
   const headingPattern = /^##\s+(.+)$/gm;
   const matches = [...normalized.matchAll(headingPattern)];
   const sections = [];
@@ -138,29 +138,24 @@ function renderAnalysis(markdown) {
     nav.append(link);
   });
 
+  const cards = [...output.querySelectorAll(".analysis-card")];
   if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        }
-      });
-    },{rootMargin:"0px 0px -5% 0px",threshold:0.04});
-    output.querySelectorAll(".analysis-card").forEach(card => observer.observe(card));
+    requestAnimationFrame(() => {
+      const revealObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => entry.target.classList.toggle("is-visible", entry.isIntersecting));
+      },{rootMargin:"0px 0px -8% 0px",threshold:[0,0.04,0.18]});
+      cards.forEach(card => revealObserver.observe(card));
+      const activeObserver = new IntersectionObserver(entries => {
+        const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
+        if (!visible) return;
+        nav.querySelectorAll(".analysis-nav-link").forEach(link => {
+          link.classList.toggle("is-active",link.textContent === visible.target.querySelector("h3")?.textContent);
+        });
+      },{rootMargin:"-12% 0px -68% 0px",threshold:[0,0.12,0.35]});
+      cards.forEach(card => activeObserver.observe(card));
+    });
   } else {
-    output.querySelectorAll(".analysis-card").forEach(card => card.classList.add("is-visible"));
-  }
-  if ("IntersectionObserver" in window) {
-
-    const activeObserver = new IntersectionObserver(entries => {
-      const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
-      if (!visible) return;
-      nav.querySelectorAll(".analysis-nav-link").forEach(link => {
-        link.classList.toggle("is-active",link.textContent === visible.target.querySelector("h3")?.textContent);
-      });
-    },{rootMargin:"-15% 0px -70% 0px",threshold:[0,.2,.5]});
-    output.querySelectorAll(".analysis-card").forEach(card => activeObserver.observe(card));
+    cards.forEach(card => card.classList.add("is-visible"));
   }
 }
 
