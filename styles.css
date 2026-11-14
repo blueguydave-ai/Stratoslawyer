@@ -22,7 +22,7 @@
 .analysis-nav-link:hover{color:#e9dfca;background:rgba(200,169,110,.06);transform:translateX(2px)}
 .analysis-nav-link.is-active{color:var(--gold-bright);background:rgba(200,169,110,.1);border-color:rgba(200,169,110,.2)}
 .analysis-output{min-width:0;display:grid;gap:13px;white-space:normal;overflow-wrap:anywhere}
-.analysis-card{scroll-margin-top:22px;min-width:0;padding:21px 22px;border:1px solid rgba(255,255,255,.085);border-radius:8px;background:linear-gradient(145deg,rgba(27,30,36,.86),rgba(16,19,23,.88));box-shadow:0 14px 40px rgba(0,0,0,.14);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;transform:translateY(13px);animation:analysisReveal .55s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(var(--reveal-order,0)*55ms)}
+.analysis-card{scroll-margin-top:22px;min-width:0;padding:21px 22px;border:1px solid rgba(255,255,255,.085);border-radius:8px;background:linear-gradient(145deg,rgba(27,30,36,.86),rgba(16,19,23,.88));box-shadow:0 14px 40px rgba(0,0,0,.14);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .analysis-card-heading{display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07)}
 .analysis-card-number{flex:0 0 auto;color:var(--gold);font:10px 'DM Mono',monospace;letter-spacing:1px}
 .analysis-card-heading h3{margin:0;color:#f0eee8;font:600 17px/1.35 var(--display);letter-spacing:-.3px}
@@ -48,15 +48,15 @@
 .analysis-card-content pre{overflow:auto;padding:13px;background:#090b0e;border:1px solid rgba(255,255,255,.08);border-radius:5px}
 .analysis-card-content pre code{padding:0;background:none}
 .analysis-fallback{white-space:pre-wrap;overflow-wrap:anywhere;color:#d2d4d7;font:13px/1.8 var(--font)}
-@keyframes analysisReveal{to{opacity:1;transform:translateY(0)}}
+
 @media(max-width:760px){.analysis-layout{grid-template-columns:minmax(0,1fr);gap:12px}.analysis-nav{position:relative;top:auto;display:flex;gap:6px;max-height:none;overflow-x:auto;white-space:nowrap;padding:7px;scrollbar-width:thin}.analysis-nav-link{flex:0 0 auto;text-align:center;padding:9px 11px}.analysis-card{padding:17px 15px}.analysis-card-heading h3{font-size:15px}.analysis-card-content{font-size:12px;line-height:1.8}.analysis-card-content table{font-size:10px}}
-@media(prefers-reduced-motion:reduce){.analysis-card{opacity:1;transform:none;animation:none}.analysis-nav-link,.primary-button{transition:none;transform:none!important}}
+@media(prefers-reduced-motion:reduce){.analysis-card{}.analysis-nav-link,.primary-button{transition:none;transform:none!important}}
 
 
 /* STRATOS-style scroll choreography and concise intelligence cards */
 .analysis-output{gap:16px}
-.analysis-card{opacity:0;transform:translate3d(0,34px,0) scale(.985);filter:blur(3px);transition:opacity .7s cubic-bezier(.2,.75,.25,1),transform .75s cubic-bezier(.2,.75,.25,1),filter .75s ease;animation:none}
-.analysis-card.is-visible{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}
+.analysis-card{}
+.analysis-card.is-visible{}
 .analysis-card-heading{position:relative}
 .analysis-card-number{display:grid;place-items:center;width:29px;height:29px;border:1px solid rgba(200,169,110,.28);border-radius:9px;background:linear-gradient(145deg,rgba(200,169,110,.13),rgba(200,169,110,.025));font-size:9px}
 .analysis-card-content{font-size:12.5px;line-height:1.72;color:#c3c8cf}
@@ -71,7 +71,7 @@
 .analysis-card:hover{border-color:rgba(200,169,110,.22);box-shadow:0 18px 52px rgba(0,0,0,.23),inset 0 1px rgba(255,255,255,.025)}
 .analysis-nav{box-shadow:0 12px 38px rgba(0,0,0,.18)}
 .analysis-nav-link.is-active{box-shadow:inset 2px 0 var(--gold)}
-@media(prefers-reduced-motion:reduce){.analysis-card,.analysis-card.is-visible{opacity:1;transform:none;filter:none;transition:none}}
+@media(prefers-reduced-motion:reduce){.analysis-card,.analysis-card.is-visible{}}
 
 
 /* Structured litigation intake */
@@ -166,15 +166,13 @@ body::before{
   box-shadow:0 18px 48px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.065),inset 0 -1px 0 rgba(255,255,255,.018);
   backdrop-filter:blur(24px) saturate(150%);
   -webkit-backdrop-filter:blur(24px) saturate(150%);
-  transition:opacity .72s cubic-bezier(.2,.75,.25,1),transform .78s cubic-bezier(.2,.75,.25,1),filter .78s ease,border-color .35s,box-shadow .35s;
 }
 .analysis-card::after{
   content:"";position:absolute;top:0;left:7%;right:7%;height:1px;pointer-events:none;
   background:linear-gradient(90deg,transparent,rgba(239,218,181,.36),rgba(169,198,224,.18),transparent);
 }
-.analysis-card.is-visible{transform:translate3d(0,0,0) scale(1);filter:blur(0);opacity:1}
+.analysis-card.is-visible{}
 .analysis-card:hover{
-  transform:translate3d(0,-3px,0) scale(1.002);
   border-color:rgba(222,198,153,.3);
   box-shadow:0 24px 60px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.09);
 }
@@ -226,42 +224,27 @@ body::before{
 .secondary-button{background:rgba(255,255,255,.025);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 /* Every major section replays its reveal whenever it re-enters the viewport. */
 .scroll-reveal{
-  opacity:0;transform:translate3d(0,24px,0);filter:blur(2px);
-  transition:opacity .72s cubic-bezier(.2,.75,.25,1),transform .78s cubic-bezier(.2,.75,.25,1),filter .78s ease;
 }
-.scroll-reveal.is-visible{opacity:1;transform:translate3d(0,0,0);filter:blur(0)}
+.scroll-reveal.is-visible{}
 @media(max-width:760px){
   .workspace,.progress-panel,.results,.auth-panel{backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%)}
   .analysis-card{backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%)}
-  .analysis-card:hover{transform:none}
+  .analysis-card:hover{}
 }
 @media(prefers-reduced-motion:reduce){
-  .scroll-reveal,.scroll-reveal.is-visible,.analysis-card,.analysis-card.is-visible{opacity:1;transform:none;filter:none;transition:none}
+  .scroll-reveal,.scroll-reveal.is-visible,.analysis-card,.analysis-card.is-visible{}
 }
 
 /* FINAL MOTION + VIGNETTE PASS
    Scroll entrances use opacity only for visibility: no blur filters. */
 .analysis-card,
 .scroll-reveal {
-  opacity: 0;
-  transform: translate3d(0, 22px, 0);
-  filter: none !important;
-  transition:
-    opacity .78s cubic-bezier(.2,.75,.25,1),
-    transform .82s cubic-bezier(.2,.75,.25,1),
-    border-color .35s ease,
-    box-shadow .35s ease;
-  will-change: opacity, transform;
 }
 .analysis-card.is-visible,
 .scroll-reveal.is-visible {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-  filter: none !important;
 }
 /* Keep hover lift separate from the reveal state. */
 .analysis-card.is-visible:hover {
-  transform: translate3d(0, -3px, 0) scale(1.002);
 }
 /* Cinematic edge falloff: darker corners, clear centre, no interaction blocking. */
 body::after {
@@ -278,18 +261,13 @@ body::after {
     linear-gradient(180deg, rgba(1,3,7,.12), transparent 22%, transparent 76%, rgba(1,3,7,.2));
 }
 @media (max-width: 760px) {
-  .analysis-card.is-visible:hover { transform: translate3d(0,0,0); }
+  .analysis-card.is-visible:hover { }
 }
 @media (prefers-reduced-motion: reduce) {
   .analysis-card,
   .analysis-card.is-visible,
   .scroll-reveal,
   .scroll-reveal.is-visible {
-    opacity: 1;
-    transform: none;
-    filter: none !important;
-    transition: none;
-    will-change: auto;
   }
 }
 
@@ -318,19 +296,8 @@ body::after {
 
 /* Fine-grained continuous reveal: all visible interface elements, opacity only. */
 .scroll-reveal {
-  opacity: 0;
-  transform: translate3d(0, 16px, 0);
-  filter: none !important;
-  transition:
-    opacity .68s cubic-bezier(.2,.75,.25,1),
-    transform .72s cubic-bezier(.2,.75,.25,1);
-  transition-delay: var(--reveal-delay, 0ms);
-  will-change: opacity, transform;
 }
 .scroll-reveal.is-visible {
-  opacity: 1;
-  transform: translate3d(0,0,0);
-  filter: none !important;
 }
 
 /* Typography hierarchy: one clear display level, section level, card level, then body. */
@@ -436,12 +403,6 @@ body::after {
 }
 @media (prefers-reduced-motion: reduce) {
   .scroll-reveal,.scroll-reveal.is-visible {
-    opacity: 1;
-    transform: none;
-    filter: none !important;
-    transition: none;
-    transition-delay: 0ms;
-    will-change: auto;
   }
 }
 
@@ -449,25 +410,19 @@ body::after {
 /* PERFORMANCE: avoid permanent GPU layers for every animated element. */
 .scroll-reveal,
 .analysis-card {
-  will-change: auto;
 }
 /* Keep the cinematic entrance lightweight: opacity + transform only. */
 .scroll-reveal,
 .analysis-card {
-  filter: none !important;
-  transition-property: opacity, transform;
 }
 .scroll-reveal.is-visible,
 .analysis-card.is-visible {
-  filter: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
   .scroll-reveal,
   .scroll-reveal.is-visible,
   .analysis-card,
   .analysis-card.is-visible {
-    transition: none !important;
-    will-change: auto !important;
   }
 }
 
@@ -619,9 +574,6 @@ body::after {
 /* VIEWPORT FLUIDITY: make scroll rendering cheaper without removing the reveal motion. */
 .scroll-reveal,
 .analysis-card {
-  transition-duration: .42s, .48s !important;
-  transition-delay: 0ms !important;
-  backface-visibility: hidden;
 }
 .analysis-card,
 .analysis-nav,
@@ -661,7 +613,7 @@ body::after {
 .analysis-card { contain: layout paint; }
 .insight-tile { contain: layout; }
 @media(prefers-reduced-motion:reduce) {
-  .scroll-reveal,.analysis-card { transition:none !important; }
+  .scroll-reveal,.analysis-card { }
 }
 
 
@@ -677,13 +629,10 @@ body::after {
   align-self: start;
   isolation: isolate;
   contain: layout paint;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 .analysis-card.is-visible {
-  opacity: 1;
 }
 .insight-grid {
   align-items: start;
@@ -695,19 +644,8 @@ body::after {
   min-width: 0;
   isolation: isolate;
   contain: layout paint;
-  opacity: 0;
-  transform: translate3d(0, 15px, 0);
-  transition: opacity .62s cubic-bezier(.2,.75,.25,1),
-              transform .68s cubic-bezier(.2,.75,.25,1),
-              border-color .3s ease,
-              background .3s ease;
-  transition-delay: 0ms;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 .insight-tile.is-visible {
-  opacity: 1;
-  transform: translate3d(0,0,0);
 }
 .insight-tile:hover {
   border-color: rgba(200,169,110,.25);
@@ -720,8 +658,111 @@ body::after {
 }
 @media (prefers-reduced-motion: reduce) {
   .insight-tile,.insight-tile.is-visible {
-    opacity: 1;
-    transform: none;
-    transition: none !important;
   }
+}
+
+
+/* STRATOS SCROLL SYSTEM — one lightweight reveal lifecycle for every visual unit. */
+.scroll-reveal,
+.analysis-card,
+.insight-tile {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  filter: none !important;
+  transition:
+    opacity .5s cubic-bezier(.2,.75,.25,1),
+    transform .54s cubic-bezier(.2,.75,.25,1),
+    border-color .24s ease,
+    box-shadow .24s ease;
+  transition-delay: 0ms;
+  will-change: auto;
+}
+.scroll-reveal.is-visible,
+.analysis-card.is-visible,
+.insight-tile.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  filter: none !important;
+}
+.analysis-card.is-visible:hover {
+  transform: translate3d(0, -2px, 0);
+}
+.insight-tile:hover {
+  border-color: rgba(200,169,110,.3);
+  box-shadow: 0 9px 24px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.045);
+}
+@media (max-width: 760px) {
+  .analysis-card.is-visible:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .scroll-reveal.is-visible,
+  .analysis-card,
+  .analysis-card.is-visible,
+  .insight-tile,
+  .insight-tile.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
+}
+
+/* Editorial card composition: varied widths, with a calm single-column mobile fallback. */
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: start;
+  gap: 10px;
+}
+.insight-tile[data-layout="feature"],
+.insight-tile[data-layout="full"] { grid-column: 1 / -1; }
+.insight-tile[data-layout="half"] { grid-column: span 6; }
+.insight-tile[data-layout="wide"] { grid-column: span 7; }
+.insight-tile[data-layout="narrow"] { grid-column: span 5; }
+.insight-tile.is-collapsible:not(.is-expanded) .tile-body {
+  max-height: 170px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(#000 76%, transparent);
+  mask-image: linear-gradient(#000 76%, transparent);
+}
+.tile-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  padding: 6px 9px;
+  border: 1px solid rgba(200,169,110,.25);
+  border-radius: 5px;
+  background: rgba(200,169,110,.07);
+  color: #e0c38a;
+  font: 600 10px var(--font);
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease;
+}
+.tile-expand:hover,
+.tile-expand:focus-visible {
+  background: rgba(200,169,110,.15);
+  border-color: rgba(200,169,110,.5);
+}
+.tile-expand:focus-visible,
+.analysis-nav-link:focus-visible,
+.intake-group>summary:focus-visible,
+button:focus-visible,
+.upload-zone:focus-visible {
+  outline: 2px solid rgba(224,195,138,.8);
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .insight-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+  .insight-tile[data-layout="feature"],
+  .insight-tile[data-layout="full"] { grid-column: 1 / -1; }
+  .insight-tile[data-layout="wide"],
+  .insight-tile[data-layout="narrow"],
+  .insight-tile[data-layout="half"] { grid-column: span 1; }
+}
+@media (max-width: 430px) {
+  .insight-grid { grid-template-columns: minmax(0,1fr); }
+  .insight-tile[data-layout] { grid-column: 1 / -1; }
 }
