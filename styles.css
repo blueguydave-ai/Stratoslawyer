@@ -614,3 +614,52 @@ body::after {
   .insight-grid { grid-template-columns: minmax(0,1fr); }
   .insight-tile,.insight-tile:nth-of-type(4n + 3),.insight-tile:nth-of-type(4n + 4) { grid-column: 1 / -1; }
 }
+
+
+/* VIEWPORT FLUIDITY: make scroll rendering cheaper without removing the reveal motion. */
+.scroll-reveal,
+.analysis-card {
+  transition-duration: .42s, .48s !important;
+  transition-delay: 0ms !important;
+  backface-visibility: hidden;
+}
+.analysis-card,
+.analysis-nav,
+.workspace,
+.results,
+.progress-panel,
+.auth-panel,
+.intake-group,
+.evidence-panel {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.analysis-card {
+  background: linear-gradient(112deg,rgba(30,40,51,.97),rgba(13,19,27,.97) 58%,rgba(20,25,31,.97));
+  box-shadow: 0 10px 26px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.055);
+}
+.insight-tile {
+  background: linear-gradient(135deg,rgba(35,45,57,.94),rgba(12,18,26,.96));
+  box-shadow: inset 0 1px rgba(255,255,255,.035);
+}
+.analysis-nav {
+  background: rgba(10,15,22,.96);
+  box-shadow: 0 8px 22px rgba(0,0,0,.2);
+}
+.workspace,.results,.progress-panel,.auth-panel,.intake-group,.evidence-panel {
+  box-shadow: 0 12px 32px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.045);
+}
+@media(max-width:760px) {
+  .analysis-card,.insight-tile,.analysis-nav,.workspace,.results,.progress-panel,
+  .auth-panel,.intake-group,.evidence-panel {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .analysis-card { box-shadow: 0 7px 18px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.045); }
+}
+/* Keep the viewport responsive when a section contains many findings. */
+.analysis-card { contain: layout paint; }
+.insight-tile { contain: layout; }
+@media(prefers-reduced-motion:reduce) {
+  .scroll-reveal,.analysis-card { transition:none !important; }
+}
