@@ -542,3 +542,75 @@ body::after {
   .insight-tile { padding: 11px 12px; }
   .insight-tile p,.insight-tile li { font-size: 11.5px; }
 }
+
+
+/* 2026 refinement: broader clear centre, deeper cinematic edge falloff. */
+body::after {
+  background:
+    radial-gradient(ellipse 158% 142% at 50% 44%,
+      rgba(0,0,0,0) 25%,
+      rgba(1,3,7,.17) 57%,
+      rgba(1,2,5,.58) 91%,
+      rgba(0,1,4,.88) 128%),
+    linear-gradient(180deg,rgba(0,1,4,.16),transparent 24%,transparent 76%,rgba(0,1,4,.3));
+}
+
+/* Faster first paint and less work per viewport: glass remains, costly blur is restrained. */
+.analysis-nav,.analysis-card,.workspace,.results,.progress-panel,.auth-panel,
+.intake-group,.evidence-panel {
+  -webkit-backdrop-filter: blur(9px) saturate(125%);
+  backdrop-filter: blur(9px) saturate(125%);
+}
+@media(max-width:760px) {
+  .analysis-nav,.analysis-card,.workspace,.results,.progress-panel,.auth-panel,
+  .intake-group,.evidence-panel {
+    -webkit-backdrop-filter: blur(6px) saturate(118%);
+    backdrop-filter: blur(6px) saturate(118%);
+  }
+}
+
+/* Alternate intelligence layout: numbered rail + editorial feature tiles + compact support tiles. */
+.analysis-card {
+  border-radius: 15px;
+  background: linear-gradient(112deg,rgba(27,37,48,.78),rgba(13,19,27,.82) 58%,rgba(20,25,31,.76));
+}
+.analysis-card-heading {
+  padding: 19px 22px;
+  background: linear-gradient(100deg,rgba(200,169,110,.095),rgba(107,143,174,.045) 55%,transparent);
+}
+.analysis-card-number {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px 11px 11px 3px;
+}
+.insight-grid {
+  grid-template-columns: repeat(12,minmax(0,1fr));
+  gap: 10px;
+}
+.insight-subheading { grid-column: 1 / -1; }
+.insight-tile {
+  grid-column: span 6;
+  position: relative;
+  padding: 15px 16px 15px 18px;
+  border-radius: 11px 11px 11px 3px;
+  background: linear-gradient(135deg,rgba(255,255,255,.055),rgba(9,15,22,.35));
+  border-color: rgba(207,220,235,.13);
+}
+.insight-tile:nth-of-type(4n + 1) {
+  grid-column: span 12;
+  border-left: 2px solid rgba(200,169,110,.62);
+  background: linear-gradient(100deg,rgba(200,169,110,.085),rgba(255,255,255,.025) 48%,rgba(9,15,22,.28));
+}
+.insight-tile:nth-of-type(4n + 3) { grid-column: span 7; }
+.insight-tile:nth-of-type(4n + 4) { grid-column: span 5; }
+.insight-tile p { font-size: 12px; line-height: 1.7; }
+@media(max-width:760px) {
+  .insight-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .insight-tile { grid-column: span 1; padding: 12px 12px 12px 13px; }
+  .insight-tile:nth-of-type(4n + 1) { grid-column: 1 / -1; }
+  .insight-tile:nth-of-type(4n + 3),.insight-tile:nth-of-type(4n + 4) { grid-column: span 1; }
+}
+@media(max-width:430px) {
+  .insight-grid { grid-template-columns: minmax(0,1fr); }
+  .insight-tile,.insight-tile:nth-of-type(4n + 3),.insight-tile:nth-of-type(4n + 4) { grid-column: 1 / -1; }
+}
