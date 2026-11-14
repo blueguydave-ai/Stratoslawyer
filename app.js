@@ -2,6 +2,7 @@ const input = document.getElementById("file-input");
 const dropZone = document.getElementById("drop-zone");
 const fileList = document.getElementById("file-list");
 const description = document.getElementById("case-description");
+const intakeFieldIds = ["case-type","case-role","case-stage","court","jurisdiction","next-date","relief","opponent-conduct","own-evidence","own-witnesses","opponent-evidence","opponent-witnesses"];
 const analyzeButton = document.getElementById("analyze-button");
 const errorMessage = document.getElementById("error-message");
 const progressPanel = document.getElementById("progress-panel");
@@ -183,7 +184,7 @@ analyzeButton.addEventListener("click", async () => {
     const response = await fetch("/api/analyze",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({description:caseText,files})
+      body:JSON.stringify({description:caseText,caseContext:Object.fromEntries(intakeFieldIds.map(id => [id,document.getElementById(id)?.value?.trim() || "Not supplied"])),files})
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Analysis failed. Please try again.");
