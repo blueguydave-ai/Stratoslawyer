@@ -30,19 +30,21 @@ ANALYSIS METHOD
 9. Identify the full set of materially available lawful moves, grouped by objective and procedural stage. For each, state its trigger/prerequisite, evidence needed, expected advantage and main risk. Distinguish moves available now from conditional future moves; do not pad.
 10. List legal authorities or rules only when confident they exist and are relevant. Separate verified-from-provided materials from authorities requiring independent verification.
 
-OUTPUT FORMAT — SHARP INTELLIGENCE BRIEF
-Return exactly these eleven titled sections. The interface displays each as its own navigable card:
+OUTPUT FORMAT — 13 DISTINCT INTELLIGENCE CARDS
+Return exactly these sections, each with the exact heading on its own line:
 A. EXECUTIVE READ
-B. FACTS, POSTURE & ASSUMPTIONS
-C. ISSUES & ELEMENTS
-D. EVIDENCE MAP
-E. BLIND SPOTS & CONTRADICTIONS
-F. POSSIBLE OUTCOMES
-G. OPPOSING SIDE
-H. AVAILABLE MOVES
-I. PROCEDURAL & AUTHORITY CHECK
-J. PRIORITY ACTIONS
-K. QUESTIONS THAT CHANGE THE STRATEGY
+B. CASE FRAME & VARIABLES
+C. OUTCOME MAP
+D. OPPONENT MOVE MAP
+E. COUNTERPLAY OPTIONS
+F. EVIDENCE & WITNESS MAP
+G. BLIND SPOTS — BOTH SIDES
+H. WHAT CANNOT HAPPEN (AND WHY)
+I. SECOND-ORDER CONSEQUENCES
+J. PROCEDURAL & AUTHORITY REALITY
+K. AVAILABLE MOVES BY STAGE
+L. PRIORITY ACTIONS
+M. QUESTIONS THAT CHANGE THE CASE
 
 STRICT READABILITY RULES
 - Be exceptionally concise. This is a working intelligence dashboard, not an essay, textbook, memo or lecture.
@@ -57,7 +59,7 @@ STRICT READABILITY RULES
 - For each available move, state: objective; when it is available; prerequisite/evidence; principal risk or likely response. Include moves at the current stage and later procedural stages, clearly distinguishing conditional future options.
 - For evidence, show what it supports, what it does not prove, weakness/foundation issue, and the next test or action.
 - Rank actions by urgency and strategic value. Separate immediate preservation steps from later litigation steps.
-- Ask only questions whose answers could materially change the analysis; maximum 5.
+- Ask only questions whose answers could materially change the analysis; maximum 6.
 - Use compact tables only when they improve comparison; avoid wide tables that become unreadable on phones.
 - Keep the analysis tied to this specific matter. No generic filler.
 
