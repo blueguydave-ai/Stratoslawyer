@@ -80,18 +80,15 @@ let scrollRevealObserver = null;
 // This keeps observer targets and composited layers small on mobile devices.
 const revealSelector = [
   ".topbar > *",
-  ".intro > *",
-  ".workspace > *",
+  ".intro",
+  ".workspace",
   ".intake-group",
-  ".intake-group > summary",
-  ".intake-field",
-  ".evidence-panel",
+  ".evidence-grid",
   ".freeform-wrap",
   ".upload-zone",
-  ".file-item",
   ".intake-footer > *",
   ".error-message",
-  ".progress-panel > *",
+  ".progress-panel",
   ".results-heading > *",
   ".results-warning",
   ".analysis-card",
@@ -159,8 +156,8 @@ function renderAnalysis(markdown) {
 
   marked.setOptions({ gfm:true, breaks:false, headerIds:false, mangle:false });
   const normalized = markdown
-    .replace(/^([A-N]\.\s+.+)$/gm, "## $1")
-    .replace(/^\*\*([A-N]\.\s+.+?)\*\*$/gm, "## $1");
+    .replace(/^([A-L]\.\s+.+)$/gm, "## $1")
+    .replace(/^\*\*([A-L]\.\s+.+?)\*\*$/gm, "## $1");
   const headingPattern = /^##\s+(.+)$/gm;
   const matches = [...normalized.matchAll(headingPattern)];
   const sections = [];
