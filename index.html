@@ -32,10 +32,30 @@
         <div><div class="step-label">01 / CASE INTAKE</div><h2 id="intake-title">Let's understand your case.</h2></div>
         <span class="private-note">CORE ENGINE TEST MODE</span>
       </div>
-      <p class="helper">Start with whatever you have. You do not need to complete a long form or choose a legal category.</p>
+      <p class="helper">Give the system the case frame you know. Leave unknown fields blank; it should identify gaps rather than force assumptions.</p>
 
-      <label class="field-label" for="case-description">Describe the matter <span>OPTIONAL IF DOCUMENTS ARE ATTACHED</span></label>
-      <textarea id="case-description" rows="6" placeholder="Tell us what happened, what stage the matter has reached, which side you represent, and what you need to prepare for. Write naturally — legal terminology is not required."></textarea>
+      <div class="intake-grid">
+        <div class="intake-field"><label class="field-label" for="case-type">Case type</label><select id="case-type"><option value="">Let the system identify it</option><option>Civil / Commercial</option><option>Criminal</option><option>Constitutional / Fundamental rights</option><option>Land / Property</option><option>Family / Matrimonial</option><option>Employment / Labour</option><option>Tax / Revenue</option><option>Election petition</option><option>Administrative / Regulatory</option><option>Arbitration / ADR</option><option>Appeal</option><option>Other / Mixed</option></select></div>
+        <div class="intake-field"><label class="field-label" for="case-role">Your client's position</label><select id="case-role"><option value="">Not specified</option><option>Claimant / Plaintiff / Applicant</option><option>Defendant / Respondent</option><option>Accused person</option><option>Prosecution</option><option>Appellant</option><option>Interested party / Other</option></select></div>
+        <div class="intake-field"><label class="field-label" for="case-stage">Current procedural stage</label><select id="case-stage"><option value="">Not sure / Please infer</option><option>Pre-action / Investigation</option><option>Pre-action notice / Demand</option><option>Commencement / Filing</option><option>Service / Response</option><option>Interlocutory applications</option><option>Pleadings / Issues joined</option><option>Case management / Pre-trial</option><option>Hearing / Trial</option><option>Ruling / Judgment pending</option><option>Judgment delivered</option><option>Enforcement / Execution</option><option>Appeal</option><option>Settlement / ADR</option></select></div>
+        <div class="intake-field"><label class="field-label" for="court">Court / tribunal</label><input id="court" type="text" placeholder="e.g. High Court of Lagos State, NICN, FHC"></div>
+        <div class="intake-field"><label class="field-label" for="jurisdiction">State / judicial division</label><input id="jurisdiction" type="text" placeholder="e.g. Lagos State, Ikeja Judicial Division"></div>
+        <div class="intake-field"><label class="field-label" for="next-date">Next hearing / deadline</label><input id="next-date" type="text" placeholder="Date, event or unknown"></div>
+        <div class="intake-field"><label class="field-label" for="relief">Reliefs / charges / orders sought</label><input id="relief" type="text" placeholder="What is each side asking the court to do?"></div>
+        <div class="intake-field"><label class="field-label" for="opponent-conduct">Known opposing-party conduct</label><input id="opponent-conduct" type="text" placeholder="Applications, denials, delays, settlement position..."></div>
+      </div>
+      <div class="evidence-grid">
+        <div class="evidence-panel"><div class="evidence-title"><span>01</span><strong>Your side</strong><small>CLIENT / APPLICANT / DEFENCE</small></div>
+          <label class="field-label" for="own-evidence">Available evidence</label><textarea id="own-evidence" rows="3" placeholder="Contracts, messages, receipts, recordings, photographs, records, physical exhibits..."></textarea>
+          <label class="field-label" for="own-witnesses">Witnesses / deponents</label><textarea id="own-witnesses" rows="3" placeholder="Who can testify? What can each person prove? Any affidavit deponents?"></textarea>
+        </div>
+        <div class="evidence-panel opponent-panel"><div class="evidence-title"><span>02</span><strong>Opposing side</strong><small>KNOWN OR ANTICIPATED</small></div>
+          <label class="field-label" for="opponent-evidence">Their available evidence</label><textarea id="opponent-evidence" rows="3" placeholder="Documents, messages, records, physical evidence, material they claim to have..."></textarea>
+          <label class="field-label" for="opponent-witnesses">Their witnesses / deponents</label><textarea id="opponent-witnesses" rows="3" placeholder="Known witnesses, affidavit deponents, roles, likely testimony or credibility concerns..."></textarea>
+        </div>
+      </div>
+      <label class="field-label" for="case-description">Further details <span>ADD ANYTHING ELSE THAT MAY CHANGE THE ANALYSIS</span></label>
+      <textarea id="case-description" rows="5" placeholder="Set out the facts in your own words. Include disputed events, dates, prior proceedings, orders, settlement discussions, suspected weaknesses or questions. Legal terminology is not required."></textarea>
 
       <div class="upload-zone" id="drop-zone" tabindex="0" role="button" aria-label="Choose case documents">
         <input id="file-input" type="file" multiple accept=".pdf,.txt,.md,.jpg,.jpeg,.png,.webp,application/pdf,text/plain,image/jpeg,image/png,image/webp">
@@ -46,7 +66,7 @@
       <div id="file-list" class="file-list" aria-live="polite"></div>
 
       <div class="intake-footer">
-        <div class="footnote"><span class="spark">✳</span><span>Any case type. Any stage. Start with incomplete information.</span></div>
+        <div class="footnote"><span class="spark">✳</span><span>Optional fields. Unknowns are allowed. The system must separate facts, inferences and assumptions.</span></div>
         <button id="analyze-button" class="primary-button" type="button"><span>Analyse my case</span><span class="button-arrow">↗</span></button>
       </div>
       <div id="error-message" class="error-message" role="alert" hidden></div>
