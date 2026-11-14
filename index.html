@@ -25,7 +25,32 @@
       <p class="intro-copy">Understand the matter, expose its weak points, anticipate the other side and prepare your next move — across Nigerian legal practice.</p>
     </section>
 
-    <section class="workspace" aria-labelledby="intake-title">
+    <section id="auth-panel" class="auth-panel" aria-labelledby="auth-title">
+      <div class="step-label">LAWYER ACCESS</div>
+      <h2 id="auth-title">Sign in to STRATOSLAWYER.</h2>
+      <p class="auth-copy">Create your lawyer account or sign in to continue to your case workspace.</p>
+      <form id="auth-form">
+        <label class="field-label" for="auth-name">Full name</label>
+        <input id="auth-name" class="auth-input" type="text" autocomplete="name" placeholder="Your full name" hidden>
+        <label class="field-label" for="auth-email">Email address</label>
+        <input id="auth-email" class="auth-input" type="email" autocomplete="email" required placeholder="you@example.com">
+        <label class="field-label" for="auth-password">Password</label>
+        <input id="auth-password" class="auth-input" type="password" autocomplete="current-password" required minlength="8" placeholder="At least 8 characters">
+        <button id="auth-submit" class="primary-button auth-submit" type="submit">Sign in <span class="button-arrow">↗</span></button>
+      </form>
+      <div class="auth-actions">
+        <button id="auth-toggle" class="text-button" type="button">Create an account</button>
+        <button id="forgot-password" class="text-button" type="button">Forgot password?</button>
+      </div>
+      <div id="auth-message" class="auth-message" role="status" aria-live="polite"></div>
+    </section>
+
+    <div id="account-bar" class="account-bar" hidden>
+      <span id="account-email"></span>
+      <button id="sign-out" class="secondary-button" type="button">Sign out</button>
+    </div>
+
+    <section class="workspace" aria-labelledby="intake-title" hidden>
       <div class="section-head">
         <div><div class="step-label">01 / CASE INTAKE</div><h2 id="intake-title">Let's understand your case.</h2></div>
         <span class="private-note"><span class="lock">⌑</span> PRIVATE SESSION</span>
@@ -66,6 +91,6 @@
 
     <footer class="page-footer"><span>STRATOSLAWYER</span><span>BUILT FOR THE COMPLEXITY OF NIGERIAN PRACTICE</span></footer>
   </main>
-  <script src="/app.js" defer></script>
+  <script src="/supabase-config.js"></script>\n  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>\n  <script src="/app.js" defer></script>
 </body>
 </html>
