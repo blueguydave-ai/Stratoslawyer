@@ -168,7 +168,8 @@ analyzeButton.addEventListener("click", async () => {
   errorMessage.hidden = true;
   results.hidden = true;
   const caseText = description.value.trim();
-  if (!caseText && !selectedFiles.length) { showError("Describe the matter or attach at least one supported document to begin."); return; }
+  const hasStructuredContext = intakeFieldIds.some(id => (document.getElementById(id)?.value || "").trim());
+  if (!caseText && !hasStructuredContext && !selectedFiles.length) { showError("Add a few case details or attach at least one supported document to begin."); return; }
   analyzeButton.disabled = true;
   analyzeButton.querySelector("span:first-child").textContent = "Analysing...";
   progressPanel.hidden = false;
