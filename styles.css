@@ -1017,3 +1017,81 @@ body.focus-visual-active .insight-tile.is-dimmed{filter:brightness(.2) saturate(
     scroll-snap-type: none !important;
   }
 }
+
+
+/* Smooth, measurable tile expansion. The JS sets explicit start/end heights,
+   then releases the expanded height after the transition for responsive reflow. */
+.insight-tile.is-collapsible .tile-body {
+  overflow: hidden;
+  transition: max-height .86s cubic-bezier(.22,1,.36,1) !important;
+  will-change: max-height;
+}
+.insight-tile.is-collapsible.is-expanded .tile-body {
+  -webkit-mask-image: linear-gradient(#000 100%,#000 100%);
+  mask-image: linear-gradient(#000 100%,#000 100%);
+}
+
+/* Quiet directional cue: stays above the vignette and is never dimmed with cards. */
+.workspace { position: relative; }
+.analysis-layout { position: relative; }
+.focus-slide-cue {
+  position: absolute;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgba(218,190,137,.24);
+  border-radius: 999px;
+  background: rgba(8,11,15,.88);
+  color: rgba(231,211,173,.88);
+  box-shadow: 0 5px 18px rgba(0,0,0,.34), 0 0 16px rgba(200,169,110,.09);
+  font: 8px 'DM Mono',monospace;
+  letter-spacing: .13em;
+  text-transform: lowercase;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(5px);
+  transition: opacity .35s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility .35s;
+  filter: none !important;
+}
+.focus-slide-cue.is-active {
+  opacity: 1 !important;
+  visibility: visible;
+  transform: translateY(0);
+}
+.workspace > .focus-slide-cue {
+  right: 26px;
+  bottom: 24px;
+}
+.analysis-layout > .focus-slide-cue {
+  right: 10px;
+  bottom: 18px;
+}
+.focus-slide-cue .cue-arrow {
+  color: #e4c58d;
+  font: 17px/1 var(--display);
+  text-shadow: 0 0 10px rgba(224,190,126,.35);
+  animation: cueNudge 1.8s ease-in-out infinite;
+}
+.focus-slide-cue[data-direction="left"] .cue-arrow {
+  animation-name: cueNudgeLeft;
+}
+@keyframes cueNudge {
+  0%,100% { transform: translateX(0); opacity: .78; }
+  50% { transform: translateX(3px); opacity: 1; }
+}
+@keyframes cueNudgeLeft {
+  0%,100% { transform: translateX(0); opacity: .78; }
+  50% { transform: translateX(-3px); opacity: 1; }
+}
+@media (max-width: 600px) {
+  .workspace > .focus-slide-cue { right: 15px; bottom: 16px; }
+  .analysis-layout > .focus-slide-cue { right: 6px; bottom: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .insight-tile.is-collapsible .tile-body,
+  .focus-slide-cue,
+  .focus-slide-cue .cue-arrow { transition: none !important; animation: none !important; }
+}
