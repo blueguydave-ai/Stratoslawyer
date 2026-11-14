@@ -663,3 +663,65 @@ body::after {
 @media(prefers-reduced-motion:reduce) {
   .scroll-reveal,.analysis-card { transition:none !important; }
 }
+
+
+/* INDEPENDENT CONTINUOUS CARD REVEALS
+   Each parent briefing card and each finding tile owns its own reveal lifecycle. */
+.analysis-output {
+  align-items: start;
+  contain: layout style;
+}
+.analysis-card {
+  width: 100%;
+  min-width: 0;
+  align-self: start;
+  isolation: isolate;
+  contain: layout paint;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.analysis-card.is-visible {
+  opacity: 1;
+}
+.insight-grid {
+  align-items: start;
+  contain: layout style;
+}
+.insight-tile {
+  position: relative;
+  align-self: start;
+  min-width: 0;
+  isolation: isolate;
+  contain: layout paint;
+  opacity: 0;
+  transform: translate3d(0, 15px, 0);
+  transition: opacity .62s cubic-bezier(.2,.75,.25,1),
+              transform .68s cubic-bezier(.2,.75,.25,1),
+              border-color .3s ease,
+              background .3s ease;
+  transition-delay: 0ms;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.insight-tile.is-visible {
+  opacity: 1;
+  transform: translate3d(0,0,0);
+}
+.insight-tile:hover {
+  border-color: rgba(200,169,110,.25);
+  background: linear-gradient(145deg,rgba(200,169,110,.065),rgba(7,11,16,.3));
+}
+@media (max-width: 640px) {
+  .analysis-card { contain: layout paint; }
+  .insight-grid { grid-template-columns: minmax(0,1fr); gap: 8px; }
+  .insight-tile { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .insight-tile,.insight-tile.is-visible {
+    opacity: 1;
+    transform: none;
+    transition: none !important;
+  }
+}
