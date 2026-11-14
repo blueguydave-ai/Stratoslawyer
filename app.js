@@ -1,4 +1,24 @@
 const input = document.getElementById("file-input");
+// Persistent app-wide light/dark appearance control.
+const themeToggle=document.getElementById("theme-toggle");
+function applyTheme(theme){
+  const light=theme==="light";
+  document.documentElement.dataset.theme=light?"light":"dark";
+  document.documentElement.style.colorScheme=light?"light":"dark";
+  themeToggle.setAttribute("aria-pressed",String(light));
+  themeToggle.setAttribute("aria-label",light?"Switch to dark mode":"Switch to light mode");
+  themeToggle.querySelector(".theme-label").textContent=light?"Dark mode":"Light mode";
+  themeToggle.querySelector(".theme-glyph").textContent=light?"☾":"☼";
+}
+let savedTheme="dark";
+try{savedTheme=localStorage.getItem("stratos-theme")==="light"?"light":"dark";}catch(error){}
+applyTheme(savedTheme);
+themeToggle.addEventListener("click",()=>{
+  const next=document.documentElement.dataset.theme==="light"?"dark":"light";
+  applyTheme(next);
+  try{localStorage.setItem("stratos-theme",next);}catch(error){}
+});
+
 const dropZone = document.getElementById("drop-zone");
 const fileList = document.getElementById("file-list");
 const description = document.getElementById("case-description");
