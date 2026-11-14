@@ -57,6 +57,27 @@ export default async function handler(req, res) {
     return jsonError(res, 405, "Method not allowed.");
   }
 
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const authorization = req.headers.authorization || "";
+  const accessToken = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+  if (!supabaseUrl || !supabasePublishableKey) {
+    return jsonError(res, 503, "Authentication service is not configured. Add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in Vercel.");
+  }
+  if (!accessToken) return jsonError(res, 401, "Please sign in before analysing a case.");
+  try {
+    const authResponse = await fetch(supabaseUrl.replace(/\/$/, "") + "/auth/v1/user", {
+      headers: { apikey: supabasePublishableKey, Authorization: "Bearer " + accessToken }
+    });
+    if (!authResponse.ok) return jsonError(res, 401, "Your session is invalid or expired. Please sign in again.");
+  } catch {
+    return jsonError(res, 502, "Could not verify your sign-in session. Please try again.");
+  }
+
+    res.setHeader("Allow", "POST");
+    return jsonError(res, 405, "Method not allowed.");
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return jsonError(res, 503, "The analysis service is not configured yet. Add GEMINI_API_KEY in Vercel environment variables.");
 
