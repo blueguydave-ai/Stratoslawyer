@@ -147,6 +147,10 @@ function renderAnalysis(markdown) {
       });
     },{rootMargin:"0px 0px -9% 0px",threshold:0.08});
     output.querySelectorAll(".analysis-card").forEach(card => observer.observe(card));
+  } else {
+    output.querySelectorAll(".analysis-card").forEach(card => card.classList.add("is-visible"));
+  }
+  if ("IntersectionObserver" in window) {
 
     const activeObserver = new IntersectionObserver(entries => {
       const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
