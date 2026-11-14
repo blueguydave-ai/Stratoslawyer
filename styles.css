@@ -51,3 +51,24 @@
 @keyframes analysisReveal{to{opacity:1;transform:translateY(0)}}
 @media(max-width:760px){.analysis-layout{grid-template-columns:minmax(0,1fr);gap:12px}.analysis-nav{position:relative;top:auto;display:flex;gap:6px;max-height:none;overflow-x:auto;white-space:nowrap;padding:7px;scrollbar-width:thin}.analysis-nav-link{flex:0 0 auto;text-align:center;padding:9px 11px}.analysis-card{padding:17px 15px}.analysis-card-heading h3{font-size:15px}.analysis-card-content{font-size:12px;line-height:1.8}.analysis-card-content table{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.analysis-card{opacity:1;transform:none;animation:none}.analysis-nav-link,.primary-button{transition:none;transform:none!important}}
+
+
+/* STRATOS-style scroll choreography and concise intelligence cards */
+.analysis-output{gap:16px}
+.analysis-card{opacity:0;transform:translate3d(0,34px,0) scale(.985);filter:blur(3px);transition:opacity .7s cubic-bezier(.2,.75,.25,1),transform .75s cubic-bezier(.2,.75,.25,1),filter .75s ease;animation:none}
+.analysis-card.is-visible{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}
+.analysis-card-heading{position:relative}
+.analysis-card-number{display:grid;place-items:center;width:29px;height:29px;border:1px solid rgba(200,169,110,.28);border-radius:9px;background:linear-gradient(145deg,rgba(200,169,110,.13),rgba(200,169,110,.025));font-size:9px}
+.analysis-card-content{font-size:12.5px;line-height:1.72;color:#c3c8cf}
+.analysis-card-content p{margin:0 0 9px}
+.analysis-card-content ul,.analysis-card-content ol{margin:7px 0 11px;padding-left:19px}
+.analysis-card-content li{margin:3px 0;padding-left:3px}
+.analysis-card-content h2,.analysis-card-content h3,.analysis-card-content h4{margin:15px 0 7px;font-size:13px;letter-spacing:.1px}
+.analysis-card-content h2:first-child,.analysis-card-content h3:first-child,.analysis-card-content h4:first-child{margin-top:0}
+.analysis-card-content strong{color:#f0dfbd}
+.analysis-card-content blockquote{font-size:12px}
+.analysis-card-content table{margin:10px 0 13px}
+.analysis-card:hover{border-color:rgba(200,169,110,.22);box-shadow:0 18px 52px rgba(0,0,0,.23),inset 0 1px rgba(255,255,255,.025)}
+.analysis-nav{box-shadow:0 12px 38px rgba(0,0,0,.18)}
+.analysis-nav-link.is-active{box-shadow:inset 2px 0 var(--gold)}
+@media(prefers-reduced-motion:reduce){.analysis-card,.analysis-card.is-visible{opacity:1;transform:none;filter:none;transition:none}}
