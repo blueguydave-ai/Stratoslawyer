@@ -541,6 +541,54 @@ output.addEventListener("click",event=>{
   setFocusedCard(tile||card);
 });
 
+
+function renderStructuredChart(block) {
+  const code = block.querySelector("code");
+  if (!code || !code.classList.contains("language-stratos-chart")) return null;
+  let chart;
+  try { chart = JSON.parse(code.textContent.trim()); } catch (error) { return null; }
+  if (!chart || !["bar","timeline"].includes(chart.type)) return null;
+  const figure = document.createElement("figure");
+  figure.className = "stratos-chart";
+  const heading = document.createElement("figcaption");
+  heading.className = "stratos-chart-title";
+  heading.textContent = String(chart.title || (chart.type === "bar" ? "Comparison" : "Procedural sequence")).slice(0,120);
+  figure.append(heading);
+  if (chart.type === "bar" && Array.isArray(chart.items) && chart.items.length) {
+    const items = chart.items.slice(0,8).filter(item => item && Number.isFinite(Number(item.value)) && Number(item.value) >= 0);
+    if (!items.length) return null;
+    const max = Math.max(...items.map(item => Number(item.value)), 1);
+    const rows = document.createElement("div");
+    rows.className = "chart-bars";
+    items.forEach(item => {
+      const row = document.createElement("div"); row.className = "chart-bar-row";
+      const label = document.createElement("span"); label.className = "chart-bar-label"; label.textContent = String(item.label || "Item").slice(0,70);
+      const track = document.createElement("span"); track.className = "chart-bar-track";
+      const fill = document.createElement("span"); fill.className = "chart-bar-fill"; fill.style.width = (Number(item.value) / max * 100) + "%";
+      track.append(fill);
+      const value = document.createElement("strong"); value.className = "chart-bar-value"; value.textContent = String(item.value) + (chart.unit ? " " + String(chart.unit).slice(0,18) : "");
+      row.append(label,track,value); rows.append(row);
+    });
+    figure.append(rows);
+  } else if (chart.type === "timeline" && Array.isArray(chart.steps) && chart.steps.length) {
+    const list = document.createElement("ol"); list.className = "chart-timeline";
+    chart.steps.slice(0,8).forEach(step => {
+      const item = document.createElement("li");
+      const status = ["completed","current","conditional","unknown"].includes(step.status) ? step.status : "unknown";
+      item.dataset.status = status;
+      const name = document.createElement("strong"); name.textContent = String(step.label || "Stage").slice(0,90);
+      const detail = document.createElement("span"); detail.textContent = String(step.detail || "").slice(0,180);
+      const tag = document.createElement("small"); tag.textContent = ({completed:"Completed",current:"Current stage",conditional:"If triggered",unknown:"To confirm"})[status];
+      item.append(name,detail,tag); list.append(item);
+    });
+    figure.append(list);
+  } else return null;
+  if (chart.note) {
+    const note = document.createElement("p"); note.className = "stratos-chart-note"; note.textContent = String(chart.note).slice(0,240); figure.append(note);
+  }
+  return figure;
+}
+
 function renderAnalysis(markdown) {
   const nav = document.getElementById("analysis-nav");
   if (analysisActiveObserver) analysisActiveObserver.disconnect();
@@ -641,6 +689,21 @@ function renderAnalysis(markdown) {
       return tile;
     };
     [...parsed.content.children].forEach(block => {
+      if (block.tagName === "PRE") {
+        const chart = renderStructuredChart(block);
+        if (chart) {
+          const tile = document.createElement("article");
+          tile.className = "insight-tile chart-insight-tile";
+          const topline = document.createElement("div"); topline.className = "insight-tile-topline";
+          const label = document.createElement("span"); label.className = "insight-tile-label"; label.textContent = "VISUAL SUMMARY";
+          topline.append(label);
+          const body = document.createElement("div"); body.className = "tile-body"; body.append(chart);
+          tile.append(topline,body); insightGrid.append(tile);
+        } else {
+          insightGrid.append(makeInsightTile(block.textContent));
+        }
+        return;
+      }
       if (/^H[2-4]$/.test(block.tagName)) {
         const label = document.createElement("div");
         label.className = "insight-subheading";
