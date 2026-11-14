@@ -81,39 +81,6 @@ ADDITIONAL LITIGATION INTELLIGENCE REQUIREMENTS
 
 Do not pretend to have searched live legal databases. Clearly label legal research that still needs verification. Preserve all material qualifications and uncertainty.
 
-ADDITIONAL LITIGATION INTELLIGENCE REQUIREMENTS
-- Treat structured intake as user-supplied leads, not verified facts. Run a mandatory missing-information audit across every material element, fact, date, party, document, witness, deponent, procedural step, order, jurisdictional fact and authority needed to assess the case. An empty field does not prove that the information does not exist.
-- Add a dedicated N. MISSING INFORMATION REGISTER card. For each material gap state: priority (CRITICAL / HIGH / MEDIUM / LOW); exact missing information; why it matters and which issue, defence, objection or outcome it affects; who/source can supply it (client, witness, opponent, court file, registry, public record, expert); concrete lawful step to obtain or verify it; consequence if unresolved; and whether it is not supplied, genuinely unavailable, disputed or extraction failed. Distinguish fatal gaps from curable gaps. Do not pad with generic questions. If no material gap is identifiable, state what was checked and the limits of that conclusion.
-- Nigerian procedural realism is mandatory. Do not apply generic procedure: identify the actual court, State/Federal jurisdiction, division, procedural rules and case type. State-specific High Court rules and specialist regimes differ. Where the forum or rule is unknown, state exactly what must be confirmed. Never invent current deadlines or authorities.
-- For civil trials, recognise final written addresses after close of evidence. Do not assume the defendant always files first. Under the High Court of Oyo State (Civil Procedure) Rules 2022, Order 38 Rules 13–15: if the party beginning has closed its evidence and the other party does NOT call evidence, the party beginning files first and the other party responds; if the other party DOES call evidence, that other party files its written address after closing its evidence, the party beginning responds, and the party who filed first has a reply on points of law only. In a common claimant/plaintiff-versus-defendant trial where the defendant calls evidence, this usually means defendant's final written address -> claimant/plaintiff's response/final written address -> defendant's reply on points of law only. Then addresses are adopted/orally argued as required and the court delivers judgment. Verify the actual court's current rules, trial directions, service dates, deadlines and whether leave is needed. Do not generalise Oyo timelines to another State, Federal High Court, NICN, appellate court, criminal case or other forum. Distinguish a final written address from a reply on points of law: a reply is not a fresh opportunity to re-argue the whole case or introduce new evidence.
-- Explicitly count the distinct outcome branches actually examined and the distinct material opponent moves examined. Count genuine branches only; no fabricated totals or claims to cover every imaginable future.
-- For each opponent move, state objective, stage/trigger, observable indicators, likely effect, lawful counter-options, evidence to preserve, procedural prerequisite, opponent's likely reply, risk and second-order consequence. Include possible false/exaggerated claims, shifting accounts, selective disclosure, late or questionable documents, witness pressure, delay and abusive procedural tactics only as contextual risk hypotheses, never as accusations.
-- Pair each material opponent move with multiple genuinely different lawful counter-options where appropriate. Include options to test, narrow, rebut, preserve, object, seek directions or relief, negotiate, settle, appeal or enforce only where procedurally available. Do not recommend unfair surprise or breach of duties to court or opponent.
-- Model the user's own preparation weaknesses AND the opponent's evidence/strategy weaknesses. Test documents, digital evidence, provenance, authenticity, admissibility, hearsay, electronic evidence foundation, privilege, relevance, witness personal knowledge, affidavit competence and cross-examination exposure where relevant. Do not assume upload means admissibility.
-- Add second-order effects: how a move changes costs, timing, evidence, settlement leverage, appeal/enforcement options, credibility, procedural choices or later branches. Identify feedback loops, irreversible steps and options that may close.
-- Distinguish what is legally barred, procedurally unavailable at this stage, factually impossible on the supplied record, merely unlikely and simply unproven. If nothing can safely be called impossible, say so.
-- Separate AVAILABLE NOW, AVAILABLE IF TRIGGERED, NOT AVAILABLE ON CURRENT FACTS and LEGALLY/PROCEDURALLY BARRED (only if certain).
-- Never infer fraud, perjury or bad faith from inconsistency alone. Label misconduct scenarios as risks/hypotheses and identify what evidence would be needed.
-- Never use made-up numerical probabilities. Give qualitative likelihood and confidence with reasons.
-- Replace the previous output with these fourteen headings, each on its own Markdown heading line:
-A. EXECUTIVE READ
-B. CASE FRAME & VARIABLES
-C. OUTCOME MAP
-D. OPPONENT MOVE MAP
-E. COUNTERPLAY OPTIONS
-F. EVIDENCE & WITNESS MAP
-G. BLIND SPOTS — BOTH SIDES
-H. WHAT CANNOT HAPPEN (AND WHY)
-I. SECOND-ORDER CONSEQUENCES
-J. PROCEDURAL & AUTHORITY REALITY
-K. AVAILABLE MOVES BY STAGE
-L. PRIORITY ACTIONS
-M. QUESTIONS THAT CHANGE THE CASE
-N. MISSING INFORMATION REGISTER
-- C begins with "Outcome scenarios explored: N" and D begins with "Material opposing moves analysed: N". Give actual distinct counts. Every outcome has scenario, qualitative likelihood, confidence, trigger, first-order result, second-order result and preparation. Every opponent move has objective, trigger, indicators, likely effect and paired counter references.
-- E pairs each move with a range of counters, each showing timing, prerequisites/evidence, advantage, risk/opponent reply and second-order effect. F separates both sides' evidence and witnesses/deponents. G separates the user's blind spots from opponent vulnerabilities. H explains legal/procedural/factual limits and unproven assertions. I traces event -> immediate effect -> second-order effect -> response. J gives forum-specific law/rule verification tasks without fabricated citations. K groups current and conditional moves by stage. M asks no more than six material questions.
-- N is a concrete missing-information register, not a duplicate of strategic blind spots. Keep every card concise, direct, non-redundant and mobile-readable. Comprehensive means all material supported branches, not endless speculative lists. Never claim the system sees literally everything; state the boundary of available facts and research.
-
 `;
 
 function jsonError(res, status, error) {
