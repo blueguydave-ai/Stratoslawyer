@@ -156,7 +156,7 @@ function initializePageReveals() {
 initializePageReveals();
 
 function addTileExpansion(tile, body) {
-  const needsExpansion = body.textContent.trim().length > 75 || body.querySelectorAll("li").length > 1;
+  const needsExpansion = body.textContent.trim().length > 0;
   if (!needsExpansion) return;
   tile.classList.add("is-collapsible");
   const toggle = document.createElement("button");
@@ -200,6 +200,7 @@ function setFocusedCard(target) {
   if(!results.classList.contains("focus-mode")) return;
   const category=target.closest(".analysis-card");
   if(!category) return;
+  category.scrollIntoView({behavior:prefersReducedMotion?"auto":"smooth",block:"nearest",inline:"center"});
   output.querySelectorAll(".analysis-card").forEach(card=>{
     card.classList.toggle("is-focused",card===category);
     card.classList.toggle("is-dimmed",card!==category);
