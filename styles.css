@@ -893,3 +893,73 @@ body.focus-visual-active .insight-tile.is-dimmed{filter:brightness(.2) saturate(
   body.focus-visual-active .results.focus-mode .results-heading,
   body.focus-visual-active .results.focus-mode .results-warning{transition:none}
 }
+
+
+/* CARD MOTION + EXPANSION POLISH — controlled easing, no abrupt state changes. */
+.intake-group,
+.results.focus-mode .analysis-card,
+.results.focus-mode .insight-tile {
+  transition:
+    opacity .62s cubic-bezier(.16,1,.3,1),
+    transform .72s cubic-bezier(.16,1,.3,1),
+    border-color .42s cubic-bezier(.16,1,.3,1),
+    box-shadow .52s cubic-bezier(.16,1,.3,1),
+    filter .52s cubic-bezier(.16,1,.3,1),
+    background .48s cubic-bezier(.16,1,.3,1);
+}
+.results.focus-mode .analysis-card.is-dimmed {
+  opacity: .38;
+}
+.results.focus-mode .analysis-card.is-focused {
+  box-shadow:
+    0 24px 68px rgba(0,0,0,.42),
+    0 0 0 1px rgba(200,169,110,.13),
+    0 0 28px rgba(200,169,110,.075),
+    inset 0 1px rgba(255,255,255,.09);
+}
+.results.focus-mode .insight-tile.is-focused,
+.insight-tile.is-expanded {
+  border-color: rgba(220,190,140,.43);
+  box-shadow:
+    0 12px 30px rgba(0,0,0,.3),
+    0 0 20px rgba(200,169,110,.075),
+    inset 0 1px rgba(255,255,255,.055);
+}
+.insight-tile.is-collapsible .tile-body {
+  overflow: hidden;
+  max-height: 112px;
+  transition:
+    max-height .72s cubic-bezier(.16,1,.3,1),
+    mask-image .42s ease,
+    -webkit-mask-image .42s ease;
+  -webkit-mask-image: linear-gradient(#000 76%,transparent);
+  mask-image: linear-gradient(#000 76%,transparent);
+}
+.insight-tile.is-collapsible.is-expanded .tile-body {
+  -webkit-mask-image: linear-gradient(#000 100%,#000 100%);
+  mask-image: linear-gradient(#000 100%,#000 100%);
+}
+.tile-expand {
+  transition:
+    color .36s cubic-bezier(.16,1,.3,1),
+    background .36s cubic-bezier(.16,1,.3,1),
+    border-color .36s cubic-bezier(.16,1,.3,1),
+    box-shadow .42s cubic-bezier(.16,1,.3,1),
+    transform .42s cubic-bezier(.16,1,.3,1);
+}
+.tile-expand:hover {
+  box-shadow: 0 0 16px rgba(200,169,110,.12);
+  transform: translateY(-1px);
+}
+.workspace.focus-mode .intake-group.is-focused {
+  box-shadow:
+    0 22px 58px rgba(0,0,0,.38),
+    0 0 26px rgba(200,169,110,.07),
+    0 0 0 1px rgba(200,169,110,.1);
+}
+@media(prefers-reduced-motion:reduce) {
+  .intake-group,.results.focus-mode .analysis-card,.results.focus-mode .insight-tile,
+  .insight-tile.is-collapsible .tile-body,.tile-expand {
+    transition:none!important;
+  }
+}
