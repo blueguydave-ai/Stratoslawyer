@@ -810,3 +810,14 @@ button:focus-visible,
 /* Keep the viewing-mode control available from the intake screen onward. */
 .workspace-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap}
 @media(max-width:680px){.section-head{align-items:flex-start;flex-direction:column}.workspace-head-actions{width:100%;justify-content:space-between}.workspace-head-actions .private-note{font-size:9px}.workspace-head-actions .view-mode-toggle{min-height:40px}}
+
+
+/* Focus visual mode also transforms the pre-analysis intake categories. */
+.workspace.focus-mode .intake-accordions{display:flex;align-items:stretch;gap:16px;overflow-x:auto;overflow-y:visible;padding:14px max(8px,calc((100% - 760px)/2)) 24px;scroll-snap-type:x mandatory;scroll-padding-inline:8px;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(200,169,110,.3) transparent}
+.workspace.focus-mode .intake-group{flex:0 0 min(86%,760px);width:min(86%,760px);min-width:0;scroll-snap-align:center;opacity:.48;transform:scale(.965);transform-origin:center center;transition:opacity .42s cubic-bezier(.2,.75,.25,1),transform .42s cubic-bezier(.2,.75,.25,1),border-color .3s,box-shadow .3s}
+.workspace.focus-mode .intake-group.is-focused{opacity:1;transform:scale(1);border-color:rgba(222,192,139,.52);box-shadow:0 22px 58px rgba(0,0,0,.34),0 0 0 1px rgba(200,169,110,.1)}
+.workspace.focus-mode .intake-group.is-dimmed{opacity:.34;transform:scale(.94)}
+.workspace.focus-mode .intake-group>summary{min-height:76px}
+.workspace.focus-mode .intake-group[open]{background:linear-gradient(145deg,rgba(200,169,110,.07),rgba(11,14,18,.72))}
+@media(max-width:600px){.workspace.focus-mode .intake-accordions{gap:12px;padding:12px 4px 20px}.workspace.focus-mode .intake-group{flex-basis:88%;width:88%}}
+@media(prefers-reduced-motion:reduce){.workspace.focus-mode .intake-group{transition:none;transform:none}}
