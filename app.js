@@ -1,7 +1,13 @@
 const SUPABASE_URL = window.STRATOS_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = window.STRATOS_SUPABASE_PUBLISHABLE_KEY;
 const authClient = window.supabase?.createClient && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    })
   : null;
 
 const authPanel = document.getElementById("auth-panel");
@@ -131,7 +137,15 @@ authForm.addEventListener("submit", async event => {
         email: authEmail.value.trim(),
         password: authPassword.value
       });
-      if (error) throw error;
+      if (error) {
+        if (error.code === "email_not_confirmed") {
+          throw new Error("Your email address has not been confirmed yet. Check your inbox or use Resend confirmation email before signing in.");
+        }
+        if (error.status === 429) {
+          throw new Error("Too many sign-in attempts. Please wait a while before trying again.");
+        }
+        throw error;
+      }
       showAuthMessage("Signed in successfully.");
     }
   } catch (error) {
