@@ -1209,3 +1209,56 @@ body.focus-visual-active .insight-tile.is-dimmed{filter:brightness(.2) saturate(
 @media(prefers-reduced-motion:reduce) {
   .primary-button.is-intake-ready { animation:none; }
 }
+
+
+/* HIGH-ATTENTION READY STATE — stronger halo, brighter core, still readable. */
+.primary-button.is-intake-ready {
+  position:relative;
+  isolation:isolate;
+  border-color:#fff0c8;
+  background:linear-gradient(115deg,#ffe9b4 0%,#f2d18e 42%,#d9b36f 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,238,195,.48),
+    0 0 12px 3px rgba(255,220,151,.62),
+    0 0 30px 9px rgba(232,190,111,.48),
+    0 0 62px 18px rgba(205,159,82,.3),
+    0 10px 30px rgba(0,0,0,.34);
+  animation:intake-ready-glow 1.9s ease-in-out infinite;
+}
+.primary-button.is-intake-ready::before {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:-13px;
+  border-radius:10px;
+  background:radial-gradient(ellipse at 50% 50%,rgba(244,207,137,.38),rgba(220,174,98,.18) 42%,transparent 72%);
+  filter:blur(10px);
+  opacity:.95;
+  pointer-events:none;
+  animation:intake-ready-halo 1.9s ease-in-out infinite;
+}
+.primary-button.is-intake-ready:hover {
+  filter:brightness(1.12);
+  box-shadow:
+    0 0 0 1px rgba(255,244,214,.62),
+    0 0 16px 5px rgba(255,225,163,.72),
+    0 0 38px 12px rgba(232,190,111,.56),
+    0 0 76px 22px rgba(205,159,82,.36),
+    0 12px 34px rgba(0,0,0,.38);
+}
+@keyframes intake-ready-glow {
+  0%,100% {
+    box-shadow:0 0 0 1px rgba(255,238,195,.38),0 0 10px 2px rgba(255,220,151,.48),0 0 25px 7px rgba(232,190,111,.36),0 0 50px 14px rgba(205,159,82,.22),0 10px 30px rgba(0,0,0,.34);
+  }
+  50% {
+    box-shadow:0 0 0 1px rgba(255,244,214,.62),0 0 18px 6px rgba(255,225,163,.76),0 0 42px 14px rgba(232,190,111,.62),0 0 82px 25px rgba(205,159,82,.4),0 10px 34px rgba(0,0,0,.34);
+  }
+}
+@keyframes intake-ready-halo {
+  0%,100% { opacity:.68; transform:scale(.96); }
+  50% { opacity:1; transform:scale(1.06); }
+}
+@media(prefers-reduced-motion:reduce) {
+  .primary-button.is-intake-ready,
+  .primary-button.is-intake-ready::before { animation:none; }
+}
