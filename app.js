@@ -156,23 +156,76 @@ function initializePageReveals() {
 initializePageReveals();
 
 function addTileExpansion(tile, body) {
-  const needsExpansion = body.textContent.trim().length > 300 || body.querySelectorAll("li").length > 3;
+  const needsExpansion = body.textContent.trim().length > 75 || body.querySelectorAll("li").length > 1;
   if (!needsExpansion) return;
   tile.classList.add("is-collapsible");
   const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.className = "tile-expand";
-  toggle.textContent = "Expand";
+  toggle.textContent = "Explore details";
   toggle.setAttribute("aria-expanded", "false");
   toggle.addEventListener("click", () => {
     const expanded = tile.classList.toggle("is-expanded");
     toggle.setAttribute("aria-expanded", String(expanded));
-    toggle.textContent = expanded ? "Collapse" : "Expand";
+    toggle.textContent = expanded ? "Show less" : "Explore details";
   });
   tile.append(toggle);
 }
 
-function renderAnalysis(markdown) {
+const categorySigils = [
+  '<path d="M24 3 42 13v22L24 45 6 35V13L24 3Z"/><path d="M24 12v24M12 18l24 12M36 18 12 30"/>',
+  '<path d="M8 8h32v32H8z"/><path d="M14 16h20M14 24h13M14 32h17"/><path d="m30 29 4 4 8-9"/>',
+  '<path d="M24 4 43 40H5L24 4Z"/><path d="M24 16v11M24 33v1"/>',
+  '<circle cx="24" cy="24" r="18"/><circle cx="24" cy="24" r="10"/><path d="M24 1v8M24 39v8M1 24h8M39 24h8"/>',
+  '<path d="M6 12h36v24H6z"/><path d="m6 14 18 14 18-14"/><path d="M15 36v5M33 36v5"/>',
+  '<path d="M24 4 39 12v14c0 9-7 14-15 18C16 40 9 35 9 26V12l15-8Z"/><path d="m16 24 5 5 11-12"/>',
+  '<path d="M24 4v40M4 24h40"/><path d="m14 14 20 20M34 14 14 34"/><circle cx="24" cy="24" r="17"/>',
+  '<path d="M8 40 24 6l16 34H8Z"/><path d="M16 31h16M20 23h8"/>',
+  '<path d="M7 10h34v28H7z"/><path d="M13 17h22M13 24h15M13 31h18"/><path d="M17 4v6M31 4v6"/>',
+  '<path d="M7 7h34v34H7z"/><path d="M14 16h20M14 24h20M14 32h12"/><path d="m30 30 4 4 7-8"/>',
+  '<circle cx="24" cy="24" r="18"/><path d="M24 13v12l8 5"/><path d="M24 3v4M45 24h-4"/>',
+  '<path d="M24 4 42 14v20L24 44 6 34V14L24 4Z"/><path d="M16 24h16M24 16v16"/><circle cx="24" cy="24" r="5"/>'
+];
+function makeCategorySigil(index) {
+  const wrap=document.createElement("span");
+  wrap.className="category-sigil";
+  wrap.setAttribute("aria-hidden","true");
+  wrap.innerHTML='<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">'+categorySigils[index%categorySigils.length]+'</svg>';
+  return wrap;
+}
+function clearCardFocus() {
+  output.querySelectorAll(".is-focused,.is-dimmed").forEach(card=>card.classList.remove("is-focused","is-dimmed"));
+}
+function setFocusedCard(target) {
+  if(!results.classList.contains("focus-mode")) return;
+  const category=target.closest(".analysis-card");
+  if(!category) return;
+  output.querySelectorAll(".analysis-card").forEach(card=>{
+    card.classList.toggle("is-focused",card===category);
+    card.classList.toggle("is-dimmed",card!==category);
+  });
+  const chosenTile=target.classList.contains("insight-tile")?target:null;
+  category.querySelectorAll(".insight-tile").forEach(tile=>{
+    tile.classList.toggle("is-focused",tile===chosenTile);
+    tile.classList.toggle("is-dimmed",Boolean(chosenTile)&&tile!==chosenTile);
+  });
+}
+const viewModeToggle=document.getElementById("view-mode-toggle");
+viewModeToggle.addEventListener("click",()=>{
+  const active=results.classList.toggle("focus-mode");
+  viewModeToggle.setAttribute("aria-pressed",String(active));
+  viewModeToggle.querySelector(".mode-label").textContent=active?"Standard mode":"Focus visual mode";
+  viewModeToggle.querySelector(".mode-glyph").textContent=active?"◇":"◈";
+  clearCardFocus();
+  if(active){const first=output.querySelector(".analysis-card");if(first)setFocusedCard(first);}
+});
+output.addEventListener("click",event=>{
+  if(!results.classList.contains("focus-mode")) return;
+  const tile=event.target.closest(".insight-tile");
+  const card=event.target.closest(".analysis-card");
+  setFocusedCard(tile||card);
+});
+\nfunction renderAnalysis(markdown) {
   const nav = document.getElementById("analysis-nav");
   if (analysisActiveObserver) analysisActiveObserver.disconnect();
   if (scrollRevealObserver) output.querySelectorAll(".scroll-reveal").forEach(element => scrollRevealObserver.unobserve(element));
@@ -276,7 +329,7 @@ function renderAnalysis(markdown) {
       insightGrid.append(tile);
     }
     content.append(insightGrid);
-    card.append(heading,content);
+    const categoryMeta = document.createElement("span");\n    categoryMeta.className = "category-meta";\n    categoryMeta.textContent = "INTELLIGENCE CATEGORY";\n    heading.append(categoryMeta);\n    card.append(heading,content);
     outputFragment.append(card);
 
     const link = document.createElement("button");
