@@ -30,21 +30,38 @@ ANALYSIS METHOD
 9. Suggest practical, lawful next steps and tactical opportunities tied to specific evidence, issues and procedural posture. Give 5-10 options for major issues where useful, not filler.
 10. List legal authorities or rules only when confident they exist and are relevant. Separate verified-from-provided materials from authorities requiring independent verification.
 
-OUTPUT FORMAT
-Use clear headings in this order:
-A. QUICK READ (matter type, posture, biggest immediate risk, strongest apparent advantage)
-B. WHAT I UNDERSTAND (facts, parties, claims/issues, assumptions and unknowns)
-C. CASE MAP (material issues/elements and evidence supporting/opposing/missing)
-D. TEN OUTCOME SCENARIOS (ranked, causal explanation, key trigger, what changes the result)
+OUTPUT FORMAT — SHARP INTELLIGENCE BRIEF
+Return exactly these eleven titled sections. The interface displays each as its own navigable card:
+A. EXECUTIVE READ
+B. FACTS, POSTURE & ASSUMPTIONS
+C. ISSUES & ELEMENTS
+D. EVIDENCE MAP
 E. BLIND SPOTS & CONTRADICTIONS
-F. OPPOSING COUNSEL'S STRONGEST CASE
-G. WITNESS & DOCUMENT PRESSURE POINTS
-H. LAWFUL TACTICAL OPTIONS (prioritised, linked to specific issue/evidence)
-I. PROCEDURAL & LEGAL VERIFICATION CHECKLIST
-J. NEXT 5 ACTIONS (ordered by urgency and expected value)
-K. ESSENTIAL QUESTIONS (ask only questions that materially affect the analysis; maximum 5)
+F. POSSIBLE OUTCOMES
+G. OPPOSING SIDE
+H. AVAILABLE MOVES
+I. PROCEDURAL & AUTHORITY CHECK
+J. PRIORITY ACTIONS
+K. QUESTIONS THAT CHANGE THE STRATEGY
 
-Be concise at the top and detailed beneath. Do not pretend to have searched live legal databases. Clearly label legal research that still needs verification.
+STRICT READABILITY RULES
+- Be exceptionally concise. This is a working intelligence dashboard, not an essay, textbook, memo or lecture.
+- Lead with the finding. Use short bullets, compact tables and labels. No introductory filler, repeated conclusions or generic legal explanations.
+- Aim for 40–80 words in the Executive Read; 3–7 high-value bullets in ordinary sections; keep each bullet to one or two sentences.
+- Include detail only when it changes the lawyer's understanding, risk, decision or next move. Prefer a precise 12-word finding over a vague 50-word paragraph.
+- Use bold sparingly for key findings. Never print raw Markdown markers as literal text.
+- Do not pad sections to meet a quota. If something is unknown, say so clearly.
+- Cover every material blind spot and every genuinely distinct outcome or lawful move supported by the facts. Group related items; do not invent variations merely to make a list longer.
+- For each blind spot, state: what is unknown; why it matters; how to resolve it.
+- For each outcome, state: scenario; qualitative likelihood (not a fabricated percentage); decisive trigger; consequence.
+- For each available move, state: objective; when it is available; prerequisite/evidence; principal risk or likely response. Include moves at the current stage and later procedural stages, clearly distinguishing conditional future options.
+- For evidence, show what it supports, what it does not prove, weakness/foundation issue, and the next test or action.
+- Rank actions by urgency and strategic value. Separate immediate preservation steps from later litigation steps.
+- Ask only questions whose answers could materially change the analysis; maximum 5.
+- Use compact tables only when they improve comparison; avoid wide tables that become unreadable on phones.
+- Keep the analysis tied to this specific matter. No generic filler.
+
+Do not pretend to have searched live legal databases. Clearly label legal research that still needs verification. Preserve all material qualifications and uncertainty.
 `;
 
 function jsonError(res, status, error) {
