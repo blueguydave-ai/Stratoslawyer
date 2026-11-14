@@ -72,3 +72,25 @@
 .analysis-nav{box-shadow:0 12px 38px rgba(0,0,0,.18)}
 .analysis-nav-link.is-active{box-shadow:inset 2px 0 var(--gold)}
 @media(prefers-reduced-motion:reduce){.analysis-card,.analysis-card.is-visible{opacity:1;transform:none;filter:none;transition:none}}
+
+
+/* Structured litigation intake */
+.intake-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 16px;margin:4px 0 22px}
+.intake-field{min-width:0}
+.intake-field .field-label{display:block;margin:0 0 8px}
+.intake-field input,.intake-field select{width:100%;min-height:44px;background:#0c1014;border:1px solid rgba(255,255,255,.11);border-radius:5px;padding:11px 12px;color:#e5e5e3;font:12px var(--font);outline:none;transition:border-color .2s,background .2s}
+.intake-field input:focus,.intake-field select:focus{border-color:rgba(200,169,110,.65);background:#101419}
+.intake-field input::placeholder{color:#626a73}
+.intake-field select{color-scheme:dark}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0 22px}
+.evidence-panel{min-width:0;padding:16px;border:1px solid rgba(200,169,110,.15);border-radius:7px;background:linear-gradient(145deg,rgba(200,169,110,.045),rgba(14,17,21,.55))}
+.opponent-panel{border-color:rgba(130,157,190,.19);background:linear-gradient(145deg,rgba(91,126,164,.055),rgba(14,17,21,.55))}
+.evidence-title{display:flex;align-items:center;gap:9px;margin-bottom:17px}
+.evidence-title>span{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;border:1px solid rgba(200,169,110,.3);color:var(--gold);font:9px 'DM Mono',monospace}
+.opponent-panel .evidence-title>span{border-color:rgba(130,157,190,.35);color:#9eb6d1}
+.evidence-title strong{font:600 13px var(--display);color:#eee9df}
+.evidence-title small{margin-left:auto;color:#737b85;font:8px 'DM Mono',monospace;letter-spacing:.6px}
+.evidence-panel .field-label{margin:0 0 8px;font-size:11px}
+.evidence-panel textarea{min-height:80px;margin-bottom:14px;font-size:12px}
+.evidence-panel textarea:last-child{margin-bottom:0}
+@media(max-width:680px){.intake-grid,.evidence-grid{grid-template-columns:minmax(0,1fr);gap:12px}.evidence-panel{padding:14px}.evidence-title small{font-size:7px}.intake-field input,.intake-field select{min-height:46px}}
