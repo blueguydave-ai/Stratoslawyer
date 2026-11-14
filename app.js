@@ -18,6 +18,7 @@ const formatSize = bytes => bytes < 1024 * 1024 ? Math.round(bytes / 1024) + " K
 function showError(message) {
   errorMessage.textContent = message;
   errorMessage.hidden = false;
+  requestAnimationFrame(() => revealAllWithin(errorMessage));
 }
 function renderFiles() {
   fileList.replaceChildren();
@@ -185,10 +186,7 @@ function renderAnalysis(markdown) {
   const cards = [...output.querySelectorAll(".analysis-card")];
   // Results are revealed immediately after renderAnalysis returns. Start observing
   // on the next frame so the cards are measured in their visible layout.
-  requestAnimationFrame(() => {
-    revealAllWithin(nav);
-    revealAllWithin(output);
-  });
+  requestAnimationFrame(() => revealAllWithin(results));
   if ("IntersectionObserver" in window) {
     const activeObserver = new IntersectionObserver(entries => {
       const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
@@ -210,6 +208,7 @@ analyzeButton.addEventListener("click", async () => {
   analyzeButton.disabled = true;
   analyzeButton.querySelector("span:first-child").textContent = "Analysing...";
   progressPanel.hidden = false;
+  requestAnimationFrame(() => revealAllWithin(progressPanel));
   progressTitle.textContent = "Reading the material...";
   progressDetail.textContent = "Identifying the legal environment and reconstructing the case.";
   progressPanel.scrollIntoView({behavior:"smooth",block:"center"});
