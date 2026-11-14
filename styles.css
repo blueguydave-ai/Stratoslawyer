@@ -662,16 +662,16 @@ body::after {
 }
 
 
-/* STRATOS SCROLL SYSTEM — one lightweight reveal lifecycle for every visual unit. */
+/* STRATOS SCROLL REVEAL — visible entrance, lightweight properties only. */
 .scroll-reveal,
 .analysis-card,
 .insight-tile {
   opacity: 0;
-  transform: translate3d(0, 18px, 0);
+  transform: translate3d(0, 26px, 0);
   filter: none !important;
   transition:
-    opacity .5s cubic-bezier(.2,.75,.25,1),
-    transform .54s cubic-bezier(.2,.75,.25,1),
+    opacity .68s cubic-bezier(.2,.75,.25,1),
+    transform .68s cubic-bezier(.2,.75,.25,1),
     border-color .24s ease,
     box-shadow .24s ease;
   transition-delay: 0ms;
