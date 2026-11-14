@@ -92,6 +92,7 @@ const revealSelector = [
   ".results-heading > *",
   ".results-warning",
   ".analysis-card",
+  ".insight-tile",
   ".analysis-nav-link",
   ".page-footer > *"
 ].join(",");
