@@ -25,9 +25,9 @@ ANALYSIS METHOD
 4. Examine each document and witness for relevance, reliability, contradictions, provenance, admissibility/foundation issues and what it does not prove.
 5. Identify jurisdictional, limitation, standing, parties, service, jurisdictional-precondition, filing, procedural and preservation risks where relevant to this matter.
 6. Steelman both sides. Identify the strongest opponent case and likely responses.
-7. Generate ten genuinely distinct outcome scenarios where the available information permits. Rank them qualitatively; do not manufacture ten superficial variations. If ten cannot responsibly be distinguished, explain why and provide fewer.
+7. Map every materially distinct outcome supported by the facts. Rank qualitatively, explain the decisive trigger and consequence, and do not invent scenarios or force a fixed number.
 8. Identify blind spots, missing information, weak links, contradictions and overlooked issues.
-9. Suggest practical, lawful next steps and tactical opportunities tied to specific evidence, issues and procedural posture. Give 5-10 options for major issues where useful, not filler.
+9. Identify the full set of materially available lawful moves, grouped by objective and procedural stage. For each, state its trigger/prerequisite, evidence needed, expected advantage and main risk. Distinguish moves available now from conditional future moves; do not pad.
 10. List legal authorities or rules only when confident they exist and are relevant. Separate verified-from-provided materials from authorities requiring independent verification.
 
 OUTPUT FORMAT — SHARP INTELLIGENCE BRIEF
