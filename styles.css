@@ -1471,53 +1471,54 @@ html[data-theme="light"] .results.focus-mode .analysis-card.is-focused{
 }
 
 
-/* Rotating thought display during live analysis */
+/* Three independently written insight cards during live analysis */
 .waiting-insight{
-  position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;
-  align-items:end;gap:8px 16px;min-height:112px;margin:24px 0 20px;
-  padding:19px 20px 16px;border:1px solid rgba(200,169,110,.18);
-  border-radius:7px;overflow:hidden;
-  background:radial-gradient(ellipse at 8% 0%,rgba(200,169,110,.105),transparent 62%),
-    linear-gradient(125deg,rgba(200,169,110,.045),rgba(255,255,255,.012));
-}
-.waiting-insight::before{
-  content:"";position:absolute;left:0;top:15px;bottom:15px;width:2px;
-  background:linear-gradient(180deg,transparent,var(--gold),transparent);
-  opacity:.8;
+  display:grid;grid-template-columns:1fr;gap:10px;margin:23px 0 20px;
 }
 .waiting-insight-kicker{
-  grid-column:1/-1;color:var(--gold);font:9px 'DM Mono',monospace;
-  letter-spacing:1.6px;opacity:.9;
+  display:block;margin:0 0 2px 2px;color:var(--gold);
+  font:9px 'DM Mono',monospace;letter-spacing:1.65px;opacity:.9;
 }
-.waiting-insight p{
-  grid-column:1;align-self:center;margin:0;max-width:650px;
-  color:var(--text);font:500 clamp(15px,2.1vw,18px)/1.58 var(--display);
-  letter-spacing:-.28px;text-wrap:pretty;
-  animation:insight-arrive .72s cubic-bezier(.2,.75,.25,1) both;
+.waiting-quote{
+  position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;
+  align-items:end;gap:12px;min-height:76px;padding:15px 17px 13px 19px;
+  border:1px solid rgba(200,169,110,.17);border-radius:7px;overflow:hidden;
+  background:radial-gradient(ellipse at 5% 0%,rgba(200,169,110,.09),transparent 64%),
+    linear-gradient(125deg,rgba(200,169,110,.035),rgba(255,255,255,.012));
+  transition:border-color .5s ease,background .5s ease,transform .5s ease;
 }
-.waiting-insight-index{
-  grid-column:2;grid-row:2;align-self:end;justify-self:end;
+.waiting-quote::before{
+  content:"";position:absolute;left:0;top:12px;bottom:12px;width:2px;
+  background:linear-gradient(180deg,transparent,var(--gold),transparent);opacity:.72;
+}
+.waiting-quote-text{
+  grid-column:1;margin:0;min-height:2.9em;color:var(--text);
+  font:500 clamp(13px,1.7vw,15px)/1.58 var(--display);
+  letter-spacing:-.16px;text-wrap:pretty;
+}
+.waiting-quote-index{
+  grid-column:2;align-self:end;justify-self:end;white-space:nowrap;
   color:var(--muted);font:9px 'DM Mono',monospace;letter-spacing:1px;
-  white-space:nowrap;
 }
-.waiting-insight.is-changing p{animation:insight-arrive .72s cubic-bezier(.2,.75,.25,1) both}
-@keyframes insight-arrive{
-  0%{opacity:0;transform:translate3d(0,10px,0);filter:blur(3px)}
-  65%{opacity:1;filter:blur(0)}
-  100%{opacity:1;transform:translate3d(0,0,0);filter:blur(0)}
+.waiting-quote.is-writing{border-color:rgba(200,169,110,.29)}
+.waiting-quote.is-writing .waiting-quote-text{animation:quote-write-arrive .55s ease both}
+@keyframes quote-write-arrive{
+  from{opacity:.25;transform:translateY(4px)}
+  to{opacity:1;transform:translateY(0)}
 }
-html[data-theme="light"] .waiting-insight{
-  border-color:rgba(128,100,56,.2);
-  background:radial-gradient(ellipse at 8% 0%,rgba(181,145,83,.12),transparent 62%),
-    linear-gradient(125deg,rgba(255,255,255,.94),rgba(239,235,226,.92));
-  box-shadow:0 8px 26px rgba(68,57,39,.045);
+html[data-theme="light"] .waiting-quote{
+  border-color:rgba(128,100,56,.19);
+  background:radial-gradient(ellipse at 5% 0%,rgba(181,145,83,.1),transparent 64%),
+    linear-gradient(125deg,rgba(255,255,255,.96),rgba(239,235,226,.92));
+  box-shadow:0 6px 20px rgba(68,57,39,.035);
 }
-html[data-theme="light"] .waiting-insight p{color:#343b43}
-html[data-theme="light"] .waiting-insight-index{color:#77756f}
+html[data-theme="light"] .waiting-quote-text{color:#343b43}
+html[data-theme="light"] .waiting-quote-index{color:#77756f}
 @media(max-width:600px){
-  .waiting-insight{min-height:126px;padding:17px 15px 14px;margin:21px 0 18px;gap:8px}
-  .waiting-insight p{font-size:15px;line-height:1.58}
+  .waiting-insight{gap:8px;margin:19px 0 17px}
+  .waiting-quote{min-height:78px;padding:13px 12px 12px 15px;gap:8px}
+  .waiting-quote-text{font-size:13.5px;line-height:1.55}
 }
 @media(prefers-reduced-motion:reduce){
-  .waiting-insight p,.waiting-insight.is-changing p{animation:none!important}
+  .waiting-quote,.waiting-quote-text{transition:none!important;animation:none!important}
 }
