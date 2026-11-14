@@ -9,6 +9,8 @@ const progressPanel = document.getElementById("progress-panel");
 const progressTitle = document.getElementById("progress-title");
 const progressDetail = document.getElementById("progress-detail");
 const results = document.getElementById("results");
+const workspace = document.querySelector(".workspace");
+const intakeAccordions = document.querySelector(".intake-accordions");
 const output = document.getElementById("analysis-output");
 const selectedFiles = [];
 
@@ -211,6 +213,15 @@ function makeCategorySigil(index) {
 function clearCardFocus() {
   output.querySelectorAll(".is-focused,.is-dimmed").forEach(card=>card.classList.remove("is-focused","is-dimmed"));
 }
+function focusIntakeGroup(group) {
+  if(!group || !focusVisualMode) return;
+  const groups=[...intakeAccordions.querySelectorAll(".intake-group")];
+  groups.forEach(card=>{
+    card.classList.toggle("is-focused",card===group);
+    card.classList.toggle("is-dimmed",card!==group);
+  });
+  group.scrollIntoView({behavior:prefersReducedMotion?"auto":"smooth",block:"nearest",inline:"center"});
+}
 function setFocusedCard(target) {
   if(!results.classList.contains("focus-mode")) return;
   const category=target.closest(".analysis-card");
@@ -236,13 +247,24 @@ function updateViewModeControl(){
 }
 viewModeToggle.addEventListener("click",()=>{
   focusVisualMode=!focusVisualMode;
+  workspace.classList.toggle("focus-mode",focusVisualMode);
   results.classList.toggle("focus-mode",focusVisualMode);
   updateViewModeControl();
   clearCardFocus();
-  if(focusVisualMode&&!results.hidden){
-    const first=output.querySelector(".analysis-card");
-    if(first)setFocusedCard(first);
+  intakeAccordions.querySelectorAll(".intake-group").forEach(card=>card.classList.remove("is-focused","is-dimmed"));
+  if(focusVisualMode){
+    const firstIntake=intakeAccordions.querySelector(".intake-group");
+    if(firstIntake)focusIntakeGroup(firstIntake);
+    if(!results.hidden){
+      const first=output.querySelector(".analysis-card");
+      if(first)setFocusedCard(first);
+    }
   }
+});
+intakeAccordions.addEventListener("click",event=>{
+  if(!focusVisualMode)return;
+  const group=event.target.closest(".intake-group");
+  if(group)focusIntakeGroup(group);
 });
 updateViewModeControl();
 output.addEventListener("click",event=>{
@@ -445,6 +467,10 @@ analyzeButton.addEventListener("click", async () => {
 document.getElementById("new-analysis").addEventListener("click",() => {
   results.hidden = true;
   progressPanel.hidden = true;
+  if(focusVisualMode){
+    const first=intakeAccordions.querySelector(".intake-group");
+    if(first)focusIntakeGroup(first);
+  }
   description.focus();
-  window.scrollTo({top:0,behavior:"smooth"});
+  window.scrollTo({top:0,behavior:prefersReducedMotion?"auto":"smooth"});
 });
