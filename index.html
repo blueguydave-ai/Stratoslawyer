@@ -45,6 +45,20 @@
       <div id="auth-message" class="auth-message" role="status" aria-live="polite"></div>
     </section>
 
+    <section id="recovery-panel" class="auth-panel recovery-panel" aria-labelledby="recovery-title" hidden>
+      <div class="step-label">ACCOUNT RECOVERY</div>
+      <h2 id="recovery-title">Choose a new password.</h2>
+      <p class="auth-copy">Enter your new password below to regain access to STRATOSLAWYER.</p>
+      <form id="recovery-form">
+        <label class="field-label" for="recovery-password">New password</label>
+        <input id="recovery-password" class="auth-input" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters">
+        <label class="field-label" for="recovery-confirm">Confirm new password</label>
+        <input id="recovery-confirm" class="auth-input" type="password" autocomplete="new-password" minlength="8" required placeholder="Enter the password again">
+        <button id="recovery-submit" class="primary-button auth-submit" type="submit">Save new password <span class="button-arrow">↗</span></button>
+      </form>
+      <div id="recovery-message" class="auth-message" role="status" aria-live="polite"></div>
+    </section>
+
     <div id="account-bar" class="account-bar" hidden>
       <span id="account-email"></span>
       <button id="sign-out" class="secondary-button" type="button">Sign out</button>
@@ -91,6 +105,7 @@
 
     <footer class="page-footer"><span>STRATOSLAWYER</span><span>BUILT FOR THE COMPLEXITY OF NIGERIAN PRACTICE</span></footer>
   </main>
-  <script src="/supabase-config.js"></script>\n  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>\n  <script src="/app.js" defer></script>
+  <script src="/supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>\n  <script src="/app.js" defer></script>
 </body>
 </html>
