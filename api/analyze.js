@@ -87,9 +87,21 @@ export default async function handler(req, res) {
   if (typeof description !== "string" || !Array.isArray(files)) {
     return jsonError(res, 400, "Invalid request format.");
   }
-  const hasCaseContext = caseContext && typeof caseContext === "object" && !Array.isArray(caseContext) && Object.values(caseContext).some(value => String(value || "").trim() && String(value).trim() !== "Not supplied");
-  if (!description.trim() && !hasCaseContext && files.length === 0) {
-    return jsonError(res, 400, "Describe the matter or attach at least one supported document.");
+  const safeIncomingContext = caseContext && typeof caseContext === "object" && !Array.isArray(caseContext) ? caseContext : {};
+  const populatedKeys = Object.entries(safeIncomingContext)
+    .filter(([,value]) => String(value || "").trim() && String(value).trim() !== "Not supplied")
+    .map(([key]) => key);
+  const coverageGroups = [
+    ["case-type","case-role","parties","relief","client-objective"],
+    ["case-stage","court","jurisdiction","next-date","orders-documents"],
+    ["opponent-position","opponent-conduct"],
+    ["own-evidence","own-witnesses","opponent-evidence","opponent-witnesses"]
+  ];
+  const coveredGroupCount = coverageGroups.filter(group => group.some(key => populatedKeys.includes(key))).length;
+  const enoughStructuredDetail = populatedKeys.length >= 5 && coveredGroupCount >= 3;
+  const enoughSourceMaterial = description.trim().length >= 120 || files.length > 0;
+  if (!enoughStructuredDetail || !enoughSourceMaterial) {
+    return jsonError(res, 400, "Not enough case information. Provide at least 5 relevant structured details across 3 sections, plus a case description of at least 120 characters or one case document.");
   }
   if (files.length > 6) return jsonError(res, 400, "For this first version, attach no more than 6 files at a time.");
 
