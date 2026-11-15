@@ -475,6 +475,7 @@ function focusIntakeGroup(group) {
 }
 const inputArrowControls=document.createElement("div");
 inputArrowControls.className="focus-arrow-controls input-focus-arrows";
+inputArrowControls.hidden=true;
 inputArrowControls.innerHTML='<button type="button" data-input-previous aria-label="Previous input section" title="Previous section">←</button><button type="button" data-input-next aria-label="Next input section" title="Next section">→</button>';
 intakeAccordions.append(inputArrowControls);
 function updateInputArrowState(){
