@@ -471,7 +471,30 @@ function focusIntakeGroup(group) {
   });
   updateSlideCue(workspace, groups.indexOf(group), groups.length);
   slideCardToCenter(group,intakeAccordions);
+  updateInputArrowState();
 }
+const inputArrowControls=document.createElement("div");
+inputArrowControls.className="focus-arrow-controls input-focus-arrows";
+inputArrowControls.innerHTML='<button type="button" data-input-previous aria-label="Previous input section" title="Previous section">←</button><button type="button" data-input-next aria-label="Next input section" title="Next section">→</button>';
+intakeAccordions.append(inputArrowControls);
+function updateInputArrowState(){
+  const groups=[...intakeAccordions.querySelectorAll(".intake-group")];
+  const current=groups.findIndex(group=>group.classList.contains("is-focused"));
+  const previous=inputArrowControls.querySelector("[data-input-previous]");
+  const next=inputArrowControls.querySelector("[data-input-next]");
+  if(previous)previous.disabled=current<=0;
+  if(next)next.disabled=current<0||current>=groups.length-1;
+}
+inputArrowControls.querySelector("[data-input-previous]").addEventListener("click",()=>{
+  const groups=[...intakeAccordions.querySelectorAll(".intake-group")];
+  const current=groups.findIndex(group=>group.classList.contains("is-focused"));
+  if(current>0)focusIntakeGroup(groups[current-1]);
+});
+inputArrowControls.querySelector("[data-input-next]").addEventListener("click",()=>{
+  const groups=[...intakeAccordions.querySelectorAll(".intake-group")];
+  const current=groups.findIndex(group=>group.classList.contains("is-focused"));
+  if(current>=0&&current<groups.length-1)focusIntakeGroup(groups[current+1]);
+});
 let focusedCategoryIndex=0;
 let focusedPointIndex=0;
 function setFocusedCard(target) {
@@ -496,27 +519,36 @@ function setFocusedCard(target) {
   updateSlideCue(results.querySelector(".analysis-layout"),focusedCategoryIndex,categories.length);
   updateFocusControls();
 }
+function getAllOutputTiles(){
+  return [...output.querySelectorAll(".analysis-card")].flatMap(category=>[...category.querySelectorAll(".insight-tile")]);
+}
+function moveOutputTile(direction){
+  const all=getAllOutputTiles();
+  if(!all.length)return;
+  const current=all.findIndex(tile=>tile.classList.contains("is-focused"));
+  const nextIndex=Math.max(0,Math.min(all.length-1,(current<0?0:current)+direction));
+  setFocusedCard(all[nextIndex]);
+}
 function updateFocusControls(){
   const categories=[...output.querySelectorAll(".analysis-card")];
   const category=categories[focusedCategoryIndex];
   const tiles=category?[...category.querySelectorAll(".insight-tile")]:[];
-  const nextPoint=focusControls?.querySelector("[data-focus-next-point]");
+  const previous=focusControls?.querySelector("[data-focus-previous]");
+  const next=focusControls?.querySelector("[data-focus-next]");
   const nextCategory=focusControls?.querySelector("[data-focus-next-category]");
-  if(nextPoint) nextPoint.disabled=!tiles.length||focusedPointIndex>=tiles.length-1;
-  if(nextCategory) nextCategory.disabled=categories.length<2;
-  if(nextPoint) nextPoint.textContent=tiles.length?("Next ("+Math.min(focusedPointIndex+1,tiles.length)+"/"+tiles.length+")"):"Next";
-  if(nextCategory) nextCategory.textContent="Next category ("+Math.min(focusedCategoryIndex+1,categories.length)+"/"+categories.length+")";
+  const all=getAllOutputTiles();
+  const active=all.findIndex(tile=>tile.classList.contains("is-focused"));
+  if(previous)previous.disabled=active<=0;
+  if(next)next.disabled=active<0||active>=all.length-1;
+  if(nextCategory)nextCategory.disabled=categories.length<2;
+  if(nextCategory)nextCategory.textContent="Next category ("+Math.min(focusedCategoryIndex+1,categories.length)+"/"+categories.length+")";
 }
 const focusControls=document.createElement("div");
 focusControls.className="focus-controls";
-focusControls.innerHTML='<button type="button" data-focus-next-point>Next</button><button type="button" data-focus-next-category>Next category</button>';
+focusControls.innerHTML='<div class="focus-arrow-controls output-focus-arrows"><button type="button" data-focus-previous aria-label="Previous output card" title="Previous card">←</button><button type="button" data-focus-next aria-label="Next output card" title="Next card">→</button></div><button type="button" data-focus-next-category>Next category</button>';
 focusControls.hidden=true;
-focusControls.querySelector("[data-focus-next-point]").addEventListener("click",()=>{
-  const category=output.querySelectorAll(".analysis-card")[focusedCategoryIndex];
-  if(!category)return;
-  const tiles=category.querySelectorAll(".insight-tile");
-  if(focusedPointIndex<tiles.length-1)setFocusedCard(tiles[focusedPointIndex+1]);
-});
+focusControls.querySelector("[data-focus-previous]").addEventListener("click",()=>moveOutputTile(-1));
+focusControls.querySelector("[data-focus-next]").addEventListener("click",()=>moveOutputTile(1));
 focusControls.querySelector("[data-focus-next-category]").addEventListener("click",()=>{
   const categories=output.querySelectorAll(".analysis-card");
   if(!categories.length)return;
@@ -536,6 +568,7 @@ viewModeToggle.addEventListener("click",()=>{
   workspace.classList.toggle("focus-mode",focusVisualMode);
   results.classList.toggle("focus-mode",focusVisualMode);
   focusControls.hidden=!focusVisualMode;
+  inputArrowControls.hidden=!focusVisualMode;
   document.body.classList.toggle("focus-visual-active",focusVisualMode);
   if(!focusVisualMode) document.querySelectorAll(".focus-slide-cue").forEach(cue=>cue.classList.remove("is-active"));
   updateViewModeControl();
