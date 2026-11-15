@@ -1690,3 +1690,134 @@ html[data-theme="light"] .stratos-chart-note{border-color:rgba(30,35,42,.1);colo
  .chart-bar-value{font-size:9px}
  .chart-timeline li{padding-bottom:15px}
 }
+
+
+/* FOUR-CATEGORY LEGAL BRIEF — quiet, text-led finding cards.
+   The typography carries the hierarchy; card chrome stays in the background. */
+.analysis-output{gap:22px}
+.analysis-card{
+  padding:20px 22px;
+  border:1px solid rgba(190,199,211,.10);
+  border-radius:10px;
+  background:linear-gradient(145deg,rgba(27,32,39,.54),rgba(13,17,22,.62));
+  box-shadow:0 12px 34px rgba(0,0,0,.13),inset 0 1px rgba(255,255,255,.035);
+}
+.analysis-card::before,.analysis-card::after{display:none}
+.analysis-card-heading{
+  gap:12px;
+  padding-bottom:13px;
+  margin-bottom:4px;
+  border-bottom:1px solid rgba(215,222,231,.09);
+}
+.analysis-card-number{
+  width:24px;height:24px;border-radius:6px;
+  border:1px solid rgba(200,169,110,.20);
+  background:rgba(200,169,110,.055);
+  box-shadow:none;
+  color:#bda477;
+  font-size:9px;
+}
+.analysis-card-heading h3{
+  color:#e8e9e9;
+  font:600 15px/1.4 var(--font);
+  letter-spacing:0;
+}
+.analysis-card-heading .category-meta{
+  margin-left:auto;
+  color:#747d88;
+  font:8px 'DM Mono',monospace;
+  letter-spacing:.6px;
+}
+.insight-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+}
+.insight-tile,
+.insight-tile[data-layout]{
+  position:relative;
+  display:block;
+  min-width:0;
+  grid-column:1/-1;
+  padding:14px 3px 15px 14px;
+  margin:0;
+  border:0;
+  border-bottom:1px solid rgba(202,211,222,.075);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  transform:none;
+  transition:opacity .24s ease,filter .24s ease;
+}
+.insight-tile:last-child{border-bottom:0}
+.insight-tile::before,.insight-tile::after{display:none!important}
+.insight-tile:hover{
+  border-color:rgba(202,211,222,.10);
+  background:rgba(255,255,255,.012);
+  box-shadow:none;
+  transform:none;
+}
+.insight-tile-topline{display:none!important}
+.tile-body{
+  max-height:112px;
+  color:#c5cbd3;
+  font:400 12px/1.78 var(--font);
+  letter-spacing:0;
+}
+.tile-body p{margin:0 0 7px}
+.tile-body p:last-child{margin-bottom:0}
+.tile-body strong{
+  color:#e4e6e8;
+  font-weight:700;
+}
+.tile-body em{color:#c9b58e}
+.tile-body ul,.tile-body ol{margin:6px 0 8px;padding-left:18px}
+.tile-body li{margin:3px 0;padding-left:2px}
+.tile-body li::marker{color:#9e8964}
+.tile-expand{
+  display:inline-block;
+  margin:8px 0 0;
+  padding:4px 0;
+  border:0;
+  border-bottom:1px solid rgba(200,169,110,.24);
+  border-radius:0;
+  background:transparent;
+  color:#bba477;
+  font:500 9px/1.4 var(--font);
+  letter-spacing:.15px;
+  box-shadow:none;
+}
+.tile-expand:hover{color:#e0c99c;background:transparent}
+html[data-theme="light"] .analysis-card{
+  border-color:rgba(50,58,68,.12);
+  background:linear-gradient(145deg,rgba(255,255,255,.82),rgba(246,247,248,.84));
+  box-shadow:0 10px 28px rgba(34,42,52,.055),inset 0 1px rgba(255,255,255,.8);
+}
+html[data-theme="light"] .analysis-card-heading{border-bottom-color:rgba(50,58,68,.10)}
+html[data-theme="light"] .analysis-card-heading h3{color:#30363d}
+html[data-theme="light"] .analysis-card-number{color:#82683d;background:rgba(160,126,69,.06)}
+html[data-theme="light"] .insight-tile{border-bottom-color:rgba(50,58,68,.09)}
+html[data-theme="light"] .insight-tile:hover{background:rgba(40,48,58,.018)}
+html[data-theme="light"] .tile-body{color:#515a64}
+html[data-theme="light"] .tile-body strong{color:#292f36}
+html[data-theme="light"] .tile-body em{color:#80663b}
+html[data-theme="light"] .tile-expand{color:#80663b;border-bottom-color:rgba(128,102,59,.25)}
+.results.focus-mode .insight-tile.is-dimmed{
+  opacity:.24!important;
+  filter:grayscale(.35)!important;
+  transform:none!important;
+}
+.results.focus-mode .insight-tile.is-focused{
+  opacity:1!important;
+  filter:none!important;
+}
+@media(max-width:760px){
+  .analysis-card{padding:16px 13px}
+  .analysis-card-heading{gap:9px}
+  .analysis-card-heading h3{font-size:14px}
+  .insight-tile{padding:12px 2px 13px 10px}
+  .tile-body{font-size:12px;line-height:1.75}
+}
+@media(prefers-reduced-motion:reduce){
+  .insight-tile{transition:none}
+}
