@@ -1821,3 +1821,44 @@ html[data-theme="light"] .tile-expand{color:#80663b;border-bottom-color:rgba(128
 @media(prefers-reduced-motion:reduce){
   .insight-tile{transition:none}
 }
+
+
+/* Intake quality gate and animated principle notice */
+.intake-principle{
+  display:flex;align-items:center;gap:13px;
+  margin:-10px 0 22px;padding:13px 15px;
+  border:1px solid rgba(200,169,110,.19);
+  border-radius:7px;
+  background:linear-gradient(100deg,rgba(200,169,110,.075),rgba(200,169,110,.018) 72%,transparent);
+  overflow:hidden;
+}
+.principle-pulse{
+  flex:0 0 7px;width:7px;height:7px;border-radius:50%;
+  background:#d5b77d;box-shadow:0 0 0 4px rgba(213,183,125,.10),0 0 16px rgba(213,183,125,.55);
+  animation:principle-pulse 2.2s ease-in-out infinite;
+}
+.principle-copy{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%}
+.principle-message{
+  margin:0;color:#d8d0bf;font:500 11px/1.6 var(--font);
+  animation:principle-reveal .9s cubic-bezier(.2,.75,.25,1) both;
+}
+.daily-limit{
+  flex:0 0 auto;color:#bda477;font:9px 'DM Mono',monospace;
+  letter-spacing:.55px;white-space:nowrap;
+}
+@keyframes principle-pulse{0%,100%{opacity:.65;transform:scale(.88)}50%{opacity:1;transform:scale(1.12)}}
+@keyframes principle-reveal{from{opacity:0;transform:translateY(7px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+.primary-button.is-intake-ready{box-shadow:0 0 0 1px rgba(224,195,138,.25),0 0 24px rgba(200,169,110,.2)}
+html[data-theme="light"] .intake-principle{border-color:rgba(130,102,59,.2);background:linear-gradient(100deg,rgba(160,126,69,.08),rgba(160,126,69,.02) 72%,transparent)}
+html[data-theme="light"] .principle-message{color:#514936}
+html[data-theme="light"] .daily-limit{color:#80663b}
+@media(max-width:640px){
+  .intake-principle{align-items:flex-start;padding:12px;margin-top:-8px}
+  .principle-copy{align-items:flex-start;flex-direction:column;gap:5px}
+  .principle-message{font-size:11px}
+  .daily-limit{font-size:8px}
+  .page-footer{flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){
+  .principle-pulse,.principle-message{animation:none}
+}
