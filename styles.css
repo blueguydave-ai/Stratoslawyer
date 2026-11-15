@@ -1894,3 +1894,8 @@ body.focus-visual-active .workspace.focus-mode .intake-footer{position:relative;
   .results.focus-mode .focus-controls{gap:8px}
 }
 @media(prefers-reduced-motion:reduce){.focus-arrow-controls button{transition:none}}
+
+
+/* Respect the hidden state: explicit flex layouts must not reveal controls early. */
+.input-focus-arrows[hidden],
+.focus-controls[hidden]{display:none!important}
