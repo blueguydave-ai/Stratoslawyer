@@ -1862,3 +1862,35 @@ html[data-theme="light"] .daily-limit{color:#80663b}
 @media(prefers-reduced-motion:reduce){
   .principle-pulse,.principle-message{animation:none}
 }
+
+
+/* Focus-mode card navigation: compact previous/next arrows on both sides. */
+.focus-arrow-controls{display:flex;align-items:center;justify-content:center;gap:9px}
+.focus-arrow-controls button{
+  display:grid;place-items:center;
+  width:42px;height:42px;min-width:42px;
+  padding:0;border:1px solid rgba(205,174,119,.34);border-radius:50%;
+  color:#ead7b4;background:linear-gradient(145deg,rgba(205,174,119,.2),rgba(205,174,119,.055));
+  font:500 22px/1 var(--font);cursor:pointer;
+  box-shadow:0 5px 18px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.08);
+  transition:transform .22s ease,border-color .22s ease,background .22s ease,opacity .22s ease;
+}
+.focus-arrow-controls button:hover:not(:disabled){transform:translateY(-2px);border-color:rgba(230,200,148,.72);background:rgba(205,174,119,.28)}
+.focus-arrow-controls button:disabled{opacity:.24;cursor:default;box-shadow:none}
+.input-focus-arrows{position:sticky;left:0;z-index:8;width:100%;padding:12px 0 4px;grid-column:1/-1}
+.output-focus-arrows{margin:0 0 8px}
+.focus-controls{gap:10px}
+.focus-controls>[data-focus-next-category]{width:100%}
+html[data-theme="light"] .focus-arrow-controls button{color:#604a28;background:linear-gradient(145deg,rgba(194,155,91,.2),rgba(194,155,91,.07));border-color:rgba(152,116,60,.34)}
+/* The primary action remains fully legible and actionable in Focus Visual Mode. */
+body.focus-visual-active .workspace.focus-mode .intake-footer,
+body.focus-visual-active .workspace.focus-mode .intake-footer .primary-button{
+  filter:none!important;opacity:1!important;visibility:visible!important;
+}
+body.focus-visual-active .workspace.focus-mode .intake-footer{position:relative;z-index:7}
+@media(max-width:760px){
+  .input-focus-arrows{position:sticky;bottom:10px;padding:10px 0 8px;background:linear-gradient(180deg,transparent,rgba(4,6,9,.82) 28%)}
+  .focus-arrow-controls button{width:46px;height:46px;min-width:46px}
+  .results.focus-mode .focus-controls{gap:8px}
+}
+@media(prefers-reduced-motion:reduce){.focus-arrow-controls button{transition:none}}
