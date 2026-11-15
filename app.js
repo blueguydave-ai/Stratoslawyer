@@ -154,22 +154,43 @@ function startWaitingInsights(){
   showSet();
 }
 
-// Light the Analyse button when the structured intake is substantially complete.
-// Unknown or genuinely unavailable facts can remain blank; analysis is never blocked.
+// Require enough usable material before spending an API request.
+// Unknown fields may remain blank; the gate checks breadth and substance, not every field.
+const intakeCoverageGroups = [
+  ["case-type","case-role","parties","relief","client-objective"],
+  ["case-stage","court","jurisdiction","next-date","orders-documents"],
+  ["opponent-position","opponent-conduct"],
+  ["own-evidence","own-witnesses","opponent-evidence","opponent-witnesses"]
+];
+function inspectIntakeQuality() {
+  const completed = intakeFieldIds.filter(id => String(document.getElementById(id)?.value || "").trim());
+  const coveredGroups = intakeCoverageGroups.filter(group => group.some(id => String(document.getElementById(id)?.value || "").trim()));
+  const hasSubstantiveNarrative = description.value.trim().length >= 120;
+  const hasDocuments = selectedFiles.length > 0;
+  const enoughStructuredDetail = completed.length >= 5 && coveredGroups.length >= 3;
+  const enoughSourceMaterial = hasSubstantiveNarrative || hasDocuments;
+  return {
+    ready: enoughStructuredDetail && enoughSourceMaterial,
+    completedCount: completed.length,
+    groupCount: coveredGroups.length,
+    hasSubstantiveNarrative,
+    hasDocuments,
+    message: [
+      !enoughStructuredDetail ? "Complete at least 5 relevant case fields across at least 3 different sections." : "",
+      !enoughSourceMaterial ? "Add a case description of at least 120 characters or upload at least one case document." : ""
+    ].filter(Boolean).join(" ")
+  };
+}
 function updateAnalyzeReadiness() {
-  const completedFields = intakeFieldIds.filter(id => {
-    const field = document.getElementById(id);
-    return Boolean(field && String(field.value || "").trim());
-  }).length;
-  const isReady = completedFields >= Math.ceil(intakeFieldIds.length * 0.5);
-  analyzeButton.classList.toggle("is-intake-ready", isReady);
-  analyzeButton.setAttribute("data-intake-progress", `${completedFields}/${intakeFieldIds.length}`);
+  const quality = inspectIntakeQuality();
+  analyzeButton.classList.toggle("is-intake-ready", quality.ready);
+  analyzeButton.setAttribute("data-intake-progress", quality.ready ? "DETAILS READY" : "MORE DETAILS NEEDED");
 }
 intakeAccordions.addEventListener("input", event => {
-  if (event.target && intakeFieldIds.includes(event.target.id)) updateAnalyzeReadiness();
+  if (event.target && (intakeFieldIds.includes(event.target.id) || event.target.id === "case-description")) updateAnalyzeReadiness();
 });
 intakeAccordions.addEventListener("change", event => {
-  if (event.target && intakeFieldIds.includes(event.target.id)) updateAnalyzeReadiness();
+  if (event.target && (intakeFieldIds.includes(event.target.id) || event.target.id === "case-description")) updateAnalyzeReadiness();
 });
 updateAnalyzeReadiness();
 
@@ -213,6 +234,7 @@ function addFiles(files) {
     selectedFiles.push(file);
   }
   renderFiles();
+  updateAnalyzeReadiness();
   input.value = "";
 }
 input.addEventListener("change",event => addFiles([...event.target.files]));
@@ -771,7 +793,15 @@ analyzeButton.addEventListener("click", async () => {
   results.hidden = true;
   const caseText = description.value.trim();
   const hasStructuredContext = intakeFieldIds.some(id => (document.getElementById(id)?.value || "").trim());
-  if (!caseText && !hasStructuredContext && !selectedFiles.length) { showError("Add a few case details or attach at least one supported document to begin."); return; }
+  const intakeQuality = inspectIntakeQuality();
+  if (!intakeQuality.ready) {
+    showError("There is not enough information to analyse this matter yet. " + intakeQuality.message + " The system has not started and no analysis request has been sent.");
+    const firstIncomplete = !intakeQuality.hasSubstantiveNarrative && !intakeQuality.hasDocuments
+      ? document.getElementById("case-description")
+      : intakeFieldIds.map(id => document.getElementById(id)).find(field => field && !String(field.value || "").trim());
+    if (firstIncomplete) firstIncomplete.focus({preventScroll:true});
+    return;
+  }
   analyzeButton.disabled = true;
   analyzeButton.querySelector("span:first-child").textContent = "Analysing...";
   progressPanel.hidden = false;
