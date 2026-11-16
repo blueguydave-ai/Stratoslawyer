@@ -38,4 +38,5 @@ drop policy if exists "saved_analyses_delete_own" on public.saved_analyses;
 create policy "saved_analyses_delete_own" on public.saved_analyses
   for delete to authenticated using (user_id = (select auth.uid()));
 
+revoke all on public.saved_analyses from public, anon;
 grant select, insert, update, delete on public.saved_analyses to authenticated;
