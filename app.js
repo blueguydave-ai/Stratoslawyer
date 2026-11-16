@@ -1454,7 +1454,6 @@ analyzeButton.addEventListener("click", async () => {
   errorMessage.hidden = true;
   results.hidden = true;
   const caseText = description.value.trim();
-  const hasStructuredContext = intakeFieldIds.some(id => (document.getElementById(id)?.value || "").trim());
   const intakeQuality = inspectIntakeQuality();
   if (dailyAnalysesRemaining === 0) {
     showError("You've used all 10 analyses for today. Your allowance resets at midnight Nigeria time.");
