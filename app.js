@@ -9,7 +9,6 @@ const authPassword = document.getElementById("auth-password");
 const authSubmit = document.getElementById("auth-submit");
 const authMessage = document.getElementById("auth-message");
 const authTitle = document.getElementById("auth-title");
-const authHeaderStatus = document.getElementById("auth-header-status");
 const accountMenuToggle = document.getElementById("account-menu-toggle");
 const accountMenu = document.getElementById("account-menu");
 const accountDisplayName = document.getElementById("account-display-name");
@@ -65,14 +64,12 @@ function applyAuthSession(session) {
     accountMenu.hidden = true;
     accountMenuToggle.setAttribute("aria-expanded","false");
     accountDisplayName.textContent = "Account";
-    authHeaderStatus.textContent = "";
     savedAnalysisRecords = [];
     renderSavedHistory();
   } else {
     const metadata = session.user.user_metadata || {};
     const displayName = String(metadata.full_name || metadata.name || "").trim() || "Account";
     accountDisplayName.textContent = displayName;
-    authHeaderStatus.textContent = "";
     loadSavedHistory(session.user.id);
   }
 }
