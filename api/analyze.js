@@ -87,7 +87,7 @@ export default async function handler(req, res) {
     process.env.SUPABASE_ANON_KEY ||
     "sb_publishable_flbGYkCA3hUKxFXIJYV1Mw_vroE6hcp";
   const authorization = req.headers.authorization || req.headers.Authorization || "";
-  const tokenMatch = typeof authorization === "string" && authorization.match(/^Bearer\\s+([^\\s]+)$/i);
+  const tokenMatch = typeof authorization === "string" && authorization.match(/^Bearer\s+([^\s]+)$/i);
   if (!tokenMatch || tokenMatch[1].length > 8192) {
     return jsonError(res, 401, "Please sign in before analysing a case.");
   }
