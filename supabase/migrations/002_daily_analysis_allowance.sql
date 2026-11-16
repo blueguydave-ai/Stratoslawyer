@@ -69,7 +69,7 @@ begin
     set analyses_used = usage.analyses_used + 1,
         updated_at = now()
     where usage.analyses_used < 10
-  returning daily_analysis_usage.analyses_used into v_used;
+  returning usage.analyses_used into v_used;
 
   if v_used is null then
     select u.analyses_used into v_used
