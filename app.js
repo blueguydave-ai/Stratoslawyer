@@ -94,7 +94,8 @@ try {
       applyAuthSession(session);
       if (event === "PASSWORD_RECOVERY") {
         authPanel.hidden = false;
-        accountBar.hidden = true;
+        accountMenu.hidden = true;
+        accountMenuToggle.hidden = true;
         document.querySelector(".workspace").hidden = true;
         setAuthMode("recovery");
         setAuthMessage("Choose a new password for your account.");
@@ -264,7 +265,7 @@ function buildAnalysisTitle() {
   return [type || "Case analysis",court,jurisdiction].filter(Boolean).join(" · ").slice(0,110);
 }
 function markdownToPlainText(markdown) {
-  return String(markdown || "").replace(/^#{1,6}\\s*/gm,"").replace(/\\*\\*(.*?)\\*\\*/g,"$1").replace(/\\*(.*?)\\*/g,"$1").replace(/^`{1,3}.*$/gm,"").replace(/^[-*+]\\s/gm,"• ").replace(/^\\d+\\.\\s/gm,"• ").replace(/\\n{3,}/g,"\\n\\n");
+  return String(markdown || "").replace(/^#{1,6}\s*/gm,"").replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/^`{1,3}.*$/gm,"").replace(/^[-*+]\s/gm,"• ").replace(/^\d+\.\s/gm,"• ").replace(/\n{3,}/g,"\n\n");
 }
 function exportAnalysis(record,format) {
   const title = record.title || "Case analysis";
@@ -276,7 +277,7 @@ function exportAnalysis(record,format) {
     if (!printWindow) return;
     const safeTitle = title.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
     const safeText = plain.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
-    printWindow.document.write('<!doctype html><html><head><title>'+safeTitle+'</title><style>body{font:12pt/1.65 Arial,sans-serif;max-width:850px;margin:40px auto;padding:0 24px;color:#20242a}h1{font-size:22pt}pre{white-space:pre-wrap;font:inherit}footer{margin-top:32px;color:#666;font-size:9pt}@media print{body{margin:18mm auto}}</style></head><body><h1>'+safeTitle+'</h1><pre>'+safeText+'</pre><footer>STRATOSLAWYER · Saved case analysis</footer><script>window.onload=()=>window.print()<\\/script></body></html>');
+    printWindow.document.write('<!doctype html><html><head><title>'+safeTitle+'</title><style>body{font:12pt/1.65 Arial,sans-serif;max-width:850px;margin:40px auto;padding:0 24px;color:#20242a}h1{font-size:22pt}pre{white-space:pre-wrap;font:inherit}footer{margin-top:32px;color:#666;font-size:9pt}@media print{body{margin:18mm auto}}</style></head><body><h1>'+safeTitle+'</h1><pre>'+safeText+'</pre><footer>STRATOSLAWYER · Saved case analysis</footer><script>window.onload=()=>window.print()</script></body></html>');
     printWindow.document.close();
     return;
   }
@@ -287,10 +288,10 @@ function exportAnalysis(record,format) {
     }
     const {Document,Paragraph,TextRun,HeadingLevel,Packer}=window.docx;
     const paragraphs = [new Paragraph({text:title,heading:HeadingLevel.TITLE})];
-    markdown.split("\\n").forEach(line => {
-      const clean = line.replace(/^#{1,6}\\s*/,"").replace(/\\*\\*(.*?)\\*\\*/g,"$1").trim();
+    markdown.split("\n").forEach(line => {
+      const clean = line.replace(/^#{1,6}\\s*/,"").replace(/\*\*(.*?)\*\*/g,"$1").trim();
       if (!clean) { paragraphs.push(new Paragraph({text:""})); return; }
-      const heading = line.match(/^(#{1,3})\\s+(.*)$/);
+      const heading = line.match(/^(#{1,3})\s+(.*)$/);
       paragraphs.push(new Paragraph({
         children:[new TextRun(clean)],
         ...(heading ? {heading:heading[1].length===1?HeadingLevel.HEADING_1:heading[1].length===2?HeadingLevel.HEADING_2:HeadingLevel.HEADING_3} : {})
