@@ -316,7 +316,7 @@ function renderSavedHistory() {
   const now = new Date();
   const filtered = savedAnalysisRecords.filter(record => {
     const snapshot = record.snapshot || {};
-    const searchable = [record.title,snapshot.court,snapshot.jurisdiction,snapshot.parties,snapshot["case-type"],snapshot["case-description"]].join(" ").toLowerCase();
+    const searchable = [record.title,snapshot.court,snapshot.jurisdiction,snapshot.parties,snapshot["case-type"],snapshot["case-description"],record.savedAt,record.updatedAt,new Date(record.savedAt).toLocaleDateString()].join(" ").toLowerCase();
     if (query && !searchable.includes(query)) return false;
     if (filter === "favorites" && !record.favorite) return false;
     if (filter === "recent" && now - new Date(record.updatedAt || record.savedAt) > 7 * 86400000) return false;
