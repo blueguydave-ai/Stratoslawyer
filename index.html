@@ -13,13 +13,32 @@
   <script defer src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
   <script defer src="/supabase-config.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
   <header class="topbar">
     <a class="brand" href="/" aria-label="STRATOSLAWYER home"><span class="brand-mark">S</span><span>STRATOS<span class="brand-light">LAWYER</span></span></a>
-    <div class="topbar-actions"><div class="top-meta"><span class="status-dot"></span><span>NIGERIAN LEGAL INTELLIGENCE</span></div><span id="auth-header-status" class="auth-header-status" aria-live="polite">ACCOUNT REQUIRED</span><button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode"><span class="theme-glyph" aria-hidden="true">☼</span><span class="theme-label">Light mode</span></button></div>
+    <div class="topbar-actions">
+      <div class="top-meta"><span class="status-dot"></span><span>NIGERIAN LEGAL INTELLIGENCE</span></div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode"><span class="theme-glyph" aria-hidden="true">☼</span><span class="theme-label">Light mode</span></button>
+      <div class="account-menu-wrap">
+        <button id="account-menu-toggle" class="account-menu-toggle" type="button" aria-label="Open account menu" aria-expanded="false" aria-controls="account-menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div id="account-menu" class="account-menu" hidden>
+          <div class="account-menu-identity"><span class="account-menu-kicker">SIGNED IN AS</span><strong id="account-display-name">Account</strong></div>
+          <button id="menu-history-toggle" class="account-menu-item" type="button" aria-expanded="false">Analysed cases <span id="history-count" class="history-count">0</span></button>
+          <div id="history-panel" class="history-panel" hidden>
+            <p class="history-empty" id="history-empty">Your saved analyses will appear here.</p>
+            <div id="history-list" class="history-list"></div>
+            <p class="history-device-note">Saved analyses stay on this device and in this browser.</p>
+          </div>
+          <button id="menu-signout" class="account-menu-item account-menu-signout" type="button">Sign out</button>
+        </div>
+      </div>
+    </div>
   </header>
 
   <main class="shell">
@@ -45,13 +64,9 @@
       </div>
       <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
     </section>
-    <div id="account-bar" class="account-bar" hidden>
-      <span>Signed in as <strong id="account-email"></strong></span>
-      <button id="auth-signout" class="secondary-button" type="button">Sign out</button>
-    </div>
     <section class="intro">
       <div class="eyebrow"><span class="eyebrow-line"></span> CASE INTELLIGENCE ENGINE <span class="version">EARLY ACCESS</span></div>
-      <h1>See the case.<br><span>Before it sees you.</span></h1>
+      <h1>See the case.<br><span id="intro-typewriter" data-text="Before it sees you.">Before it sees you.</span><span id="intro-typewriter-cursor" class="typewriter-cursor" aria-hidden="true"></span></h1>
       <p class="intro-copy">Understand the matter, expose its weak points, anticipate the other side and prepare your next move — across Nigerian legal practice.</p>
     </section>
 
@@ -150,7 +165,7 @@
     </section>
 
     <section id="results" class="results" hidden>
-      <div class="results-heading"><div><div class="step-label">02 / CASE INTELLIGENCE</div><h2>Your case, examined.</h2><p class="view-mode-hint">Your selected viewing mode is applied here.</p></div><div class="results-actions"><button id="new-analysis" class="secondary-button">New analysis ↗</button></div></div>
+      <div class="results-heading"><div><div class="step-label">02 / CASE INTELLIGENCE</div><h2>Your case, examined.</h2><p class="view-mode-hint">Your selected viewing mode is applied here.</p></div><div class="results-actions"><button id="save-analysis" class="secondary-button save-analysis-button" type="button">Save analysis</button><button id="new-analysis" class="secondary-button">New analysis ↗</button></div></div>
       <div class="results-warning"><span>!</span><p>Preparation support, not a substitute for professional judgment. Independently verify authorities, current rules, filing requirements and deadlines before acting.</p></div>
       <div class="analysis-layout"><nav id="analysis-nav" class="analysis-nav" aria-label="Analysis sections"></nav><div id="analysis-output" class="analysis-output" aria-live="polite"></div></div>
     </section>
