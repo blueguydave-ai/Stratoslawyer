@@ -2169,3 +2169,26 @@ html[data-theme="light"] .daily-usage.is-empty .daily-usage-label strong{color:#
  .daily-usage-label{text-align:center}
  .daily-usage-label span{max-width:70px;text-align:center}
 }
+
+/* Searchable, cloud-saved case history */
+.history-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(125px,.75fr);gap:7px;margin:8px 3px 10px}
+.history-tools input,.history-tools select,.deadline-form input{width:100%;min-width:0;min-height:34px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);font:10px var(--font)}
+.history-tools input::placeholder,.deadline-form input::placeholder{color:var(--muted)}
+.history-item-actions{flex-wrap:wrap}
+.history-item-actions button.history-delete{color:#d98f84;border-color:rgba(190,110,96,.35)}
+.case-deadlines{display:grid;gap:7px;padding-top:9px;border-top:1px solid var(--line);min-width:0}
+.case-deadlines>strong{font-size:10px;letter-spacing:.035em;color:var(--muted);font-weight:600}
+.case-deadline-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;color:var(--text);min-width:0}
+.case-deadline-row span{min-width:0;overflow-wrap:anywhere;line-height:1.45}
+.case-deadline-row button{flex:0 0 auto;min-height:26px;padding:3px 7px;border:1px solid var(--line);border-radius:5px;background:transparent;color:var(--muted);font:9px var(--font);cursor:pointer}
+.deadline-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(105px,.7fr) auto;gap:6px;min-width:0}
+.deadline-form input{min-height:31px;font-size:9px}
+.deadline-form button{min-height:31px;padding:5px 9px;border:1px solid rgba(200,169,110,.5);border-radius:6px;background:rgba(200,169,110,.1);color:var(--text);font:10px var(--font);cursor:pointer}
+html[data-theme="light"] .history-tools input,html[data-theme="light"] .history-tools select,html[data-theme="light"] .deadline-form input{background:#fff;color:#242a31}
+html[data-theme="light"] .history-item-actions button.history-delete{color:#984e40}
+@media(max-width:420px){
+ .history-tools{grid-template-columns:1fr}
+ .deadline-form{grid-template-columns:minmax(0,1fr) minmax(100px,.8fr)}
+ .deadline-form button{grid-column:1/-1}
+ .history-item-actions button{flex:1 1 auto}
+}
