@@ -18,7 +18,13 @@ const historyList = document.getElementById("history-list");
 const historyEmpty = document.getElementById("history-empty");
 const historyFeedback = document.getElementById("history-feedback");
 const historyCount = document.getElementById("history-count");
+const dailyUsage = document.getElementById("daily-usage");
+const dailyUsageNumber = document.getElementById("daily-usage-number");
+const dailyUsageCaption = document.getElementById("daily-usage-caption");
+const dailyUsageProgress = document.getElementById("daily-usage-progress");
 const authSignout = document.getElementById("menu-signout");
+let dailyAnalysesRemaining = null;
+let dailyUsageRequest = 0;
 let currentAnalysisMarkdown = "";
 let currentAnalysisTitle = "Case analysis";
 let savedAnalysisRecords = [];
@@ -54,6 +60,48 @@ function setAuthMode(mode) {
   authForgot.hidden = signup || recovery;
   setAuthMessage("");
 }
+function renderDailyUsage(usage) {
+  const limit = Number(usage?.limit) || 10;
+  const remainingValue = Number(usage?.remaining);
+  if (!Number.isFinite(remainingValue)) {
+    dailyAnalysesRemaining = null;
+    dailyUsageNumber.textContent = "—";
+    dailyUsageCaption.textContent = "COUNT UNAVAILABLE";
+    dailyUsageProgress.style.strokeDashoffset = "100";
+    dailyUsage.classList.remove("is-empty");
+    dailyUsage.setAttribute("aria-label","Daily analysis count unavailable");
+    return;
+  }
+  const remaining = Math.max(0,Math.min(limit,Math.floor(remainingValue)));
+  dailyAnalysesRemaining = remaining;
+  dailyUsageNumber.textContent = String(remaining);
+  dailyUsageCaption.textContent = remaining === 0 ? "NONE LEFT TODAY" : remaining + " LEFT TODAY";
+  dailyUsageProgress.style.strokeDashoffset = String(100 - (remaining / limit * 100));
+  dailyUsage.classList.toggle("is-empty",remaining === 0);
+  dailyUsage.setAttribute("aria-label",remaining + " of " + limit + " analyses remaining today");
+}
+
+async function refreshDailyUsage() {
+  const requestId = ++dailyUsageRequest;
+  const token = currentAuthSession?.access_token;
+  if (!token) {
+    renderDailyUsage(null);
+    return;
+  }
+  try {
+    const response = await fetch("/api/usage",{
+      method:"GET",
+      headers:{"Authorization":"Bearer " + token}
+    });
+    const data = await response.json().catch(()=>({}));
+    if (requestId !== dailyUsageRequest) return;
+    if (!response.ok) throw new Error("Daily allowance unavailable");
+    renderDailyUsage(data);
+  } catch(error) {
+    if (requestId === dailyUsageRequest) renderDailyUsage(null);
+  }
+}
+
 function applyAuthSession(session) {
   currentAuthSession = session || null;
   const signedIn = Boolean(session?.user);
@@ -67,11 +115,14 @@ function applyAuthSession(session) {
     accountDisplayName.textContent = "Account";
     savedAnalysisRecords = [];
     renderSavedHistory();
+    dailyUsageRequest++;
+    renderDailyUsage(null);
   } else {
     const metadata = session.user.user_metadata || {};
     const displayName = String(metadata.full_name || metadata.name || "").trim() || "Account";
     accountDisplayName.textContent = displayName;
     loadSavedHistory(session.user.id);
+    refreshDailyUsage();
   }
 }
 try {
@@ -577,7 +628,9 @@ const allowedTypes = new Set(["application/pdf","text/plain","text/markdown","im
 const formatSize = bytes => bytes < 1024 * 1024 ? Math.round(bytes / 1024) + " KB" : (bytes / 1024 / 1024).toFixed(1) + " MB";
 
 function showError(message) {
-  const safeMessage = /not enough information/i.test(message)
+  const safeMessage = /daily limit|analyses for today|all ten analyses/i.test(message)
+    ? "You've used all 10 analyses for today. Your allowance resets at midnight Nigeria time."
+    : /not enough information/i.test(message)
     ? "Please add more case details before starting the analysis."
     : /session|sign in/i.test(message)
       ? "Your session has ended. Please sign in again."
@@ -1214,6 +1267,10 @@ analyzeButton.addEventListener("click", async () => {
   const caseText = description.value.trim();
   const hasStructuredContext = intakeFieldIds.some(id => (document.getElementById(id)?.value || "").trim());
   const intakeQuality = inspectIntakeQuality();
+  if (dailyAnalysesRemaining === 0) {
+    showError("You've used all 10 analyses for today. Your allowance resets at midnight Nigeria time.");
+    return;
+  }
   if (!intakeQuality.ready) {
     showError("There is not enough information to analyse this matter yet. " + intakeQuality.message);
     const firstIncomplete = !intakeQuality.hasSubstantiveNarrative && !intakeQuality.hasDocuments
@@ -1250,7 +1307,12 @@ analyzeButton.addEventListener("click", async () => {
       body:JSON.stringify({description:caseText,caseContext:Object.fromEntries(intakeFieldIds.map(id => [id,document.getElementById(id)?.value?.trim() || "Not supplied"])),files})
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(response.status === 401 ? "Please sign in again." : "Analysis failed.");
+    if (!response.ok) {
+      if (data.usage) renderDailyUsage(data.usage);
+      if (data.code === "DAILY_LIMIT_REACHED") throw new Error(data.error || "Daily analysis limit reached.");
+      throw new Error(response.status === 401 ? "Please sign in again." : "Analysis failed.");
+    }
+    if (data.usage) renderDailyUsage(data.usage);
     const {data:latestSessionData} = await authClient.auth.getSession();
     if (!latestSessionData.session?.user) {
       throw new Error("You signed out before the analysis finished. Sign in again to continue.");
