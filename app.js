@@ -127,6 +127,9 @@ function applyAuthSession(session) {
     accountDisplayName.textContent = displayName;
     loadSavedHistory(session.user.id);
     refreshDailyUsage();
+    // The workspace was hidden until authentication completed. Observe it only
+    // after it has entered the layout so its entrance animations can run.
+    requestAnimationFrame(() => revealAllWithin(document.querySelector(".workspace")));
   }
 }
 try {
@@ -454,6 +457,7 @@ function resumeSavedCase(record) {
   renderAnalysis(record.markdown);
   results.hidden = false;
   results.classList.toggle("focus-mode",focusVisualMode);
+  requestAnimationFrame(() => revealAllWithin(results));
   accountMenu.hidden = true;
   accountMenuToggle.setAttribute("aria-expanded","false");
   historyPanel.hidden = true;
@@ -1283,7 +1287,6 @@ function renderAnalysis(markdown) {
     fallback.className = "analysis-fallback";
     fallback.textContent = markdown;
     output.append(fallback);
-    requestAnimationFrame(() => revealAllWithin(results));
     return;
   }
 
@@ -1433,9 +1436,8 @@ function renderAnalysis(markdown) {
   if(!focusControls.isConnected) layout.append(focusControls);
   const cards = [...output.querySelectorAll(".analysis-card")];
   if(focusVisualMode&&cards.length)setFocusedCard(cards[0]);
-  // Results are revealed immediately after renderAnalysis returns. Start observing
-  // on the next frame so the cards are measured in their visible layout.
-  requestAnimationFrame(() => revealAllWithin(results));
+  // The caller reveals the results section first, then registers its cards with
+  // the observer once the section has a measurable, visible layout.
   if ("IntersectionObserver" in window) {
     analysisActiveObserver = new IntersectionObserver(entries => {
       const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
@@ -1516,6 +1518,7 @@ analyzeButton.addEventListener("click", async () => {
     document.getElementById("save-analysis").textContent = "Save analysis";
     results.classList.toggle("focus-mode",focusVisualMode);
     results.hidden = false;
+    requestAnimationFrame(() => revealAllWithin(results));
     if(focusVisualMode)setTimeout(()=>{
       const first=output.querySelector(".analysis-card");
       if(first)setFocusedCard(first);
