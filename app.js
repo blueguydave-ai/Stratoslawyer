@@ -289,7 +289,7 @@ function exportAnalysis(record,format) {
     const {Document,Paragraph,TextRun,HeadingLevel,Packer}=window.docx;
     const paragraphs = [new Paragraph({text:title,heading:HeadingLevel.TITLE})];
     markdown.split("\n").forEach(line => {
-      const clean = line.replace(/^#{1,6}\\s*/,"").replace(/\*\*(.*?)\*\*/g,"$1").trim();
+      const clean = line.replace(/^#{1,6}\s*/,"").replace(/\*\*(.*?)\*\*/g,"$1").trim();
       if (!clean) { paragraphs.push(new Paragraph({text:""})); return; }
       const heading = line.match(/^(#{1,3})\s+(.*)$/);
       paragraphs.push(new Paragraph({
