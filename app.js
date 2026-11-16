@@ -160,6 +160,20 @@ authForgot.addEventListener("click",async () => {
     authForgot.disabled = false;
   }
 });
+function clearCaseWorkspace() {
+  document.querySelectorAll(".workspace input:not([type=file]),.workspace textarea,.workspace select").forEach(field => {
+    field.value = "";
+  });
+  const fileInput = document.getElementById("file-input");
+  if (fileInput) fileInput.value = "";
+  if (Array.isArray(selectedFiles)) selectedFiles.splice(0);
+  document.getElementById("file-list").replaceChildren();
+  document.getElementById("analysis-output").replaceChildren();
+  document.getElementById("analysis-nav").replaceChildren();
+  document.getElementById("results").hidden = true;
+  document.getElementById("progress-panel").hidden = true;
+  document.getElementById("error-message").hidden = true;
+}
 authSignout.addEventListener("click",async () => {
   if (!authClient) return;
   authSignout.disabled = true;
@@ -167,6 +181,7 @@ authSignout.addEventListener("click",async () => {
     const {error} = await authClient.auth.signOut({scope:"local"});
     if (error) throw error;
     applyAuthSession(null);
+    clearCaseWorkspace();
     authPassword.value = "";
     setAuthMode("signin");
     setAuthMessage("You have signed out of this device.");
@@ -1044,6 +1059,10 @@ analyzeButton.addEventListener("click", async () => {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Analysis failed. Please try again.");
+    const {data:latestSessionData} = await authClient.auth.getSession();
+    if (!latestSessionData.session?.user) {
+      throw new Error("You signed out before the analysis finished. Sign in again to continue.");
+    }
     clearTimeout(stageTimer);
     stopWaitingInsights();
     progressPanel.hidden = true;
