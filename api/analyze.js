@@ -80,6 +80,38 @@ export default async function handler(req, res) {
     return jsonError(res, 405, "Method not allowed.");
   }
 
+  // Verify the caller's Supabase access token on the server. The browser key
+  // is publishable by design; never use a service-role key for this check.
+  const supabaseUrl = process.env.SUPABASE_URL || "https://jrwbthzdoibmrmqoqklg.supabase.co";
+  const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    "sb_publishable_flbGYkCA3hUKxFXIJYV1Mw_vroE6hcp";
+  const authorization = req.headers.authorization || req.headers.Authorization || "";
+  const tokenMatch = typeof authorization === "string" && authorization.match(/^Bearer\\s+([^\\s]+)$/i);
+  if (!tokenMatch || tokenMatch[1].length > 8192) {
+    return jsonError(res, 401, "Please sign in before analysing a case.");
+  }
+  let authenticatedUser;
+  try {
+    const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method:"GET",
+      headers:{
+        "apikey":supabasePublishableKey,
+        "Authorization":"Bearer " + tokenMatch[1]
+      },
+      signal:AbortSignal.timeout(10000)
+    });
+    if (!authResponse.ok) {
+      return jsonError(res, 401, "Your session is no longer valid. Please sign in again.");
+    }
+    authenticatedUser = await authResponse.json();
+    if (!authenticatedUser?.id) {
+      return jsonError(res, 401, "Your session could not be verified. Please sign in again.");
+    }
+  } catch (error) {
+    return jsonError(res, 503, "Account verification is temporarily unavailable. Please try again.");
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return jsonError(res, 503, "The analysis service is not configured yet. Add GEMINI_API_KEY in Vercel environment variables.");
 
