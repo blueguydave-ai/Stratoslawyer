@@ -74,6 +74,22 @@ function jsonError(res, status, error) {
   return res.status(status).json({ error });
 }
 
+
+async function callUsageRpc(functionName,body,accessToken,supabaseUrl,supabaseKey) {
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${functionName}`,{
+    method:"POST",
+    headers:{
+      "apikey":supabaseKey,
+      "Authorization":"Bearer " + accessToken,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(body),
+    signal:AbortSignal.timeout(10000)
+  });
+  const payload = await response.json().catch(()=>null);
+  return {ok:response.ok,payload};
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -194,6 +210,54 @@ export default async function handler(req, res) {
   }
   if (totalBytes > 2.7 * 1024 * 1024) return jsonError(res, 413, "The combined upload is too large for this first version. Keep the total below 2.7 MB or analyse fewer files.");
 
+  // Reserve one of the user's ten daily analyses atomically before calling Gemini.
+  // The reservation is released if the analysis fails.
+  let dailyReservation;
+  try {
+    const quotaResult = await callUsageRpc(
+      "reserve_daily_analysis",
+      {p_user_id:authenticatedUser.id},
+      tokenMatch[1],
+      supabaseUrl,
+      supabasePublishableKey
+    );
+    if (!quotaResult.ok) {
+      return jsonError(res,503,"Your daily allowance is temporarily unavailable. Please try again shortly.");
+    }
+    dailyReservation = Array.isArray(quotaResult.payload) ? quotaResult.payload[0] : quotaResult.payload;
+    if (!dailyReservation) {
+      return jsonError(res,503,"Your daily allowance is temporarily unavailable. Please try again shortly.");
+    }
+    if (!dailyReservation.allowed) {
+      return res.status(429).json({
+        code:"DAILY_LIMIT_REACHED",
+        error:"You have used all ten analyses for today. Your allowance resets at midnight Nigeria time.",
+        usage:{
+          used:Number(dailyReservation.analyses_used)||10,
+          remaining:0,
+          limit:10,
+          date:dailyReservation.usage_date
+        }
+      });
+    }
+  } catch(error) {
+    return jsonError(res,503,"Your daily allowance is temporarily unavailable. Please try again shortly.");
+  }
+
+  const releaseDailyReservation = async () => {
+    try {
+      await callUsageRpc(
+        "release_daily_analysis",
+        {p_user_id:authenticatedUser.id,p_usage_date:dailyReservation.usage_date},
+        tokenMatch[1],
+        supabaseUrl,
+        supabasePublishableKey
+      );
+    } catch(error) {
+      // A failed release is retained for safe accounting rather than bypassing the limit.
+    }
+  };
+
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: "POST",
@@ -208,6 +272,7 @@ export default async function handler(req, res) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
+      await releaseDailyReservation();
       return jsonError(res, response.status === 429 ? 429 : 502,
         response.status === 429
           ? "The service is temporarily busy. Please try again shortly."
@@ -216,6 +281,7 @@ export default async function handler(req, res) {
     const candidate = payload.candidates?.[0];
     if (!candidate || candidate.finishReason === "MAX_TOKENS" ||
         candidate.finishReason === "SAFETY" || candidate.finishReason === "RECITATION") {
+      await releaseDailyReservation();
       return jsonError(res, 502, "The analysis was incomplete and has not been presented. Please try again with fewer or smaller documents.");
     }
     const text = (candidate.content?.parts || []).map(part => part.text || "").join("\n").trim();
@@ -226,10 +292,20 @@ export default async function handler(req, res) {
       "## 4. ENDGAME — FINAL ADDRESS AND AUTHORITIES"
     ];
     if (!text || requiredHeadings.some(heading => !text.includes(heading))) {
+      await releaseDailyReservation();
       return jsonError(res, 502, "The analysis did not contain all four required sections. No incomplete result has been presented; please try again.");
     }
-    return res.status(200).json({ analysis: text });
+    return res.status(200).json({
+      analysis:text,
+      usage:{
+        used:Number(dailyReservation.analyses_used)||1,
+        remaining:Number(dailyReservation.analyses_remaining)||0,
+        limit:Number(dailyReservation.daily_limit)||10,
+        date:dailyReservation.usage_date
+      }
+    });
   } catch (error) {
+    await releaseDailyReservation();
     const timedOut = error?.name === "TimeoutError" || error?.name === "AbortError";
     return jsonError(res, timedOut ? 504 : 502, timedOut ? "Analysis timed out. Try fewer or smaller documents." : "The analysis service could not be reached.");
   }
