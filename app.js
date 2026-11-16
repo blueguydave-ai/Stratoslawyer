@@ -16,6 +16,7 @@ const menuHistoryToggle = document.getElementById("menu-history-toggle");
 const historyPanel = document.getElementById("history-panel");
 const historyList = document.getElementById("history-list");
 const historyEmpty = document.getElementById("history-empty");
+const historyFeedback = document.getElementById("history-feedback");
 const historyCount = document.getElementById("history-count");
 const authSignout = document.getElementById("menu-signout");
 let currentAnalysisMarkdown = "";
@@ -321,11 +322,16 @@ document.getElementById("save-analysis").addEventListener("click",() => {
   savedAnalysisRecords = [record,...savedAnalysisRecords.filter(item=>item.id!==record.id)].slice(0,30);
   if (!persistSavedHistory()) {
     savedAnalysisRecords = savedAnalysisRecords.filter(item=>item.id!==record.id);
-    setAuthMessage("There isn't enough browser storage to save this analysis. Download a copy instead.",true);
+    historyFeedback.textContent = "This browser is low on storage. Download a copy of this analysis instead.";
+    historyFeedback.hidden = false;
     accountMenu.hidden = false;
+    accountMenuToggle.setAttribute("aria-expanded","true");
+    historyPanel.hidden = false;
+    menuHistoryToggle.setAttribute("aria-expanded","true");
     return;
   }
   renderSavedHistory();
+  historyFeedback.hidden = true;
   const saveButton = document.getElementById("save-analysis");
   saveButton.textContent = "Saved";
   saveButton.disabled = true;
