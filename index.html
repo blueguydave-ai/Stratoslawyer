@@ -10,81 +10,159 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="/supabase-config.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
   <header class="topbar">
     <a class="brand" href="/" aria-label="STRATOSLAWYER home"><span class="brand-mark">S</span><span>STRATOS<span class="brand-light">LAWYER</span></span></a>
-    <div class="top-meta"><span class="status-dot"></span><span>NIGERIAN LEGAL INTELLIGENCE</span></div>
+    <div class="topbar-actions">
+      <div class="top-meta"><span class="status-dot"></span><span>NIGERIAN LEGAL INTELLIGENCE</span></div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode"><span class="theme-glyph" aria-hidden="true">☼</span><span class="theme-label">Light mode</span></button>
+      <div class="account-menu-wrap">
+        <button id="account-menu-toggle" class="account-menu-toggle" type="button" aria-label="Open account menu" aria-expanded="false" aria-controls="account-menu" hidden>
+          <span></span><span></span><span></span>
+        </button>
+        <div id="account-menu" class="account-menu" hidden>
+          <div class="account-menu-identity"><span class="account-menu-kicker">SIGNED IN AS</span><strong id="account-display-name">Account</strong></div>
+          <button id="menu-history-toggle" class="account-menu-item" type="button" aria-expanded="false">Analysed cases <span id="history-count" class="history-count">0</span></button>
+          <div id="history-panel" class="history-panel" hidden>
+            <div class="history-tools">
+              <input id="history-search" type="search" placeholder="Search case name or court" aria-label="Search saved cases">
+              <select id="history-filter" aria-label="Filter saved cases">
+                <option value="all">All cases</option>
+                <option value="favorites">Favourites</option>
+                <option value="recent">Updated in last 7 days</option>
+                <option value="deadlines">Cases with upcoming deadlines</option>
+              </select>
+            </div>
+            <p class="history-empty" id="history-empty">Your saved analyses will appear here.</p>
+            <div id="history-list" class="history-list"></div>
+            <p id="history-feedback" class="history-feedback" role="status" hidden></p>
+            <p class="history-device-note">Saved securely to your account and available across devices. Uploaded documents are not included; attach them again when resuming a case.</p>
+          </div>
+          <button id="menu-signout" class="account-menu-item account-menu-signout" type="button">Sign out</button>
+        </div>
+      </div>
+    </div>
   </header>
 
   <main class="shell">
-    <section class="intro">
-      <div class="eyebrow"><span class="eyebrow-line"></span> CASE INTELLIGENCE ENGINE <span class="version">EARLY ACCESS</span></div>
-      <h1>See the case.<br><span>Before it sees you.</span></h1>
-      <p class="intro-copy">Understand the matter, expose its weak points, anticipate the other side and prepare your next move — across Nigerian legal practice.</p>
-    </section>
-
     <section id="auth-panel" class="auth-panel" aria-labelledby="auth-title">
-      <div class="step-label">LAWYER ACCESS</div>
-      <h2 id="auth-title">Sign in to STRATOSLAWYER.</h2>
-      <p class="auth-copy">Create your lawyer account or sign in to continue to your case workspace.</p>
-      <form id="auth-form">
-        <label class="field-label" for="auth-name">Full name</label>
-        <input id="auth-name" class="auth-input" type="text" autocomplete="name" placeholder="Your full name" hidden>
-        <label class="field-label" for="auth-email">Email address</label>
-        <input id="auth-email" class="auth-input" type="email" autocomplete="email" required placeholder="you@example.com">
-        <label class="field-label" for="auth-password">Password</label>
-        <input id="auth-password" class="auth-input" type="password" autocomplete="current-password" required minlength="8" placeholder="At least 8 characters">
-        <button id="auth-submit" class="primary-button auth-submit" type="submit">Sign in <span class="button-arrow">↗</span></button>
+      <div class="step-label">STRATOS ACCOUNT</div>
+      <h2 id="auth-title">Your workspace, kept yours.</h2>
+      <p class="auth-copy">Sign in once on this device. Your session will remain active when you close and reopen the site, until you sign out or your session is cleared.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Account access">
+        <button id="auth-signin-tab" class="auth-tab is-active" type="button" role="tab" aria-selected="true">Sign in</button>
+        <button id="auth-signup-tab" class="auth-tab" type="button" role="tab" aria-selected="false">Create account</button>
+      </div>
+      <form id="auth-form" novalidate>
+        <label class="auth-field-label" for="auth-name" id="auth-name-label" hidden>Your name</label>
+        <input id="auth-name" class="auth-input" type="text" autocomplete="name" maxlength="100" placeholder="Your name" hidden>
+        <label class="auth-field-label" for="auth-email">Email address</label>
+        <input id="auth-email" class="auth-input" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required>
+        <label class="auth-field-label" for="auth-password">Password</label>
+        <input id="auth-password" class="auth-input" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="At least 8 characters" required>
+        <button id="auth-submit" class="primary-button auth-submit" type="submit"><span>Sign in</span><span class="button-arrow">↗</span></button>
       </form>
       <div class="auth-actions">
-        <button id="auth-toggle" class="text-button" type="button">Create an account</button>
-        <button id="forgot-password" class="text-button" type="button">Forgot password?</button>
-        <button id="resend-confirmation" class="text-button" type="button">Resend confirmation email</button>
+        <button id="auth-forgot" class="text-button" type="button">Forgot password?</button>
       </div>
-      <div id="auth-message" class="auth-message" role="status" aria-live="polite"></div>
+      <p id="auth-message" class="auth-message" role="status" aria-live="polite" hidden></p>
     </section>
-
-    <section id="recovery-panel" class="auth-panel recovery-panel" aria-labelledby="recovery-title" hidden>
-      <div class="step-label">ACCOUNT RECOVERY</div>
-      <h2 id="recovery-title">Choose a new password.</h2>
-      <p class="auth-copy">Enter your new password below to regain access to STRATOSLAWYER.</p>
-      <form id="recovery-form">
-        <label class="field-label" for="recovery-password">New password</label>
-        <input id="recovery-password" class="auth-input" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters">
-        <label class="field-label" for="recovery-confirm">Confirm new password</label>
-        <input id="recovery-confirm" class="auth-input" type="password" autocomplete="new-password" minlength="8" required placeholder="Enter the password again">
-        <button id="recovery-submit" class="primary-button auth-submit" type="submit">Save new password <span class="button-arrow">↗</span></button>
-      </form>
-      <div id="recovery-message" class="auth-message" role="status" aria-live="polite"></div>
+    <section class="intro">
+      <div class="eyebrow"><span class="eyebrow-line"></span> CASE INTELLIGENCE ENGINE <span class="version">EARLY ACCESS</span></div>
+      <h1>See the case.<br><span id="intro-typewriter" data-text="Before it sees you.">Before it sees you.</span><span id="intro-typewriter-cursor" class="typewriter-cursor" aria-hidden="true"></span></h1>
+      <p class="intro-copy">Understand the matter, expose its weak points, anticipate the other side and prepare your next move — across Nigerian legal practice.</p>
     </section>
-
-    <div id="account-bar" class="account-bar" hidden>
-      <span id="account-email"></span>
-      <button id="sign-out" class="secondary-button" type="button">Sign out</button>
-    </div>
 
     <section class="workspace" aria-labelledby="intake-title" hidden>
       <div class="section-head">
         <div><div class="step-label">01 / CASE INTAKE</div><h2 id="intake-title">Let's understand your case.</h2></div>
-        <span class="private-note"><span class="lock">⌑</span> PRIVATE SESSION</span>
+        <div class="workspace-head-actions"><span class="private-note">CORE ENGINE TEST MODE</span><button id="view-mode-toggle" class="view-mode-toggle" type="button" aria-pressed="false" aria-label="Enable focus visual mode"><span class="mode-glyph" aria-hidden="true">◈</span><span class="mode-label">Focus visual mode</span></button></div>
       </div>
-      <p class="helper">Start with whatever you have. You do not need to complete a long form or choose a legal category.</p>
+      <p class="helper">Give the system the case frame you know. Leave unknown fields blank; it should identify gaps rather than force assumptions.</p>
+      <div class="intake-principle" role="note" aria-label="Analysis quality and daily allowance">
+        <span class="principle-pulse" aria-hidden="true"></span>
+        <div class="principle-copy">
+          <p class="principle-message">The analysis is only as strong as the volume and accuracy of detail you input.</p>
+          <div id="daily-usage" class="daily-usage" role="status" aria-live="polite" aria-label="Daily analysis count loading">
+            <div class="daily-usage-ring">
+              <svg viewBox="0 0 48 48" aria-hidden="true">
+                <circle class="daily-usage-track" cx="24" cy="24" r="20" pathLength="100"></circle>
+                <circle id="daily-usage-progress" class="daily-usage-progress" cx="24" cy="24" r="20" pathLength="100"></circle>
+              </svg>
+              <strong id="daily-usage-number">—</strong>
+            </div>
+            <div class="daily-usage-label"><strong id="daily-usage-caption">LOADING COUNT</strong><span>RESETS AT MIDNIGHT WAT</span></div>
+          </div>
+        </div>
+      </div>
 
-      <label class="field-label" for="case-description">Describe the matter <span>OPTIONAL IF DOCUMENTS ARE ATTACHED</span></label>
-      <textarea id="case-description" rows="6" placeholder="Tell us what happened, what stage the matter has reached, which side you represent, and what you need to prepare for. Write naturally — legal terminology is not required."></textarea>
-
-      <div class="upload-zone" id="drop-zone" tabindex="0" role="button" aria-label="Choose case documents">
+      <div class="intake-accordions">
+        <details class="intake-group" open>
+          <summary><span class="group-index">01</span><span class="group-copy"><strong>Case identity & objective</strong><small>What is the dispute, who is involved, and what result is sought?</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="intake-grid">
+            <div class="intake-field"><label class="field-label" for="case-type">Case type</label><select id="case-type"><option value="">Let the system identify it</option><option>Civil / Commercial</option><option>Criminal</option><option>Constitutional / Fundamental rights</option><option>Land / Property</option><option>Family / Matrimonial</option><option>Employment / Labour</option><option>Tax / Revenue</option><option>Election petition</option><option>Administrative / Regulatory</option><option>Arbitration / ADR</option><option>Appeal</option><option>Other / Mixed</option></select></div>
+            <div class="intake-field"><label class="field-label" for="case-role">Your client's position</label><select id="case-role"><option value="">Not specified</option><option>Claimant / Plaintiff / Applicant</option><option>Defendant / Respondent</option><option>Accused person</option><option>Prosecution</option><option>Appellant</option><option>Interested party / Other</option></select></div>
+            <div class="intake-field"><label class="field-label" for="parties">Parties & roles</label><input id="parties" type="text" placeholder="Use roles or initials; avoid unnecessary personal data"></div>
+            <div class="intake-field"><label class="field-label" for="relief">Reliefs / charges / orders sought</label><input id="relief" type="text" placeholder="What is each side asking the court to do?"></div>
+            <div class="intake-field"><label class="field-label" for="client-objective">Client's objective</label><input id="client-objective" type="text" placeholder="Best realistic result, acceptable settlement, urgent protection..."></div>
+          </div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">02</span><span class="group-copy"><strong>Court, jurisdiction & procedural stage</strong><small>Identify the forum, applicable process and what has happened so far.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="intake-grid">
+            <div class="intake-field"><label class="field-label" for="case-stage">Current procedural stage</label><select id="case-stage"><option value="">Not sure / Please infer</option><option>Pre-action / Investigation</option><option>Pre-action notice / Demand</option><option>Commencement / Filing</option><option>Service / Response</option><option>Interlocutory applications</option><option>Pleadings / Issues joined</option><option>Case management / Pre-trial</option><option>Hearing / Claimant's case</option><option>Hearing / Defendant's case</option><option>Close of evidence / Final written addresses</option><option>Defendant's final written address filed</option><option>Plaintiff / claimant's final written address filed</option><option>Reply on points of law filed</option><option>Final addresses adopted / Judgment pending</option><option>Judgment delivered</option><option>Enforcement / Execution</option><option>Appeal</option><option>Settlement / ADR</option></select></div>
+            <div class="intake-field"><label class="field-label" for="court">Court / tribunal</label><input id="court" type="text" placeholder="e.g. High Court of Oyo State, NICN, FHC"></div>
+            <div class="intake-field"><label class="field-label" for="jurisdiction">State / judicial division</label><input id="jurisdiction" type="text" placeholder="e.g. Oyo State, Ibadan Judicial Division"></div>
+            <div class="intake-field"><label class="field-label" for="next-date">Next hearing / deadline</label><input id="next-date" type="text" placeholder="Date, event or unknown"></div>
+            <div class="intake-field"><label class="field-label" for="orders-documents">Existing orders & filed documents</label><input id="orders-documents" type="text" placeholder="Pleadings, affidavits, rulings, notices, court orders..."></div>
+          </div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">03</span><span class="group-copy"><strong>Opposing party & their position</strong><small>What they say, what they have done, and what they may rely on.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="intake-grid">
+            <div class="intake-field"><label class="field-label" for="opponent-position">Opponent's pleaded / stated position</label><input id="opponent-position" type="text" placeholder="Their defence, denial, counterclaim or stated version"></div>
+            <div class="intake-field"><label class="field-label" for="opponent-conduct">Known opposing-party conduct</label><input id="opponent-conduct" type="text" placeholder="Applications, denials, delays, settlement position..."></div>
+          </div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">04</span><span class="group-copy"><strong>Evidence, witnesses & deponents</strong><small>Compare what each side has, who can prove it, and what remains untested.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="evidence-grid">
+            <div class="evidence-panel"><div class="evidence-title"><span>01</span><strong>Your side</strong><small>CLIENT / APPLICANT / DEFENCE</small></div>
+              <label class="field-label" for="own-evidence">Available evidence</label><textarea id="own-evidence" rows="3" placeholder="Contracts, messages, receipts, recordings, photographs, records, physical exhibits..."></textarea>
+              <label class="field-label" for="own-witnesses">Witnesses / deponents</label><textarea id="own-witnesses" rows="3" placeholder="Who can testify? What can each person prove? Any affidavit deponents?"></textarea>
+            </div>
+            <div class="evidence-panel opponent-panel"><div class="evidence-title"><span>02</span><strong>Opposing side</strong><small>KNOWN OR ANTICIPATED</small></div>
+              <label class="field-label" for="opponent-evidence">Their available evidence</label><textarea id="opponent-evidence" rows="3" placeholder="Documents, messages, records, physical evidence, material they claim to have..."></textarea>
+              <label class="field-label" for="opponent-witnesses">Their witnesses / deponents</label><textarea id="opponent-witnesses" rows="3" placeholder="Known witnesses, affidavit deponents, roles, likely testimony or credibility concerns..."></textarea>
+            </div>
+          </div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">05</span><span class="group-copy"><strong>Further facts & context</strong><small>Anything else that could change the analysis.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="freeform-wrap"><label class="field-label" for="case-description">Further details <span>OPTIONAL — WRITE NATURALLY</span></label><textarea id="case-description" rows="5" placeholder="Set out the facts in your own words. Include disputed events, dates, prior proceedings, orders, settlement discussions, suspected weaknesses or questions. Legal terminology is not required."></textarea></div>
+        </details>
+        <details class="intake-group">
+          <summary><span class="group-index">06</span><span class="group-copy"><strong>Case documents</strong><small>Upload pleadings, affidavits, orders, exhibits, correspondence and other relevant records.</small></span><span class="group-state">OPEN / CLOSE</span></summary>
+          <div class="upload-group-content">      <div class="upload-zone" id="drop-zone" tabindex="0" role="button" aria-label="Choose case documents">
         <input id="file-input" type="file" multiple accept=".pdf,.txt,.md,.jpg,.jpeg,.png,.webp,application/pdf,text/plain,image/jpeg,image/png,image/webp">
         <div class="upload-icon">↑</div>
         <div class="upload-copy"><strong>Drop your case documents here</strong><span>or <u>browse files</u></span></div>
-        <div class="upload-support">PDF · TXT · MD · JPG · PNG · WEBP <span>MAX 6 FILES · 8 MB EACH</span></div>
+        <div class="upload-support">PDF · TXT · MD · JPG · PNG · WEBP <span>MAX 6 FILES · 2 MB EACH</span></div>
+      </div>
+
+          </div>
+        </details>
       </div>
       <div id="file-list" class="file-list" aria-live="polite"></div>
 
       <div class="intake-footer">
-        <div class="footnote"><span class="spark">✳</span><span>Any case type. Any stage. Start with incomplete information.</span></div>
+        <div class="footnote"><span class="spark">✳</span><span>Optional fields. Unknowns are allowed. The system must separate facts, inferences and assumptions.</span></div>
         <button id="analyze-button" class="primary-button" type="button"><span>Analyse my case</span><span class="button-arrow">↗</span></button>
       </div>
       <div id="error-message" class="error-message" role="alert" hidden></div>
@@ -94,20 +172,24 @@
       <div class="progress-top"><span class="step-label">CASE REVIEW IN PROGRESS</span><span class="pulse-label"><i></i> ANALYSING</span></div>
       <h3 id="progress-title">Reading the material...</h3>
       <p id="progress-detail">Identifying the legal environment and reconstructing the case.</p>
+      <div class="waiting-insight" id="waiting-insight" aria-live="off" aria-atomic="true">
+        <span class="waiting-insight-kicker">THREE THOUGHTS WHILE YOU WAIT</span>
+        <div class="waiting-quote"><p class="waiting-quote-text" id="waiting-insight-text">A useful question does not merely request information; it separates two competing explanations.</p><span class="waiting-quote-index" id="waiting-insight-index">01 / 50</span></div>
+        <div class="waiting-quote"><p class="waiting-quote-text">An option has value before it is used. Preserve it long enough to learn whether it is needed.</p><span class="waiting-quote-index">02 / 50</span></div>
+        <div class="waiting-quote"><p class="waiting-quote-text">A strategy that works only if nobody reacts is not a strategy; it is a hope with steps attached.</p><span class="waiting-quote-index">03 / 50</span></div>
+      </div>
       <div class="progress-track"><span></span></div>
       <div class="progress-stages"><span>Understand</span><span>Stress-test</span><span>Prepare</span></div>
     </section>
 
     <section id="results" class="results" hidden>
-      <div class="results-heading"><div><div class="step-label">02 / CASE INTELLIGENCE</div><h2>Your case, examined.</h2></div><button id="new-analysis" class="secondary-button">New analysis ↗</button></div>
+      <div class="results-heading"><div><div class="step-label">02 / CASE INTELLIGENCE</div><h2>Your case, examined.</h2><p class="view-mode-hint">Your selected viewing mode is applied here.</p></div><div class="results-actions"><button id="save-analysis" class="secondary-button save-analysis-button" type="button">Save analysis</button><button id="new-analysis" class="secondary-button">New analysis ↗</button></div></div>
       <div class="results-warning"><span>!</span><p>Preparation support, not a substitute for professional judgment. Independently verify authorities, current rules, filing requirements and deadlines before acting.</p></div>
-      <article id="analysis-output" class="analysis-output"></article>
+      <div class="analysis-layout"><nav id="analysis-nav" class="analysis-nav" aria-label="Analysis sections"></nav><div id="analysis-output" class="analysis-output" aria-live="polite"></div></div>
     </section>
 
-    <footer class="page-footer"><span>STRATOSLAWYER</span><span>BUILT FOR THE COMPLEXITY OF NIGERIAN PRACTICE</span></footer>
+    <footer class="page-footer"><span>STRATOSLAWYER</span><span>BUILT FOR THE COMPLEXITY OF NIGERIAN PRACTICE</span><span class="creator-credit">BY DAVID JAYY</span></footer>
   </main>
-  <script src="/supabase-config.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/app.js" defer></script>
 </body>
 </html>
