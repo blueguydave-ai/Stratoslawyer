@@ -18,6 +18,8 @@ const historyList = document.getElementById("history-list");
 const historyEmpty = document.getElementById("history-empty");
 const historyFeedback = document.getElementById("history-feedback");
 const historyCount = document.getElementById("history-count");
+const historySearch = document.getElementById("history-search");
+const historyFilter = document.getElementById("history-filter");
 const dailyUsage = document.getElementById("daily-usage");
 const dailyUsageNumber = document.getElementById("daily-usage-number");
 const dailyUsageCaption = document.getElementById("daily-usage-caption");
@@ -530,13 +532,27 @@ function downloadBlob(content,type,filename) {
   anchor.href = url; anchor.download = filename; document.body.append(anchor); anchor.click(); anchor.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
-document.getElementById("save-analysis").addEventListener("click",() => {
+document.getElementById("save-analysis").addEventListener("click",async () => {
   if (!currentAnalysisMarkdown || !currentAuthSession?.user) return;
-  const record = {id:(crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+"-"+Math.random().toString(36).slice(2)),title:currentAnalysisTitle,savedAt:new Date().toISOString(),markdown:currentAnalysisMarkdown};
-  savedAnalysisRecords = [record,...savedAnalysisRecords.filter(item=>item.id!==record.id)].slice(0,30);
-  if (!persistSavedHistory()) {
-    savedAnalysisRecords = savedAnalysisRecords.filter(item=>item.id!==record.id);
-    historyFeedback.textContent = "This browser is low on storage. Download a copy of this analysis instead.";
+  const saveButton = document.getElementById("save-analysis");
+  saveButton.disabled = true;
+  saveButton.textContent = "Saving…";
+  const now = new Date().toISOString();
+  const record = {
+    id:crypto.randomUUID(),
+    title:String(currentAnalysisTitle || "Case analysis").slice(0,160),
+    savedAt:now,
+    updatedAt:now,
+    markdown:currentAnalysisMarkdown,
+    snapshot:buildHistorySnapshot(),
+    favorite:false,
+    deadlines:[]
+  };
+  const saved = await persistSavedRecord(record);
+  if (!saved) {
+    saveButton.disabled = false;
+    saveButton.textContent = "Save analysis";
+    historyFeedback.textContent = "This case could not be saved to your account. Please try again.";
     historyFeedback.hidden = false;
     accountMenu.hidden = false;
     accountMenuToggle.setAttribute("aria-expanded","true");
@@ -544,9 +560,9 @@ document.getElementById("save-analysis").addEventListener("click",() => {
     menuHistoryToggle.setAttribute("aria-expanded","true");
     return;
   }
+  savedAnalysisRecords = [record,...savedAnalysisRecords.filter(item=>item.id!==record.id)];
   renderSavedHistory();
   historyFeedback.hidden = true;
-  const saveButton = document.getElementById("save-analysis");
   saveButton.textContent = "Saved";
   saveButton.disabled = true;
 });
@@ -555,6 +571,8 @@ accountMenuToggle.addEventListener("click",() => {
   accountMenu.hidden = !open;
   accountMenuToggle.setAttribute("aria-expanded",String(open));
 });
+historySearch.addEventListener("input",renderSavedHistory);
+historyFilter.addEventListener("change",renderSavedHistory);
 menuHistoryToggle.addEventListener("click",() => {
   const open = historyPanel.hidden;
   historyPanel.hidden = !open;
