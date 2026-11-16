@@ -33,8 +33,8 @@ Redeploy after setting environment variables.
 ## Accounts and sign-in
 
 - Browser authentication uses Supabase Auth with persistent sessions, automatic token refresh and local sign-out. A user normally remains signed in on the same browser/device after closing and reopening the site.
-- New accounts use email and password. Email confirmation must be disabled in the Supabase project for immediate access after registration: open the Supabase project, go to **Authentication → Providers → Email**, and turn off **Confirm email**. Save the setting. The site cannot change this project-level security setting from browser code.
-- Password reset remains available by email. Supabase email delivery limits still apply to password recovery messages.
+- New accounts use email and password. For immediate access without a verification email, open the Supabase project and go to **Authentication → Sign In / Providers → Email**. Turn off **Confirm email** and save. Also make sure **Allow new users to sign up** is enabled. The site cannot change these project-level settings from browser code. Supabase then treats the submitted email as confirmed without proving that the user owns it; users can mistype an address or register an address they do not control.
+- Password reset remains available by email. Add `https://stratoslawyer.vercel.app/**` under **Authentication → URL Configuration → Redirect URLs** so the recovery link can return to the production site. Supabase email delivery limits still apply to password recovery messages.
 - The analysis endpoint verifies the signed-in user's access token with Supabase before processing a request. Do not replace the publishable key with a service-role key in browser code.
 - A session is specific to that browser profile/device. Signing out, clearing site data, using private browsing, or browser storage restrictions can require signing in again. Signing out on one device does not intentionally sign out other devices.
 
