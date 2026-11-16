@@ -10,9 +10,18 @@ const authSubmit = document.getElementById("auth-submit");
 const authMessage = document.getElementById("auth-message");
 const authTitle = document.getElementById("auth-title");
 const authHeaderStatus = document.getElementById("auth-header-status");
-const accountBar = document.getElementById("account-bar");
-const accountEmail = document.getElementById("account-email");
-const authSignout = document.getElementById("auth-signout");
+const accountMenuToggle = document.getElementById("account-menu-toggle");
+const accountMenu = document.getElementById("account-menu");
+const accountDisplayName = document.getElementById("account-display-name");
+const menuHistoryToggle = document.getElementById("menu-history-toggle");
+const historyPanel = document.getElementById("history-panel");
+const historyList = document.getElementById("history-list");
+const historyEmpty = document.getElementById("history-empty");
+const historyCount = document.getElementById("history-count");
+const authSignout = document.getElementById("menu-signout");
+let currentAnalysisMarkdown = "";
+let currentAnalysisTitle = "Case analysis";
+let savedAnalysisRecords = [];
 const authSigninTab = document.getElementById("auth-signin-tab");
 const authSignupTab = document.getElementById("auth-signup-tab");
 const authForgot = document.getElementById("auth-forgot");
@@ -22,6 +31,7 @@ let currentAuthSession = null;
 
 function setAuthMessage(message, isError=false) {
   authMessage.textContent = message || "";
+  authMessage.hidden = !message;
   authMessage.classList.toggle("is-error",Boolean(isError));
 }
 function setAuthMode(mode) {
@@ -48,16 +58,22 @@ function applyAuthSession(session) {
   currentAuthSession = session || null;
   const signedIn = Boolean(session?.user);
   authPanel.hidden = signedIn;
-  accountBar.hidden = !signedIn;
+  accountMenuToggle.hidden = !signedIn;
   document.querySelector(".workspace").hidden = !signedIn;
   if (!signedIn) {
     document.getElementById("results").hidden = true;
-    accountEmail.textContent = "";
-    authHeaderStatus.textContent = "ACCOUNT REQUIRED";
+    accountMenu.hidden = true;
+    accountMenuToggle.setAttribute("aria-expanded","false");
+    accountDisplayName.textContent = "Account";
+    authHeaderStatus.textContent = "";
+    savedAnalysisRecords = [];
+    renderSavedHistory();
   } else {
-    const email = session.user.email || "Account";
-    accountEmail.textContent = email;
-    authHeaderStatus.textContent = email;
+    const metadata = session.user.user_metadata || {};
+    const displayName = String(metadata.full_name || metadata.name || "").trim() || "Account";
+    accountDisplayName.textContent = displayName;
+    authHeaderStatus.textContent = "";
+    loadSavedHistory(session.user.id);
   }
 }
 try {
@@ -89,15 +105,15 @@ try {
       applyAuthSession(data.session);
     }).catch(() => {
       applyAuthSession(null);
-      setAuthMessage("Your saved session could not be restored. Please sign in again.",true);
+      setAuthMessage("");
     });
   } else {
     applyAuthSession(null);
-    setAuthMessage("Account access is not configured. Please refresh the page or contact the site administrator.",true);
+    setAuthMessage("");
   }
 } catch (error) {
   applyAuthSession(null);
-  setAuthMessage("Account access could not be started. Please refresh the page.",true);
+  setAuthMessage("");
 }
 authSigninTab.addEventListener("click",() => setAuthMode("signin"));
 authSignupTab.addEventListener("click",() => setAuthMode("signup"));
@@ -120,9 +136,9 @@ authForm.addEventListener("submit",async event => {
       if (error) throw error;
       if (data.session) {
         applyAuthSession(data.session);
-        setAuthMessage("Your account is ready. You are signed in on this device.");
+        setAuthMessage("Your account is ready.");
       } else {
-        setAuthMessage("The account was created, but email confirmation is still enabled in the Supabase project. The administrator must turn off Confirm email before users can enter without verification.",true);
+        setAuthMessage("We couldn't complete account creation. Please try again.",true);
       }
     } else if (authMode === "recovery") {
       const {error} = await authClient.auth.updateUser({password});
@@ -138,8 +154,7 @@ authForm.addEventListener("submit",async event => {
       setAuthMessage("");
     }
   } catch(error) {
-    const message = error?.message || "Account access failed. Please try again.";
-    setAuthMessage(message,true);
+    setAuthMessage(authMode==="signup" ? "We couldn't create your account. Check your details and try again." : authMode==="recovery" ? "We couldn't update your password. Please try again." : "Those sign-in details don't match. Check them and try again.",true);
   } finally {
     authSubmit.disabled = false;
   }
@@ -155,12 +170,13 @@ authForgot.addEventListener("click",async () => {
     if (error) throw error;
     setAuthMessage("If an account exists for that email, a password reset link will be sent. Check your inbox.");
   } catch(error) {
-    setAuthMessage(error?.message || "The reset link could not be sent. Try again later.",true);
+    setAuthMessage("We couldn't send a reset link right now. Please try again later.",true);
   } finally {
     authForgot.disabled = false;
   }
 });
 function clearCaseWorkspace() {
+  currentAnalysisMarkdown = "";
   document.querySelectorAll(".workspace input:not([type=file]),.workspace textarea,.workspace select").forEach(field => {
     field.value = "";
   });
@@ -174,6 +190,167 @@ function clearCaseWorkspace() {
   document.getElementById("progress-panel").hidden = true;
   document.getElementById("error-message").hidden = true;
 }
+
+function getHistoryStorageKey(userId) {
+  return "stratos-saved-analyses-v1:" + userId;
+}
+function loadSavedHistory(userId) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(getHistoryStorageKey(userId)) || "[]");
+    savedAnalysisRecords = Array.isArray(parsed) ? parsed.filter(item =>
+      item && typeof item.id === "string" && typeof item.markdown === "string"
+    ).slice(0,30) : [];
+  } catch(error) {
+    savedAnalysisRecords = [];
+  }
+  renderSavedHistory();
+}
+function persistSavedHistory() {
+  if (!currentAuthSession?.user?.id) return false;
+  try {
+    localStorage.setItem(getHistoryStorageKey(currentAuthSession.user.id),JSON.stringify(savedAnalysisRecords.slice(0,30)));
+    return true;
+  } catch(error) {
+    return false;
+  }
+}
+function renderSavedHistory() {
+  historyList.replaceChildren();
+  historyCount.textContent = String(savedAnalysisRecords.length);
+  historyEmpty.hidden = savedAnalysisRecords.length > 0;
+  savedAnalysisRecords.forEach(record => {
+    const item = document.createElement("article");
+    item.className = "history-item";
+    const info = document.createElement("div");
+    info.className = "history-item-info";
+    const title = document.createElement("strong");
+    title.textContent = record.title || "Case analysis";
+    const date = document.createElement("small");
+    date.textContent = new Date(record.savedAt).toLocaleString();
+    info.append(title,date);
+    const actions = document.createElement("div");
+    actions.className = "history-item-actions";
+    const open = document.createElement("button");
+    open.type = "button"; open.textContent = "Open";
+    open.addEventListener("click",() => {
+      currentAnalysisMarkdown = record.markdown;
+      currentAnalysisTitle = record.title || "Case analysis";
+      renderAnalysis(record.markdown);
+      results.hidden = false;
+      results.classList.toggle("focus-mode",focusVisualMode);
+      accountMenu.hidden = true;
+      accountMenuToggle.setAttribute("aria-expanded","false");
+      historyPanel.hidden = true;
+      menuHistoryToggle.setAttribute("aria-expanded","false");
+      results.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+    const download = document.createElement("select");
+    download.className = "history-download";
+    download.setAttribute("aria-label","Download " + (record.title || "analysis"));
+    download.innerHTML = '<option value="">Download</option><option value="pdf">PDF</option><option value="docx">Word (.docx)</option><option value="md">Markdown</option><option value="txt">Text</option><option value="html">HTML</option>';
+    download.addEventListener("change",() => {
+      if(download.value) exportAnalysis(record,download.value);
+      download.value = "";
+    });
+    actions.append(open,download);
+    item.append(info,actions);
+    historyList.append(item);
+  });
+}
+function buildAnalysisTitle() {
+  const type = document.getElementById("case-type")?.value || "";
+  const court = document.getElementById("court")?.value.trim() || "";
+  const jurisdiction = document.getElementById("jurisdiction")?.value.trim() || "";
+  return [type || "Case analysis",court,jurisdiction].filter(Boolean).join(" · ").slice(0,110);
+}
+function markdownToPlainText(markdown) {
+  return String(markdown || "").replace(/^#{1,6}\\s*/gm,"").replace(/\\*\\*(.*?)\\*\\*/g,"$1").replace(/\\*(.*?)\\*/g,"$1").replace(/^`{1,3}.*$/gm,"").replace(/^[-*+]\\s/gm,"• ").replace(/^\\d+\\.\\s/gm,"• ").replace(/\\n{3,}/g,"\\n\\n");
+}
+function exportAnalysis(record,format) {
+  const title = record.title || "Case analysis";
+  const markdown = record.markdown || "";
+  const plain = markdownToPlainText(markdown);
+  const filename = (title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,55) || "case-analysis");
+  if (format === "pdf") {
+    const printWindow = window.open("","_blank");
+    if (!printWindow) return;
+    const safeTitle = title.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+    const safeText = plain.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+    printWindow.document.write('<!doctype html><html><head><title>'+safeTitle+'</title><style>body{font:12pt/1.65 Arial,sans-serif;max-width:850px;margin:40px auto;padding:0 24px;color:#20242a}h1{font-size:22pt}pre{white-space:pre-wrap;font:inherit}footer{margin-top:32px;color:#666;font-size:9pt}@media print{body{margin:18mm auto}}</style></head><body><h1>'+safeTitle+'</h1><pre>'+safeText+'</pre><footer>STRATOSLAWYER · Saved case analysis</footer><script>window.onload=()=>window.print()<\\/script></body></html>');
+    printWindow.document.close();
+    return;
+  }
+  if (format === "docx") {
+    if (!window.docx?.Document || !window.docx?.Packer) {
+      downloadBlob(plain,"text/plain;charset=utf-8",filename+".txt");
+      return;
+    }
+    const {Document,Paragraph,TextRun,HeadingLevel,Packer}=window.docx;
+    const paragraphs = [new Paragraph({text:title,heading:HeadingLevel.TITLE})];
+    markdown.split("\\n").forEach(line => {
+      const clean = line.replace(/^#{1,6}\\s*/,"").replace(/\\*\\*(.*?)\\*\\*/g,"$1").trim();
+      if (!clean) { paragraphs.push(new Paragraph({text:""})); return; }
+      const heading = line.match(/^(#{1,3})\\s+(.*)$/);
+      paragraphs.push(new Paragraph({
+        children:[new TextRun(clean)],
+        ...(heading ? {heading:heading[1].length===1?HeadingLevel.HEADING_1:heading[1].length===2?HeadingLevel.HEADING_2:HeadingLevel.HEADING_3} : {})
+      }));
+    });
+    const doc = new Document({sections:[{properties:{},children:paragraphs}]});
+    Packer.toBlob(doc).then(blob=>downloadBlob(blob,"application/vnd.openxmlformats-officedocument.wordprocessingml.document",filename+".docx")).catch(()=>downloadBlob(plain,"text/plain;charset=utf-8",filename+".txt"));
+    return;
+  }
+  if (format === "md") return downloadBlob(markdown,"text/markdown;charset=utf-8",filename+".md");
+  if (format === "html") {
+    const escaped = plain.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+    return downloadBlob("<!doctype html><meta charset=utf-8><title>"+title+"</title><h1>"+title+"</h1><pre>"+escaped+"</pre>","text/html;charset=utf-8",filename+".html");
+  }
+  return downloadBlob(plain,"text/plain;charset=utf-8",filename+".txt");
+}
+function downloadBlob(content,type,filename) {
+  const blob = content instanceof Blob ? content : new Blob([content],{type});
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url; anchor.download = filename; document.body.append(anchor); anchor.click(); anchor.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+document.getElementById("save-analysis").addEventListener("click",() => {
+  if (!currentAnalysisMarkdown || !currentAuthSession?.user) return;
+  const record = {id:crypto.randomUUID(),title:currentAnalysisTitle,savedAt:new Date().toISOString(),markdown:currentAnalysisMarkdown};
+  savedAnalysisRecords = [record,...savedAnalysisRecords.filter(item=>item.id!==record.id)].slice(0,30);
+  if (!persistSavedHistory()) {
+    savedAnalysisRecords = savedAnalysisRecords.filter(item=>item.id!==record.id);
+    setAuthMessage("There isn't enough browser storage to save this analysis. Download a copy instead.",true);
+    accountMenu.hidden = false;
+    return;
+  }
+  renderSavedHistory();
+  const saveButton = document.getElementById("save-analysis");
+  saveButton.textContent = "Saved";
+  saveButton.disabled = true;
+});
+accountMenuToggle.addEventListener("click",() => {
+  const open = accountMenu.hidden;
+  accountMenu.hidden = !open;
+  accountMenuToggle.setAttribute("aria-expanded",String(open));
+});
+menuHistoryToggle.addEventListener("click",() => {
+  const open = historyPanel.hidden;
+  historyPanel.hidden = !open;
+  menuHistoryToggle.setAttribute("aria-expanded",String(open));
+});
+document.addEventListener("click",event => {
+  if (!event.target.closest(".account-menu-wrap")) {
+    accountMenu.hidden = true;
+    accountMenuToggle.setAttribute("aria-expanded","false");
+  }
+});
+document.addEventListener("keydown",event => {
+  if (event.key === "Escape") {
+    accountMenu.hidden = true;
+    accountMenuToggle.setAttribute("aria-expanded","false");
+  }
+});
 authSignout.addEventListener("click",async () => {
   if (!authClient) return;
   authSignout.disabled = true;
@@ -186,7 +363,7 @@ authSignout.addEventListener("click",async () => {
     setAuthMode("signin");
     setAuthMessage("You have signed out of this device.");
   } catch(error) {
-    setAuthMessage(error?.message || "Sign out failed. Please try again.",true);
+    setAuthMessage("Sign out didn't work. Please try again.",true);
   } finally {
     authSignout.disabled = false;
   }
@@ -392,7 +569,14 @@ const allowedTypes = new Set(["application/pdf","text/plain","text/markdown","im
 const formatSize = bytes => bytes < 1024 * 1024 ? Math.round(bytes / 1024) + " KB" : (bytes / 1024 / 1024).toFixed(1) + " MB";
 
 function showError(message) {
-  errorMessage.textContent = message;
+  const safeMessage = /not enough information/i.test(message)
+    ? "Please add more case details before starting the analysis."
+    : /session|sign in/i.test(message)
+      ? "Your session has ended. Please sign in again."
+      : /file|upload|document/i.test(message)
+        ? "One or more files could not be processed. Check the file type and size, then try again."
+        : "The analysis couldn't be completed right now. Please try again.";
+  errorMessage.textContent = safeMessage;
   errorMessage.hidden = false;
   requestAnimationFrame(() => revealAllWithin(errorMessage));
 }
@@ -1023,7 +1207,7 @@ analyzeButton.addEventListener("click", async () => {
   const hasStructuredContext = intakeFieldIds.some(id => (document.getElementById(id)?.value || "").trim());
   const intakeQuality = inspectIntakeQuality();
   if (!intakeQuality.ready) {
-    showError("There is not enough information to analyse this matter yet. " + intakeQuality.message + " The system has not started and no analysis request has been sent.");
+    showError("There is not enough information to analyse this matter yet. " + intakeQuality.message);
     const firstIncomplete = !intakeQuality.hasSubstantiveNarrative && !intakeQuality.hasDocuments
       ? document.getElementById("case-description")
       : intakeFieldIds.map(id => document.getElementById(id)).find(field => field && !String(field.value || "").trim());
@@ -1058,7 +1242,7 @@ analyzeButton.addEventListener("click", async () => {
       body:JSON.stringify({description:caseText,caseContext:Object.fromEntries(intakeFieldIds.map(id => [id,document.getElementById(id)?.value?.trim() || "Not supplied"])),files})
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "Analysis failed. Please try again.");
+    if (!response.ok) throw new Error(response.status === 401 ? "Please sign in again." : "Analysis failed.");
     const {data:latestSessionData} = await authClient.auth.getSession();
     if (!latestSessionData.session?.user) {
       throw new Error("You signed out before the analysis finished. Sign in again to continue.");
@@ -1068,7 +1252,11 @@ analyzeButton.addEventListener("click", async () => {
     progressPanel.hidden = true;
     progressTitle.textContent = "Preparing your case intelligence...";
     progressDetail.textContent = "Outcome branches and opposing moves have been mapped against the supplied record.";
+    currentAnalysisMarkdown = data.analysis;
+    currentAnalysisTitle = buildAnalysisTitle();
     renderAnalysis(data.analysis);
+    document.getElementById("save-analysis").disabled = false;
+    document.getElementById("save-analysis").textContent = "Save analysis";
     results.classList.toggle("focus-mode",focusVisualMode);
     results.hidden = false;
     if(focusVisualMode)setTimeout(()=>{
@@ -1087,6 +1275,9 @@ analyzeButton.addEventListener("click", async () => {
   }
 });
 document.getElementById("new-analysis").addEventListener("click",() => {
+  currentAnalysisMarkdown = "";
+  document.getElementById("save-analysis").disabled = false;
+  document.getElementById("save-analysis").textContent = "Save analysis";
   results.hidden = true;
   stopWaitingInsights();
   progressPanel.hidden = true;
@@ -1097,3 +1288,25 @@ document.getElementById("new-analysis").addEventListener("click",() => {
   description.focus();
   window.scrollTo({top:0,behavior:prefersReducedMotion?"auto":"smooth"});
 });
+
+/* One typewriter pass per page load. */
+(function runIntroTypewriter(){
+  const target=document.getElementById("intro-typewriter");
+  const cursor=document.getElementById("intro-typewriter-cursor");
+  if(!target||!cursor)return;
+  const fullText=target.dataset.text||target.textContent;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){cursor.remove();return;}
+  target.textContent="";
+  let index=0;
+  const interval=85;
+  const typeNext=()=>{
+    if(index<fullText.length){
+      target.textContent+=fullText.charAt(index++);
+      window.setTimeout(typeNext,interval);
+    }else{
+      window.setTimeout(()=>cursor.classList.add("is-gone"),5000);
+      window.setTimeout(()=>cursor.remove(),5600);
+    }
+  };
+  window.setTimeout(typeNext,420);
+})();
