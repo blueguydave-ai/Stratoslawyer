@@ -2014,3 +2014,59 @@ html[data-theme="light"] .focus-arrow-controls button:disabled{opacity:.38}
   html[data-theme="light"] *::before,
   html[data-theme="light"] *::after{scroll-behavior:auto}
 }
+
+
+/* ACCOUNT ACCESS — PERSISTENT SESSION */
+.auth-header-status{
+  max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#a9b0b9;font:8px 'DM Mono',monospace;letter-spacing:.06em;
+  padding:7px 9px;border:1px solid rgba(200,169,110,.18);border-radius:6px;
+  background:rgba(200,169,110,.045);
+}
+.auth-panel{max-width:560px;margin:26px auto 24px}
+.auth-panel h2{color:#f0eee8}
+.auth-copy{max-width:440px}
+.auth-tabs{
+  display:grid;grid-template-columns:1fr 1fr;gap:5px;
+  padding:5px;margin:0 0 23px;border:1px solid rgba(213,224,238,.12);
+  border-radius:8px;background:rgba(4,7,11,.38);
+}
+.auth-tab{
+  min-height:40px;border:1px solid transparent;border-radius:5px;
+  background:transparent;color:#8e98a3;font:600 11px var(--font);cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.auth-tab.is-active{
+  color:#ead7b4;background:linear-gradient(145deg,rgba(200,169,110,.17),rgba(200,169,110,.06));
+  border-color:rgba(200,169,110,.25);box-shadow:inset 0 1px rgba(255,255,255,.05);
+}
+.auth-field-label{display:block;margin:0 0 7px;color:#d5d9df;font:600 11px var(--font)}
+.auth-submit{margin-top:8px;min-height:47px}
+.auth-message{min-height:20px}
+.auth-message:not(.is-error){color:#a9c3a5}
+.auth-panel[hidden],.account-bar[hidden]{display:none!important}
+.account-bar strong{color:#e6d6b5;font-weight:700}
+.account-bar .secondary-button{flex:0 0 auto}
+.auth-header-status:empty{display:none}
+html[data-theme="light"] .auth-header-status{
+  color:#725a35;background:rgba(160,126,69,.07);border-color:rgba(130,102,59,.2)
+}
+html[data-theme="light"] .auth-panel h2{color:#303944}
+html[data-theme="light"] .auth-tabs{background:#e9edf1;border-color:rgba(55,68,82,.15)}
+html[data-theme="light"] .auth-tab{color:#64707c}
+html[data-theme="light"] .auth-tab.is-active{
+  color:#72552b;background:linear-gradient(145deg,#fff,#f5efe4);
+  border-color:rgba(145,111,59,.25)
+}
+html[data-theme="light"] .auth-field-label{color:#3f4a55}
+html[data-theme="light"] .account-bar strong{color:#594526}
+html[data-theme="light"] .auth-message:not(.is-error){color:#3d7446}
+@media(max-width:640px){
+  .topbar-actions{gap:7px}
+  .auth-header-status{max-width:90px;padding:6px 6px;font-size:7px}
+  .auth-panel{margin:18px auto 20px}
+  .auth-panel h2{font-size:22px}
+}
+@media(prefers-reduced-motion:reduce){
+  .auth-tab{transition:none}
+}
