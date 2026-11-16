@@ -30,6 +30,14 @@ Import this repository into Vercel and add:
 
 Redeploy after setting environment variables.
 
+## Accounts and sign-in
+
+- Browser authentication uses Supabase Auth with persistent sessions, automatic token refresh and local sign-out. A user normally remains signed in on the same browser/device after closing and reopening the site.
+- New accounts use email and password. Email confirmation must be disabled in the Supabase project for immediate access after registration: open the Supabase project, go to **Authentication → Providers → Email**, and turn off **Confirm email**. Save the setting. The site cannot change this project-level security setting from browser code.
+- Password reset remains available by email. Supabase email delivery limits still apply to password recovery messages.
+- The analysis endpoint verifies the signed-in user's access token with Supabase before processing a request. Do not replace the publishable key with a service-role key in browser code.
+- A session is specific to that browser profile/device. Signing out, clearing site data, using private browsing, or browser storage restrictions can require signing in again. Signing out on one device does not intentionally sign out other devices.
+
 ## Important limitations
 
 - This is an initial working foundation, not a complete legal research platform.
