@@ -649,8 +649,6 @@ body::after {
   isolation: isolate;
   contain: layout paint;
 }
-.insight-tile.is-visible {
-}
 .insight-tile:hover {
   border-color: rgba(200,169,110,.25);
   background: linear-gradient(145deg,rgba(200,169,110,.065),rgba(7,11,16,.3));
@@ -660,16 +658,8 @@ body::after {
   .insight-grid { grid-template-columns: minmax(0,1fr); gap: 8px; }
   .insight-tile { padding: 12px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .insight-tile,.insight-tile.is-visible {
-  }
-}
-
-
-/* STRATOS SCROLL REVEAL — visible entrance, lightweight properties only. */
-.scroll-reveal,
-.analysis-card,
-.insight-tile {
+/* STRATOS SCROLL REVEAL — only observed elements receive the hidden start state. */
+.scroll-reveal {
   opacity: 0;
   transform: translate3d(0, 26px, 0);
   filter: none !important;
@@ -681,14 +671,12 @@ body::after {
   transition-delay: 0ms;
   will-change: auto;
 }
-.scroll-reveal.is-visible,
-.analysis-card.is-visible,
-.insight-tile.is-visible {
+.scroll-reveal.is-visible {
   opacity: 1;
   transform: translate3d(0, 0, 0);
   filter: none !important;
 }
-.analysis-card.is-visible:hover {
+.analysis-card.scroll-reveal.is-visible:hover {
   transform: translate3d(0, -2px, 0);
 }
 .insight-tile:hover {
@@ -696,15 +684,11 @@ body::after {
   box-shadow: 0 9px 24px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.045);
 }
 @media (max-width: 760px) {
-  .analysis-card.is-visible:hover { transform: none; }
+  .analysis-card.scroll-reveal.is-visible:hover { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .scroll-reveal,
-  .scroll-reveal.is-visible,
-  .analysis-card,
-  .analysis-card.is-visible,
-  .insight-tile,
-  .insight-tile.is-visible {
+  .scroll-reveal.is-visible {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
@@ -1185,33 +1169,6 @@ body.focus-visual-active .insight-tile.is-dimmed{filter:brightness(.2) saturate(
 }
 @media(prefers-reduced-motion:reduce) {
   .insight-tile::before,.insight-subheading::before { box-shadow: none; }
-}
-
-
-/* Intake completion cue: the primary action gains a warm, deliberate glow at 50%. */
-.primary-button.is-intake-ready {
-  border-color: rgba(255,226,164,.98);
-  background: linear-gradient(118deg,#f1d69a 0%,#d9b875 52%,#c5a064 100%);
-  box-shadow:
-    0 0 0 1px rgba(255,224,160,.18),
-    0 0 18px rgba(224,190,119,.32),
-    0 0 38px rgba(200,169,110,.16),
-    0 8px 24px rgba(0,0,0,.22);
-  animation: intake-ready-glow 2.8s ease-in-out infinite;
-}
-.primary-button.is-intake-ready:hover {
-  box-shadow:
-    0 0 0 1px rgba(255,230,177,.28),
-    0 0 24px rgba(224,190,119,.42),
-    0 0 46px rgba(200,169,110,.2),
-    0 10px 28px rgba(0,0,0,.25);
-}
-@keyframes intake-ready-glow {
-  0%,100% { box-shadow: 0 0 0 1px rgba(255,224,160,.14),0 0 14px rgba(224,190,119,.24),0 0 30px rgba(200,169,110,.1),0 8px 24px rgba(0,0,0,.22); }
-  50% { box-shadow: 0 0 0 1px rgba(255,224,160,.24),0 0 22px rgba(224,190,119,.38),0 0 42px rgba(200,169,110,.18),0 8px 24px rgba(0,0,0,.22); }
-}
-@media(prefers-reduced-motion:reduce) {
-  .primary-button.is-intake-ready { animation:none; }
 }
 
 
