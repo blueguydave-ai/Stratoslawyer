@@ -493,7 +493,27 @@ function buildAnalysisTitle() {
 function markdownToPlainText(markdown) {
   return String(markdown || "").replace(/^#{1,6}\s*/gm,"").replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/^`{1,3}.*$/gm,"").replace(/^[-*+]\s/gm,"• ").replace(/^\d+\.\s/gm,"• ").replace(/\n{3,}/g,"\n\n");
 }
-function exportAnalysis(record,format) {
+let docxLibraryPromise = null;
+function loadDocxLibrary() {
+  if (window.docx?.Document && window.docx?.Packer) return Promise.resolve(window.docx);
+  if (!docxLibraryPromise) {
+    docxLibraryPromise = new Promise((resolve,reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js";
+      script.async = true;
+      script.onload = () => window.docx?.Document && window.docx?.Packer
+        ? resolve(window.docx)
+        : reject(new Error("Word export library unavailable"));
+      script.onerror = () => reject(new Error("Word export library could not be loaded"));
+      document.head.append(script);
+    }).catch(error => {
+      docxLibraryPromise = null;
+      throw error;
+    });
+  }
+  return docxLibraryPromise;
+}
+async function exportAnalysis(record,format) {
   const title = record.title || "Case analysis";
   const markdown = record.markdown || "";
   const plain = markdownToPlainText(markdown);
@@ -508,11 +528,14 @@ function exportAnalysis(record,format) {
     return;
   }
   if (format === "docx") {
-    if (!window.docx?.Document || !window.docx?.Packer) {
+    let library;
+    try {
+      library = await loadDocxLibrary();
+    } catch(error) {
       downloadBlob(plain,"text/plain;charset=utf-8",filename+".txt");
       return;
     }
-    const {Document,Paragraph,TextRun,HeadingLevel,Packer}=window.docx;
+    const {Document,Paragraph,TextRun,HeadingLevel,Packer}=library;
     const paragraphs = [new Paragraph({text:title,heading:HeadingLevel.TITLE})];
     markdown.split("\n").forEach(line => {
       const clean = line.replace(/^#{1,6}\s*/,"").replace(/\*\*(.*?)\*\*/g,"$1").trim();
@@ -1438,6 +1461,10 @@ function renderAnalysis(markdown) {
   if(focusVisualMode&&cards.length)setFocusedCard(cards[0]);
   // The caller reveals the results section first, then registers its cards with
   // the observer once the section has a measurable, visible layout.
+  if (analysisActiveObserver) {
+    analysisActiveObserver.disconnect();
+    analysisActiveObserver = null;
+  }
   if ("IntersectionObserver" in window) {
     analysisActiveObserver = new IntersectionObserver(entries => {
       const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
