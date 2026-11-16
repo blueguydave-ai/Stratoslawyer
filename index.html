@@ -12,22 +12,50 @@
   <link rel="stylesheet" href="/styles.css">
   <script defer src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="/supabase-config.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
   <header class="topbar">
     <a class="brand" href="/" aria-label="STRATOSLAWYER home"><span class="brand-mark">S</span><span>STRATOS<span class="brand-light">LAWYER</span></span></a>
-    <div class="topbar-actions"><div class="top-meta"><span class="status-dot"></span><span>NIGERIAN LEGAL INTELLIGENCE</span></div><button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode"><span class="theme-glyph" aria-hidden="true">☼</span><span class="theme-label">Light mode</span></button></div>
+    <div class="topbar-actions"><div class="top-meta"><span class="status-dot"></span><span>NIGERIAN LEGAL INTELLIGENCE</span></div><span id="auth-header-status" class="auth-header-status" aria-live="polite">ACCOUNT REQUIRED</span><button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode"><span class="theme-glyph" aria-hidden="true">☼</span><span class="theme-label">Light mode</span></button></div>
   </header>
 
   <main class="shell">
+    <section id="auth-panel" class="auth-panel" aria-labelledby="auth-title">
+      <div class="step-label">STRATOS ACCOUNT</div>
+      <h2 id="auth-title">Your workspace, kept yours.</h2>
+      <p class="auth-copy">Sign in once on this device. Your session will remain active when you close and reopen the site, until you sign out or your session is cleared.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Account access">
+        <button id="auth-signin-tab" class="auth-tab is-active" type="button" role="tab" aria-selected="true">Sign in</button>
+        <button id="auth-signup-tab" class="auth-tab" type="button" role="tab" aria-selected="false">Create account</button>
+      </div>
+      <form id="auth-form" novalidate>
+        <label class="auth-field-label" for="auth-name" id="auth-name-label" hidden>Your name</label>
+        <input id="auth-name" class="auth-input" type="text" autocomplete="name" maxlength="100" placeholder="Your name" hidden>
+        <label class="auth-field-label" for="auth-email">Email address</label>
+        <input id="auth-email" class="auth-input" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required>
+        <label class="auth-field-label" for="auth-password">Password</label>
+        <input id="auth-password" class="auth-input" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="At least 8 characters" required>
+        <button id="auth-submit" class="primary-button auth-submit" type="submit"><span>Sign in</span><span class="button-arrow">↗</span></button>
+      </form>
+      <div class="auth-actions">
+        <button id="auth-forgot" class="text-button" type="button">Forgot password?</button>
+      </div>
+      <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
+    </section>
+    <div id="account-bar" class="account-bar" hidden>
+      <span>Signed in as <strong id="account-email"></strong></span>
+      <button id="auth-signout" class="secondary-button" type="button">Sign out</button>
+    </div>
     <section class="intro">
       <div class="eyebrow"><span class="eyebrow-line"></span> CASE INTELLIGENCE ENGINE <span class="version">EARLY ACCESS</span></div>
       <h1>See the case.<br><span>Before it sees you.</span></h1>
       <p class="intro-copy">Understand the matter, expose its weak points, anticipate the other side and prepare your next move — across Nigerian legal practice.</p>
     </section>
 
-    <section class="workspace" aria-labelledby="intake-title">
+    <section class="workspace" aria-labelledby="intake-title" hidden>
       <div class="section-head">
         <div><div class="step-label">01 / CASE INTAKE</div><h2 id="intake-title">Let's understand your case.</h2></div>
         <div class="workspace-head-actions"><span class="private-note">CORE ENGINE TEST MODE</span><button id="view-mode-toggle" class="view-mode-toggle" type="button" aria-pressed="false" aria-label="Enable focus visual mode"><span class="mode-glyph" aria-hidden="true">◈</span><span class="mode-label">Focus visual mode</span></button></div>
