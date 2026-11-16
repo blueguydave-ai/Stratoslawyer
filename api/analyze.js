@@ -102,6 +102,7 @@ export default async function handler(req, res) {
   const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY ||
     process.env.SUPABASE_ANON_KEY ||
     "sb_publishable_flbGYkCA3hUKxFXIJYV1Mw_vroE6hcp";
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   const authorization = req.headers.authorization || req.headers.Authorization || "";
   const tokenMatch = typeof authorization === "string" && authorization.match(/^Bearer\s+([^\s]+)$/i);
   if (!tokenMatch || tokenMatch[1].length > 8192) {
@@ -246,12 +247,13 @@ export default async function handler(req, res) {
 
   const releaseDailyReservation = async () => {
     try {
+      if (!supabaseServiceRoleKey) return;
       await callUsageRpc(
         "release_daily_analysis",
         {p_user_id:authenticatedUser.id,p_usage_date:dailyReservation.usage_date},
-        tokenMatch[1],
+        supabaseServiceRoleKey,
         supabaseUrl,
-        supabasePublishableKey
+        supabaseServiceRoleKey
       );
     } catch(error) {
       // A failed release is retained for safe accounting rather than bypassing the limit.
