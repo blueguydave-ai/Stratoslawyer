@@ -16,7 +16,6 @@ const authSignout = document.getElementById("auth-signout");
 const authSigninTab = document.getElementById("auth-signin-tab");
 const authSignupTab = document.getElementById("auth-signup-tab");
 const authForgot = document.getElementById("auth-forgot");
-const workspace = document.querySelector(".workspace");
 let authMode = "signin";
 let authClient = null;
 let currentAuthSession = null;
@@ -50,7 +49,7 @@ function applyAuthSession(session) {
   const signedIn = Boolean(session?.user);
   authPanel.hidden = signedIn;
   accountBar.hidden = !signedIn;
-  workspace.hidden = !signedIn;
+  document.querySelector(".workspace").hidden = !signedIn;
   if (!signedIn) {
     document.getElementById("results").hidden = true;
     accountEmail.textContent = "";
@@ -78,6 +77,9 @@ try {
     authClient.auth.onAuthStateChange((event,session) => {
       applyAuthSession(session);
       if (event === "PASSWORD_RECOVERY") {
+        authPanel.hidden = false;
+        accountBar.hidden = true;
+        document.querySelector(".workspace").hidden = true;
         setAuthMode("recovery");
         setAuthMessage("Choose a new password for your account.");
       }
@@ -125,9 +127,10 @@ authForm.addEventListener("submit",async event => {
     } else if (authMode === "recovery") {
       const {error} = await authClient.auth.updateUser({password});
       if (error) throw error;
-      setAuthMode("signin");
+      await authClient.auth.signOut({scope:"local"});
       authPassword.value = "";
-      setAuthMessage("Password updated. You can now sign in with your new password.");
+      setAuthMode("signin");
+      setAuthMessage("Password updated. Sign in with your new password.");
     } else {
       const {data,error} = await authClient.auth.signInWithPassword({email,password});
       if (error) throw error;
