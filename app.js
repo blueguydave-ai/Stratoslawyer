@@ -30,6 +30,7 @@ let dailyUsageRequest = 0;
 let currentAnalysisMarkdown = "";
 let currentAnalysisTitle = "Case analysis";
 let savedAnalysisRecords = [];
+let historyLoadRequest = 0;
 const authSigninTab = document.getElementById("auth-signin-tab");
 const authSignupTab = document.getElementById("auth-signup-tab");
 const authForgot = document.getElementById("auth-forgot");
@@ -115,6 +116,7 @@ function applyAuthSession(session) {
     accountMenu.hidden = true;
     accountMenuToggle.setAttribute("aria-expanded","false");
     accountDisplayName.textContent = "Account";
+    historyLoadRequest++;
     savedAnalysisRecords = [];
     renderSavedHistory();
     dailyUsageRequest++;
@@ -266,6 +268,7 @@ function normalizeCloudAnalysis(row) {
   };
 }
 async function loadSavedHistory(userId) {
+  const requestId = ++historyLoadRequest;
   historyList.replaceChildren();
   historyEmpty.hidden = true;
   historyFeedback.hidden = true;
@@ -276,6 +279,7 @@ async function loadSavedHistory(userId) {
       .order("updated_at",{ascending:false})
       .limit(100);
     if (error) throw error;
+    if (requestId !== historyLoadRequest || currentAuthSession?.user?.id !== userId) return;
     savedAnalysisRecords = (data || []).map(normalizeCloudAnalysis);
     renderSavedHistory();
     // Migrate older browser-only saved analyses once, without overwriting cloud records.
@@ -296,12 +300,14 @@ async function loadSavedHistory(userId) {
       if (migrated.length) {
         const {data:migratedRows,error:migrateError} = await authClient.from("saved_analyses").insert(migrated).select("id,title,markdown,intake_snapshot,is_favorite,deadlines,saved_at,updated_at");
         if (migrateError) throw migrateError;
+        if (requestId !== historyLoadRequest || currentAuthSession?.user?.id !== userId) return;
         savedAnalysisRecords = (migratedRows || []).map(normalizeCloudAnalysis);
         try { localStorage.removeItem(legacyKey); } catch(error) {}
         renderSavedHistory();
       }
     }
   } catch(error) {
+    if (requestId !== historyLoadRequest || currentAuthSession?.user?.id !== userId) return;
     savedAnalysisRecords = [];
     renderSavedHistory();
     historyFeedback.textContent = "Your saved cases could not be loaded. Please refresh and try again.";
