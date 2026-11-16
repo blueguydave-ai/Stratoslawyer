@@ -31,10 +31,19 @@
           <div class="account-menu-identity"><span class="account-menu-kicker">SIGNED IN AS</span><strong id="account-display-name">Account</strong></div>
           <button id="menu-history-toggle" class="account-menu-item" type="button" aria-expanded="false">Analysed cases <span id="history-count" class="history-count">0</span></button>
           <div id="history-panel" class="history-panel" hidden>
+            <div class="history-tools">
+              <input id="history-search" type="search" placeholder="Search case name or court" aria-label="Search saved cases">
+              <select id="history-filter" aria-label="Filter saved cases">
+                <option value="all">All cases</option>
+                <option value="favorites">Favourites</option>
+                <option value="recent">Updated in last 7 days</option>
+                <option value="deadlines">Cases with upcoming deadlines</option>
+              </select>
+            </div>
             <p class="history-empty" id="history-empty">Your saved analyses will appear here.</p>
             <div id="history-list" class="history-list"></div>
             <p id="history-feedback" class="history-feedback" role="status" hidden></p>
-            <p class="history-device-note">Saved in this browser only. Avoid saving sensitive client material on shared devices.</p>
+            <p class="history-device-note">Saved securely to your account and available across devices. Uploaded documents are not included; attach them again when resuming a case.</p>
           </div>
           <button id="menu-signout" class="account-menu-item account-menu-signout" type="button">Sign out</button>
         </div>
