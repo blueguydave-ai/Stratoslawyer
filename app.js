@@ -302,6 +302,7 @@ function exportAnalysis(record,format) {
     return;
   }
   if (format === "md") return downloadBlob(markdown,"text/markdown;charset=utf-8",filename+".md");
+  if (format === "txt") return downloadBlob(plain,"text/plain;charset=utf-8",filename+".txt");
   if (format === "html") {
     const escaped = plain.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
     const safeTitle = title.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
