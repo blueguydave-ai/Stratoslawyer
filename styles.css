@@ -1899,3 +1899,118 @@ body.focus-visual-active .workspace.focus-mode .intake-footer{position:relative;
 /* Respect the hidden state: explicit flex layouts must not reveal controls early. */
 .input-focus-arrows[hidden],
 .focus-controls[hidden]{display:none!important}
+
+
+/* LIGHT THEME CONTRAST PASS
+   Keep the page, primary panels, nested cards and controls visibly distinct. */
+html[data-theme="light"] body{
+  color:#303943;
+  background:
+    radial-gradient(ellipse at 12% 8%,rgba(190,151,91,.10),transparent 34%),
+    radial-gradient(ellipse at 88% 38%,rgba(105,139,172,.08),transparent 38%),
+    #edf0f3;
+}
+html[data-theme="light"] body::before{
+  opacity:.12;
+  background-image:linear-gradient(rgba(40,50,62,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(40,50,62,.025) 1px,transparent 1px);
+}
+html[data-theme="light"] .topbar{
+  background:rgba(247,249,251,.88);
+  border-bottom-color:rgba(47,58,70,.15);
+  box-shadow:0 5px 24px rgba(35,45,57,.06);
+}
+html[data-theme="light"] .topbar,
+html[data-theme="light"] .topbar a,
+html[data-theme="light"] .topbar button,
+html[data-theme="light"] .top-meta,
+html[data-theme="light"] .brand,
+html[data-theme="light"] .brand-name{
+  color:#35404b;
+}
+html[data-theme="light"] .workspace,
+html[data-theme="light"] .progress-panel,
+html[data-theme="light"] .results,
+html[data-theme="light"] .auth-panel{
+  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(237,241,245,.97));
+  border-color:rgba(55,68,82,.18);
+  box-shadow:0 24px 64px rgba(39,51,65,.11),inset 0 1px rgba(255,255,255,.95);
+}
+html[data-theme="light"] .intake-group{
+  background:linear-gradient(145deg,#ffffff,#f2f4f6);
+  border-color:rgba(58,71,85,.19);
+  box-shadow:0 5px 16px rgba(40,52,65,.055),inset 0 1px #fff;
+}
+html[data-theme="light"] .intake-group[open]{
+  background:linear-gradient(145deg,#fffdf8,#f4f0e8);
+  border-color:rgba(145,111,59,.36);
+  box-shadow:0 9px 24px rgba(70,57,36,.09),inset 0 1px #fff;
+}
+html[data-theme="light"] .group-copy strong,
+html[data-theme="light"] .evidence-title strong{color:#303944}
+html[data-theme="light"] .group-copy small,
+html[data-theme="light"] .group-state{color:#68737e}
+html[data-theme="light"] .intake-field input,
+html[data-theme="light"] .intake-field select,
+html[data-theme="light"] textarea,
+html[data-theme="light"] .auth-input{
+  color:#29333d;
+  background:#fff;
+  border-color:rgba(55,68,82,.24);
+  box-shadow:inset 0 1px 2px rgba(35,45,57,.045);
+  color-scheme:light;
+}
+html[data-theme="light"] .intake-field input::placeholder,
+html[data-theme="light"] textarea::placeholder,
+html[data-theme="light"] .auth-input::placeholder{color:#78838e}
+html[data-theme="light"] .intake-field input:focus,
+html[data-theme="light"] .intake-field select:focus,
+html[data-theme="light"] textarea:focus,
+html[data-theme="light"] .auth-input:focus{
+  background:#fff;
+  border-color:#a9854e;
+  box-shadow:0 0 0 3px rgba(169,133,78,.13);
+}
+html[data-theme="light"] .evidence-panel{
+  background:linear-gradient(145deg,#fbf8f1,#fff);
+  border-color:rgba(153,119,67,.25);
+}
+html[data-theme="light"] .opponent-panel{
+  background:linear-gradient(145deg,#f0f5fa,#fff);
+  border-color:rgba(94,127,161,.27);
+}
+html[data-theme="light"] .analysis-nav{
+  background:linear-gradient(160deg,#fff,#f0f3f6);
+  border-color:rgba(55,68,82,.18);
+  box-shadow:0 10px 28px rgba(39,51,65,.08);
+}
+html[data-theme="light"] .analysis-nav-link{color:#5e6975}
+html[data-theme="light"] .analysis-nav-link:hover{
+  color:#3b4651;background:rgba(165,130,76,.09);
+}
+html[data-theme="light"] .analysis-nav-link.is-active{
+  color:#72552b;background:rgba(180,143,84,.13);border-color:rgba(145,111,59,.27);
+}
+html[data-theme="light"] .secondary-button,
+html[data-theme="light"] .focus-controls{
+  color:#46515d;background:rgba(255,255,255,.88);border-color:rgba(55,68,82,.2);
+}
+html[data-theme="light"] .primary-button{color:#fff}
+html[data-theme="light"] .results-warning,
+html[data-theme="light"] .account-bar{
+  color:#55482f;background:#f8f3e9;border-color:rgba(145,111,59,.24);
+}
+html[data-theme="light"] .auth-copy,
+html[data-theme="light"] .intro-copy{color:#596571}
+html[data-theme="light"] .private-note,
+html[data-theme="light"] .field-label,
+html[data-theme="light"] .upload-support{color:#596571}
+html[data-theme="light"] .page-footer{color:#69747f}
+html[data-theme="light"] .error-message{color:#9c302b;background:#fff0ee;border-color:rgba(156,48,43,.22)}
+html[data-theme="light"] .progress-title,
+html[data-theme="light"] .progress-detail{color:#394550}
+html[data-theme="light"] .focus-arrow-controls button:disabled{opacity:.38}
+@media(prefers-reduced-motion:reduce){
+  html[data-theme="light"] *,
+  html[data-theme="light"] *::before,
+  html[data-theme="light"] *::after{scroll-behavior:auto}
+}
