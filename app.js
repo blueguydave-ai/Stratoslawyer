@@ -244,31 +244,86 @@ function clearCaseWorkspace() {
 function getHistoryStorageKey(userId) {
   return "stratos-saved-analyses-v1:" + userId;
 }
-function loadSavedHistory(userId) {
+function captureIntakeSnapshot() {
+  const snapshot = {};
+  document.querySelectorAll(".intake-accordions input[id], .intake-accordions select[id], .intake-accordions textarea[id]").forEach(field => {
+    if (field.id !== "file-input") snapshot[field.id] = field.value;
+  });
+  return snapshot;
+}
+function normalizeCloudAnalysis(row) {
+  return {
+    id:row.id,
+    title:row.title || "Case analysis",
+    savedAt:row.saved_at || row.updated_at || new Date().toISOString(),
+    updatedAt:row.updated_at || row.saved_at || new Date().toISOString(),
+    markdown:row.markdown || "",
+    snapshot:row.intake_snapshot && typeof row.intake_snapshot === "object" ? row.intake_snapshot : {},
+    favorite:Boolean(row.is_favorite),
+    deadlines:Array.isArray(row.deadlines) ? row.deadlines : []
+  };
+}
+async function loadSavedHistory(userId) {
+  historyList.replaceChildren();
+  historyEmpty.hidden = true;
+  historyFeedback.hidden = true;
   try {
-    const parsed = JSON.parse(localStorage.getItem(getHistoryStorageKey(userId)) || "[]");
-    savedAnalysisRecords = Array.isArray(parsed) ? parsed.filter(item =>
-      item && typeof item.id === "string" && typeof item.markdown === "string"
-    ).slice(0,30) : [];
+    const {data,error} = await authClient.from("saved_analyses")
+      .select("id,title,markdown,intake_snapshot,is_favorite,deadlines,saved_at,updated_at")
+      .eq("user_id",userId)
+      .order("updated_at",{ascending:false})
+      .limit(100);
+    if (error) throw error;
+    savedAnalysisRecords = (data || []).map(normalizeCloudAnalysis);
+    renderSavedHistory();
+    // Migrate older browser-only saved analyses once, without overwriting cloud records.
+    const legacyKey = getHistoryStorageKey(userId);
+    let legacy = [];
+    try { legacy = JSON.parse(localStorage.getItem(legacyKey) || "[]"); } catch(error) {}
+    if (savedAnalysisRecords.length === 0 && Array.isArray(legacy) && legacy.length) {
+      const migrated = legacy.slice(0,30).filter(item => item && typeof item.markdown === "string").map(item => ({
+        id:crypto.randomUUID(),
+        user_id:userId,
+        title:String(item.title || "Case analysis").slice(0,160),
+        markdown:item.markdown,
+        intake_snapshot:{},
+        is_favorite:false,
+        deadlines:[],
+        saved_at:item.savedAt || new Date().toISOString()
+      }));
+      if (migrated.length) {
+        const {data:migratedRows,error:migrateError} = await authClient.from("saved_analyses").insert(migrated).select("id,title,markdown,intake_snapshot,is_favorite,deadlines,saved_at,updated_at");
+        if (migrateError) throw migrateError;
+        savedAnalysisRecords = (migratedRows || []).map(normalizeCloudAnalysis);
+        try { localStorage.removeItem(legacyKey); } catch(error) {}
+        renderSavedHistory();
+      }
+    }
   } catch(error) {
     savedAnalysisRecords = [];
-  }
-  renderSavedHistory();
-}
-function persistSavedHistory() {
-  if (!currentAuthSession?.user?.id) return false;
-  try {
-    localStorage.setItem(getHistoryStorageKey(currentAuthSession.user.id),JSON.stringify(savedAnalysisRecords.slice(0,30)));
-    return true;
-  } catch(error) {
-    return false;
+    renderSavedHistory();
+    historyFeedback.textContent = "Your saved cases could not be loaded. Please refresh and try again.";
+    historyFeedback.hidden = false;
   }
 }
 function renderSavedHistory() {
   historyList.replaceChildren();
   historyCount.textContent = String(savedAnalysisRecords.length);
-  historyEmpty.hidden = savedAnalysisRecords.length > 0;
-  savedAnalysisRecords.forEach(record => {
+  const query = (historySearch?.value || "").trim().toLowerCase();
+  const filter = historyFilter?.value || "all";
+  const now = new Date();
+  const filtered = savedAnalysisRecords.filter(record => {
+    const snapshot = record.snapshot || {};
+    const searchable = [record.title,snapshot.court,snapshot.jurisdiction,snapshot.parties,snapshot["case-type"],snapshot["case-description"]].join(" ").toLowerCase();
+    if (query && !searchable.includes(query)) return false;
+    if (filter === "favorites" && !record.favorite) return false;
+    if (filter === "recent" && now - new Date(record.updatedAt || record.savedAt) > 7 * 86400000) return false;
+    if (filter === "deadlines" && !(record.deadlines || []).some(item => item.date && new Date(item.date + "T23:59:59") >= new Date(now.toDateString()))) return false;
+    return true;
+  });
+  historyEmpty.hidden = filtered.length > 0;
+  historyEmpty.textContent = savedAnalysisRecords.length ? "No cases match this search or filter." : "Your saved analyses will appear here.";
+  filtered.forEach(record => {
     const item = document.createElement("article");
     item.className = "history-item";
     const info = document.createElement("div");
@@ -276,38 +331,145 @@ function renderSavedHistory() {
     const title = document.createElement("strong");
     title.textContent = record.title || "Case analysis";
     const date = document.createElement("small");
-    date.textContent = new Date(record.savedAt).toLocaleString();
+    date.textContent = "Updated " + new Date(record.updatedAt || record.savedAt).toLocaleString();
     info.append(title,date);
     const actions = document.createElement("div");
     actions.className = "history-item-actions";
-    const open = document.createElement("button");
-    open.type = "button"; open.textContent = "Open";
-    open.addEventListener("click",() => {
-      currentAnalysisMarkdown = record.markdown;
-      currentAnalysisTitle = record.title || "Case analysis";
-      document.getElementById("save-analysis").disabled = false;
-      document.getElementById("save-analysis").textContent = "Save analysis";
-      renderAnalysis(record.markdown);
-      results.hidden = false;
-      results.classList.toggle("focus-mode",focusVisualMode);
-      accountMenu.hidden = true;
-      accountMenuToggle.setAttribute("aria-expanded","false");
-      historyPanel.hidden = true;
-      menuHistoryToggle.setAttribute("aria-expanded","false");
-      results.scrollIntoView({behavior:"smooth",block:"start"});
-    });
+    const makeButton = (label,handler,extraClass="") => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      if (extraClass) button.className = extraClass;
+      button.addEventListener("click",handler);
+      return button;
+    };
+    actions.append(
+      makeButton("Resume case",() => resumeSavedCase(record)),
+      makeButton(record.favorite ? "★ Favourited" : "☆ Favourite",() => updateSavedRecord(record,{favorite:!record.favorite})),
+      makeButton("Rename",() => {
+        const next = window.prompt("Enter a name for this case",record.title || "");
+        if (next && next.trim()) updateSavedRecord(record,{title:next.trim().slice(0,160)});
+      }),
+      makeButton("Delete",() => {
+        if (window.confirm("Delete this saved case and its analysis? This cannot be undone.")) deleteSavedRecord(record);
+      },"history-delete")
+    );
     const download = document.createElement("select");
     download.className = "history-download";
     download.setAttribute("aria-label","Download " + (record.title || "analysis"));
     download.innerHTML = '<option value="">Download</option><option value="pdf">PDF</option><option value="docx">Word (.docx)</option><option value="md">Markdown</option><option value="txt">Text</option><option value="html">HTML</option>';
-    download.addEventListener("change",() => {
-      if(download.value) exportAnalysis(record,download.value);
-      download.value = "";
-    });
-    actions.append(open,download);
+    download.addEventListener("change",() => { if(download.value) exportAnalysis(record,download.value); download.value = ""; });
+    actions.append(download);
     item.append(info,actions);
+
+    const deadlineSection = document.createElement("div");
+    deadlineSection.className = "case-deadlines";
+    const deadlineHeading = document.createElement("strong");
+    deadlineHeading.textContent = "Case deadlines and next steps";
+    deadlineSection.append(deadlineHeading);
+    (record.deadlines || []).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(deadline => {
+      const line = document.createElement("div");
+      line.className = "case-deadline-row";
+      const label = document.createElement("span");
+      const due = new Date(deadline.date + "T00:00:00");
+      const today = new Date(); today.setHours(0,0,0,0);
+      label.textContent = deadline.title + " · " + due.toLocaleDateString() + (due < today ? " · OVERDUE" : due.getTime() === today.getTime() ? " · TODAY" : "");
+      const remove = makeButton("Remove",() => updateSavedRecord(record,{deadlines:(record.deadlines || []).filter(item=>item.id!==deadline.id)}));
+      line.append(label,remove);
+      deadlineSection.append(line);
+    });
+    const deadlineForm = document.createElement("form");
+    deadlineForm.className = "deadline-form";
+    const deadlineTitle = document.createElement("input");
+    deadlineTitle.type = "text"; deadlineTitle.placeholder = "Hearing, filing or next step"; deadlineTitle.maxLength = 120; deadlineTitle.required = true;
+    const deadlineDate = document.createElement("input");
+    deadlineDate.type = "date"; deadlineDate.required = true;
+    const deadlineAdd = document.createElement("button");
+    deadlineAdd.type = "submit"; deadlineAdd.textContent = "Add";
+    deadlineForm.append(deadlineTitle,deadlineDate,deadlineAdd);
+    deadlineForm.addEventListener("submit",event => {
+      event.preventDefault();
+      const titleValue = deadlineTitle.value.trim();
+      const dateValue = deadlineDate.value;
+      if (!titleValue || !dateValue) return;
+      updateSavedRecord(record,{deadlines:[...(record.deadlines || []),{id:crypto.randomUUID(),title:titleValue,date:dateValue}].slice(0,30)});
+    });
+    deadlineSection.append(deadlineForm);
+    item.append(deadlineSection);
     historyList.append(item);
   });
+}
+async function updateSavedRecord(record,changes) {
+  if (!currentAuthSession?.user?.id) return;
+  const updated = {...record,...changes,updatedAt:new Date().toISOString()};
+  const payload = {
+    title:updated.title,
+    markdown:updated.markdown,
+    intake_snapshot:updated.snapshot || {},
+    is_favorite:Boolean(updated.favorite),
+    deadlines:Array.isArray(updated.deadlines) ? updated.deadlines : [],
+    updated_at:updated.updatedAt
+  };
+  const {error} = await authClient.from("saved_analyses").update(payload).eq("id",record.id).eq("user_id",currentAuthSession.user.id);
+  if (error) {
+    historyFeedback.textContent = "That change could not be saved. Please try again.";
+    historyFeedback.hidden = false;
+    return;
+  }
+  savedAnalysisRecords = savedAnalysisRecords.map(item=>item.id===record.id?updated:item);
+  renderSavedHistory();
+}
+async function deleteSavedRecord(record) {
+  if (!currentAuthSession?.user?.id) return;
+  const {error} = await authClient.from("saved_analyses").delete().eq("id",record.id).eq("user_id",currentAuthSession.user.id);
+  if (error) {
+    historyFeedback.textContent = "This case could not be deleted. Please try again.";
+    historyFeedback.hidden = false;
+    return;
+  }
+  savedAnalysisRecords = savedAnalysisRecords.filter(item=>item.id!==record.id);
+  renderSavedHistory();
+}
+function resumeSavedCase(record) {
+  Object.entries(record.snapshot || {}).forEach(([id,value]) => {
+    const field = document.getElementById(id);
+    if (field && field.id !== "file-input") field.value = value == null ? "" : String(value);
+  });
+  selectedFiles.splice(0,selectedFiles.length);
+  if (typeof renderFiles === "function") renderFiles();
+  if (typeof updateAnalyzeReadiness === "function") updateAnalyzeReadiness();
+  currentAnalysisMarkdown = record.markdown;
+  currentAnalysisTitle = record.title || "Case analysis";
+  document.getElementById("save-analysis").disabled = false;
+  document.getElementById("save-analysis").textContent = "Save analysis";
+  renderAnalysis(record.markdown);
+  results.hidden = false;
+  results.classList.toggle("focus-mode",focusVisualMode);
+  accountMenu.hidden = true;
+  accountMenuToggle.setAttribute("aria-expanded","false");
+  historyPanel.hidden = true;
+  menuHistoryToggle.setAttribute("aria-expanded","false");
+  document.querySelector(".workspace").scrollIntoView({behavior:"smooth",block:"start"});
+}
+async function persistSavedRecord(record) {
+  if (!currentAuthSession?.user?.id) return false;
+  const payload = {
+    id:record.id,
+    user_id:currentAuthSession.user.id,
+    title:record.title,
+    markdown:record.markdown,
+    intake_snapshot:record.snapshot || {},
+    is_favorite:Boolean(record.favorite),
+    deadlines:Array.isArray(record.deadlines) ? record.deadlines : [],
+    saved_at:record.savedAt,
+    updated_at:record.updatedAt || record.savedAt
+  };
+  const {error} = await authClient.from("saved_analyses").upsert(payload,{onConflict:"id"});
+  if (error) return false;
+  return true;
+}
+function buildHistorySnapshot() {
+  return captureIntakeSnapshot();
 }
 function buildAnalysisTitle() {
   const type = document.getElementById("case-type")?.value || "";
