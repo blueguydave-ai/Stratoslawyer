@@ -57,7 +57,7 @@ function applyAuthSession(session) {
   currentAuthSession = session || null;
   const signedIn = Boolean(session?.user);
   authPanel.hidden = signedIn;
-  accountMenuToggle.hidden = !signedIn;
+  accountMenuToggle.hidden = !signedIn || authMode === "recovery";
   document.querySelector(".workspace").hidden = !signedIn;
   if (!signedIn) {
     document.getElementById("results").hidden = true;
@@ -233,6 +233,8 @@ function renderSavedHistory() {
     open.addEventListener("click",() => {
       currentAnalysisMarkdown = record.markdown;
       currentAnalysisTitle = record.title || "Case analysis";
+      document.getElementById("save-analysis").disabled = false;
+      document.getElementById("save-analysis").textContent = "Save analysis";
       renderAnalysis(record.markdown);
       results.hidden = false;
       results.classList.toggle("focus-mode",focusVisualMode);
@@ -301,7 +303,8 @@ function exportAnalysis(record,format) {
   if (format === "md") return downloadBlob(markdown,"text/markdown;charset=utf-8",filename+".md");
   if (format === "html") {
     const escaped = plain.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
-    return downloadBlob("<!doctype html><meta charset=utf-8><title>"+title+"</title><h1>"+title+"</h1><pre>"+escaped+"</pre>","text/html;charset=utf-8",filename+".html");
+    const safeTitle = title.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+    return downloadBlob("<!doctype html><meta charset=utf-8><title>"+safeTitle+"</title><h1>"+safeTitle+"</h1><pre>"+escaped+"</pre>","text/html;charset=utf-8",filename+".html");
   }
   return downloadBlob(plain,"text/plain;charset=utf-8",filename+".txt");
 }
@@ -314,7 +317,7 @@ function downloadBlob(content,type,filename) {
 }
 document.getElementById("save-analysis").addEventListener("click",() => {
   if (!currentAnalysisMarkdown || !currentAuthSession?.user) return;
-  const record = {id:crypto.randomUUID(),title:currentAnalysisTitle,savedAt:new Date().toISOString(),markdown:currentAnalysisMarkdown};
+  const record = {id:(crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+"-"+Math.random().toString(36).slice(2)),title:currentAnalysisTitle,savedAt:new Date().toISOString(),markdown:currentAnalysisMarkdown};
   savedAnalysisRecords = [record,...savedAnalysisRecords.filter(item=>item.id!==record.id)].slice(0,30);
   if (!persistSavedHistory()) {
     savedAnalysisRecords = savedAnalysisRecords.filter(item=>item.id!==record.id);
