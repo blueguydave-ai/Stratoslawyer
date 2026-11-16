@@ -243,6 +243,7 @@ function clearCaseWorkspace() {
   document.getElementById("results").hidden = true;
   document.getElementById("progress-panel").hidden = true;
   document.getElementById("error-message").hidden = true;
+  updateAnalyzeReadiness();
 }
 
 function getHistoryStorageKey(userId) {
@@ -842,7 +843,7 @@ function renderFiles() {
     remove.type = "button";
     remove.setAttribute("aria-label","Remove " + file.name);
     remove.textContent = "×";
-    remove.addEventListener("click",() => { selectedFiles.splice(index,1); renderFiles(); });
+    remove.addEventListener("click",() => { selectedFiles.splice(index,1); renderFiles(); updateAnalyzeReadiness(); });
     row.append(label,remove);
     fileList.append(row);
   });
