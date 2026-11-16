@@ -1,4 +1,4 @@
--- Daily analysis allowance: 10 successful analyses per user per Nigeria calendar day.
+-- Daily analysis allowance: 10 analysis requests per user per Nigeria calendar day.
 -- Run this migration in the Supabase SQL Editor before deploying the matching app code.
 
 create table if not exists public.daily_analysis_usage (
@@ -34,15 +34,17 @@ begin
     raise exception 'Not authorised';
   end if;
 
-  select coalesce(u.analyses_used, 0)
+  select u.analyses_used
     into v_used
     from public.daily_analysis_usage u
     where u.user_id = p_user_id and u.usage_date = v_date;
+  v_used := coalesce(v_used, 0);
 
   return query select v_used, greatest(10 - v_used, 0), 10, v_date;
 end;
 $$;
 
+-- Atomically reserve a slot. Concurrent requests cannot push a user over ten.
 create or replace function public.reserve_daily_analysis(p_user_id uuid)
 returns table (
   allowed boolean,
@@ -63,13 +65,14 @@ begin
     raise exception 'Not authorised';
   end if;
 
-  insert into public.daily_analysis_usage as usage (user_id, usage_date, analyses_used, updated_at)
+  insert into public.daily_analysis_usage as current_usage
+    (user_id, usage_date, analyses_used, updated_at)
   values (p_user_id, v_date, 1, now())
   on conflict (user_id, usage_date) do update
-    set analyses_used = usage.analyses_used + 1,
+    set analyses_used = current_usage.analyses_used + 1,
         updated_at = now()
     where current_usage.analyses_used < 10
-  returning usage.analyses_used into v_used;
+  returning current_usage.analyses_used into v_used;
 
   if v_used is null then
     select u.analyses_used into v_used
@@ -82,6 +85,7 @@ begin
 end;
 $$;
 
+-- Only the server's service-role credential may refund a failed reservation.
 create or replace function public.release_daily_analysis(p_user_id uuid, p_usage_date date)
 returns boolean
 language plpgsql
@@ -89,7 +93,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if auth.uid() is null or auth.uid() <> p_user_id then
+  if auth.role() <> 'service_role' then
     raise exception 'Not authorised';
   end if;
 
@@ -107,4 +111,4 @@ revoke all on function public.reserve_daily_analysis(uuid) from public;
 revoke all on function public.release_daily_analysis(uuid, date) from public;
 grant execute on function public.get_daily_analysis_usage(uuid) to authenticated;
 grant execute on function public.reserve_daily_analysis(uuid) to authenticated;
-grant execute on function public.release_daily_analysis(uuid, date) to authenticated;
+grant execute on function public.release_daily_analysis(uuid, date) to service_role;
