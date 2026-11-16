@@ -1,3 +1,179 @@
+// Persistent Supabase account session. Supabase stores the refreshable session
+// in this browser's local storage and renews access tokens automatically.
+const authPanel = document.getElementById("auth-panel");
+const authForm = document.getElementById("auth-form");
+const authName = document.getElementById("auth-name");
+const authNameLabel = document.getElementById("auth-name-label");
+const authEmail = document.getElementById("auth-email");
+const authPassword = document.getElementById("auth-password");
+const authSubmit = document.getElementById("auth-submit");
+const authMessage = document.getElementById("auth-message");
+const authTitle = document.getElementById("auth-title");
+const authHeaderStatus = document.getElementById("auth-header-status");
+const accountBar = document.getElementById("account-bar");
+const accountEmail = document.getElementById("account-email");
+const authSignout = document.getElementById("auth-signout");
+const authSigninTab = document.getElementById("auth-signin-tab");
+const authSignupTab = document.getElementById("auth-signup-tab");
+const authForgot = document.getElementById("auth-forgot");
+const workspace = document.querySelector(".workspace");
+let authMode = "signin";
+let authClient = null;
+let currentAuthSession = null;
+
+function setAuthMessage(message, isError=false) {
+  authMessage.textContent = message || "";
+  authMessage.classList.toggle("is-error",Boolean(isError));
+}
+function setAuthMode(mode) {
+  authMode = mode;
+  const signup = mode === "signup";
+  const recovery = mode === "recovery";
+  authSigninTab.hidden = recovery;
+  authSignupTab.hidden = recovery;
+  authSigninTab.classList.toggle("is-active",mode==="signin");
+  authSignupTab.classList.toggle("is-active",signup);
+  authSigninTab.setAttribute("aria-selected",String(mode==="signin"));
+  authSignupTab.setAttribute("aria-selected",String(signup));
+  authName.hidden = !signup;
+  authNameLabel.hidden = !signup;
+  authName.required = signup;
+  authPassword.autocomplete = recovery ? "new-password" : signup ? "new-password" : "current-password";
+  authPassword.placeholder = recovery ? "Choose a new password (at least 8 characters)" : "At least 8 characters";
+  authTitle.textContent = recovery ? "Choose a new password." : signup ? "Create your STRATOS account." : "Your workspace, kept yours.";
+  authSubmit.querySelector("span:first-child").textContent = recovery ? "Save new password" : signup ? "Create account" : "Sign in";
+  authForgot.hidden = signup || recovery;
+  setAuthMessage("");
+}
+function applyAuthSession(session) {
+  currentAuthSession = session || null;
+  const signedIn = Boolean(session?.user);
+  authPanel.hidden = signedIn;
+  accountBar.hidden = !signedIn;
+  workspace.hidden = !signedIn;
+  if (!signedIn) {
+    document.getElementById("results").hidden = true;
+    accountEmail.textContent = "";
+    authHeaderStatus.textContent = "ACCOUNT REQUIRED";
+  } else {
+    const email = session.user.email || "Account";
+    accountEmail.textContent = email;
+    authHeaderStatus.textContent = email;
+  }
+}
+try {
+  if (window.supabase?.createClient && window.STRATOS_SUPABASE_URL && window.STRATOS_SUPABASE_PUBLISHABLE_KEY) {
+    authClient = window.supabase.createClient(
+      window.STRATOS_SUPABASE_URL,
+      window.STRATOS_SUPABASE_PUBLISHABLE_KEY,
+      {auth:{
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:true,
+        flowType:"pkce",
+        storageKey:"stratoslawyer-auth-v1"
+      }}
+    );
+    window.STRATOS_AUTH_CLIENT = authClient;
+    authClient.auth.onAuthStateChange((event,session) => {
+      applyAuthSession(session);
+      if (event === "PASSWORD_RECOVERY") {
+        setAuthMode("recovery");
+        setAuthMessage("Choose a new password for your account.");
+      }
+    });
+    authClient.auth.getSession().then(({data,error}) => {
+      if (error) throw error;
+      applyAuthSession(data.session);
+    }).catch(() => {
+      applyAuthSession(null);
+      setAuthMessage("Your saved session could not be restored. Please sign in again.",true);
+    });
+  } else {
+    applyAuthSession(null);
+    setAuthMessage("Account access is not configured. Please refresh the page or contact the site administrator.",true);
+  }
+} catch (error) {
+  applyAuthSession(null);
+  setAuthMessage("Account access could not be started. Please refresh the page.",true);
+}
+authSigninTab.addEventListener("click",() => setAuthMode("signin"));
+authSignupTab.addEventListener("click",() => setAuthMode("signup"));
+authForm.addEventListener("submit",async event => {
+  event.preventDefault();
+  if (!authClient) return setAuthMessage("Account access is not available right now. Please refresh the page.",true);
+  const email = authEmail.value.trim().toLowerCase();
+  const password = authPassword.value;
+  if (!email || !authEmail.validity.valid) return setAuthMessage("Enter a valid email address.",true);
+  if (password.length < 8) return setAuthMessage("Use a password with at least 8 characters.",true);
+  if (authMode === "signup" && !authName.value.trim()) return setAuthMessage("Enter your name to create the account.",true);
+  authSubmit.disabled = true;
+  setAuthMessage(authMode==="signup" ? "Creating your account..." : authMode==="recovery" ? "Updating your password..." : "Signing in...");
+  try {
+    if (authMode === "signup") {
+      const {data,error} = await authClient.auth.signUp({
+        email,password,
+        options:{data:{full_name:authName.value.trim()}}
+      });
+      if (error) throw error;
+      if (data.session) {
+        applyAuthSession(data.session);
+        setAuthMessage("Your account is ready. You are signed in on this device.");
+      } else {
+        setAuthMessage("The account was created, but email confirmation is still enabled in the Supabase project. The administrator must turn off Confirm email before users can enter without verification.",true);
+      }
+    } else if (authMode === "recovery") {
+      const {error} = await authClient.auth.updateUser({password});
+      if (error) throw error;
+      setAuthMode("signin");
+      authPassword.value = "";
+      setAuthMessage("Password updated. You can now sign in with your new password.");
+    } else {
+      const {data,error} = await authClient.auth.signInWithPassword({email,password});
+      if (error) throw error;
+      applyAuthSession(data.session);
+      setAuthMessage("");
+    }
+  } catch(error) {
+    const message = error?.message || "Account access failed. Please try again.";
+    setAuthMessage(message,true);
+  } finally {
+    authSubmit.disabled = false;
+  }
+});
+authForgot.addEventListener("click",async () => {
+  if (!authClient) return setAuthMessage("Account access is not available right now.",true);
+  const email = authEmail.value.trim().toLowerCase();
+  if (!email || !authEmail.validity.valid) return setAuthMessage("Enter your account email first, then choose Forgot password.",true);
+  authForgot.disabled = true;
+  setAuthMessage("Sending the password reset link...");
+  try {
+    const {error} = await authClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin + "/"});
+    if (error) throw error;
+    setAuthMessage("If an account exists for that email, a password reset link will be sent. Check your inbox.");
+  } catch(error) {
+    setAuthMessage(error?.message || "The reset link could not be sent. Try again later.",true);
+  } finally {
+    authForgot.disabled = false;
+  }
+});
+authSignout.addEventListener("click",async () => {
+  if (!authClient) return;
+  authSignout.disabled = true;
+  try {
+    const {error} = await authClient.auth.signOut({scope:"local"});
+    if (error) throw error;
+    applyAuthSession(null);
+    authPassword.value = "";
+    setAuthMode("signin");
+    setAuthMessage("You have signed out of this device.");
+  } catch(error) {
+    setAuthMessage(error?.message || "Sign out failed. Please try again.",true);
+  } finally {
+    authSignout.disabled = false;
+  }
+});
+
 const input = document.getElementById("file-input");
 // Persistent app-wide light/dark appearance control.
 const themeToggle=document.getElementById("theme-toggle");
@@ -850,9 +1026,17 @@ analyzeButton.addEventListener("click", async () => {
   },4500);
   try {
     const files = await Promise.all(selectedFiles.map(async file => ({name:file.name,mimeType:file.type,data:await fileAsDataUrl(file)})));
+    const {data:sessionData,error:sessionError} = await authClient.auth.getSession();
+    if (sessionError || !sessionData.session?.access_token) {
+      applyAuthSession(null);
+      throw new Error("Your session has expired. Please sign in again before analysing a case.");
+    }
     const response = await fetch("/api/analyze",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer " + sessionData.session.access_token
+      },
       body:JSON.stringify({description:caseText,caseContext:Object.fromEntries(intakeFieldIds.map(id => [id,document.getElementById(id)?.value?.trim() || "Not supplied"])),files})
     });
     const data = await response.json().catch(() => ({}));
