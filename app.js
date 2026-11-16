@@ -1078,8 +1078,8 @@ function renderAnalysis(markdown) {
     "Information still needed"
   ];
   sections.forEach((section,index) => {
-    const headingMatch = section.title.match(/^([A-L])\\s*[.):-]?\\s*/i);
-    if (headingMatch) section.title = plainCategoryNames[headingMatch[1].toUpperCase().charCodeAt(0)-65] || section.title.replace(/^([A-L])\\s*[.):-]?\\s*/i,"");
+    const headingMatch = section.title.match(/^([A-L])\s*[.):-]?\s*/i);
+    if (headingMatch) section.title = plainCategoryNames[headingMatch[1].toUpperCase().charCodeAt(0)-65] || section.title.replace(/^([A-L])\s*[.):-]?\s*/i,"");
     const id = "analysis-" + (slugify(section.title) || index);
     const card = document.createElement("section");
     card.className = "analysis-card";
