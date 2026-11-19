@@ -68,7 +68,7 @@ begin
   insert into public.daily_analysis_usage as current_usage
     (user_id, usage_date, analyses_used, updated_at)
   values (p_user_id, v_date, 1, now())
-  on conflict (user_id, usage_date) do update
+  on conflict on constraint daily_analysis_usage_pkey do update
     set analyses_used = current_usage.analyses_used + 1,
         updated_at = now()
     where current_usage.analyses_used < 10
