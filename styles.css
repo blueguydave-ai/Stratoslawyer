@@ -2413,3 +2413,6 @@ html[data-theme="light"] .history-item-actions button.history-delete{color:#984e
 .results.focus-mode .analysis-card.is-focused{opacity:1!important;filter:none!important}
 @media(max-width:760px){.results .insight-tile{padding:12px 12px 10px!important}}
 @media(prefers-reduced-motion:reduce){.results .insight-tile,.results .insight-tile .tile-body{transition:none!important}}
+
+.results .insight-tile .tile-body .grey-zone-caution{display:block;margin:8px 0 10px!important;padding:8px 10px!important;border-left:2px solid #bd8a69!important;border-radius:0 5px 5px 0;background:rgba(171,119,85,.09)!important;color:#d6b69f!important;font-size:11px!important;line-height:1.55!important}
+.results .insight-tile .tile-body .grey-zone-caution strong{color:#e5c2a6!important}
