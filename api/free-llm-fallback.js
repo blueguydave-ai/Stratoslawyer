@@ -26,7 +26,7 @@ export async function callFreeLlmFallback({ systemInstructions, userText }) {
   const ordered = configuredOrder
     .map(name => PROVIDERS.find(provider => provider.name === name))
     .filter((provider, index, list) => provider && list.indexOf(provider) === index);
-  const deadline = Date.now() + 15000;
+  const deadline = Date.now() + 12000;
   const failures = [];
 
   for (const provider of ordered) {
@@ -45,7 +45,7 @@ export async function callFreeLlmFallback({ systemInstructions, userText }) {
           temperature: 0.25,
           max_tokens: 8192
         }),
-        signal: AbortSignal.timeout(Math.min(5000, remaining))
+        signal: AbortSignal.timeout(Math.min(4000, remaining))
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
