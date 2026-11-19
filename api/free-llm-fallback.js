@@ -4,11 +4,6 @@
 
 const PROVIDERS = [
   {
-    name: "kilo",
-    baseUrl: "https://api.kilo.ai/api/gateway",
-    model: process.env.KILO_MODEL || "kilo-auto/free"
-  },
-  {
     name: "ovh",
     baseUrl: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
     model: process.env.OVH_MODEL || "gpt-oss-120b"
@@ -17,11 +12,18 @@ const PROVIDERS = [
     name: "llm7",
     baseUrl: "https://api.llm7.io/v1",
     model: process.env.LLM7_MODEL || "gpt-oss:20b"
+  },
+  {
+    name: "kilo",
+    baseUrl: "https://api.kilo.ai/api/gateway",
+    model: process.env.KILO_MODEL || "kilo-auto/free"
   }
 ];
 
 export async function callFreeLlmFallback({ systemInstructions, userText }) {
-  const configuredOrder = (process.env.FREE_LLM_FALLBACK_ORDER || "kilo,ovh,llm7")
+  // Start with providers that returned actual text in live anonymous tests.
+  // Kilo remains a last-resort option; its free route was slow/unreliable in testing.
+  const configuredOrder = (process.env.FREE_LLM_FALLBACK_ORDER || "ovh,llm7,kilo")
     .split(",").map(value => value.trim().toLowerCase()).filter(Boolean);
   const ordered = configuredOrder
     .map(name => PROVIDERS.find(provider => provider.name === name))
