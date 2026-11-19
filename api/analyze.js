@@ -158,25 +158,8 @@ export default async function handler(req, res) {
   )) {
     return jsonError(res, 400, "One or more case fields are invalid.");
   }
-  const safeIncomingContext = caseContext;
-  const populatedKeys = contextEntries
-    .filter(([,value]) => value.trim() && value.trim() !== "Not supplied")
-    .map(([key]) => key);
-  const coverageGroups = [
-    ["case-type","case-role","parties","relief","client-objective"],
-    ["case-stage","court","jurisdiction","next-date","orders-documents"],
-    ["opponent-position","opponent-conduct"],
-    ["own-evidence","own-witnesses","opponent-evidence","opponent-witnesses"]
-  ];
-  const coveredGroupCount = coverageGroups.filter(group => group.some(key => populatedKeys.includes(key))).length;
-  const enoughStructuredDetail = populatedKeys.length >= 5 && coveredGroupCount >= 3;
-  const enoughSourceMaterial = description.trim().length >= 120 || files.length > 0;
-  // Temporary Preview-only switch for fictional fallback testing. Authentication,
-  // input shape/size checks, file validation and daily usage limits remain enforced.
-  const partialIntakeTestMode = process.env.ALLOW_PARTIAL_INTAKE_FOR_TESTING === "true";
-  if (!partialIntakeTestMode && (!enoughStructuredDetail || !enoughSourceMaterial)) {
-    return jsonError(res, 400, "Not enough case information. Provide at least 5 relevant structured details across 3 sections, plus a case description of at least 120 characters or one case document.");
-  }
+  // Sparse and empty intake is valid. The analysis prompt explicitly instructs the
+  // model to identify unknowns and never fill gaps with invented facts.
   if (files.length > 6) return jsonError(res, 400, "For this first version, attach no more than 6 files at a time.");
 
   const contextText = contextEntries.map(([key,value]) => `${key}: ${value}`).join("\n");
