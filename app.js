@@ -678,6 +678,8 @@ const workspace = document.querySelector(".workspace");
 const intakeAccordions = document.querySelector(".intake-accordions");
 const output = document.getElementById("analysis-output");
 const selectedFiles = [];
+// Browser-side switch for deliberately sparse fictional test scenarios.
+const partialIntakeTestMode = new URLSearchParams(window.location.search).get("partialIntakeTest") === "1";
 
 const waitingInsights = [
   "People often defend the version of events that makes their choices look inevitable. Ask what their account quietly needs you not to examine.",
@@ -814,7 +816,7 @@ function inspectIntakeQuality() {
   const enoughStructuredDetail = completed.length >= 5 && coveredGroups.length >= 3;
   const enoughSourceMaterial = hasSubstantiveNarrative || hasDocuments;
   return {
-    ready: enoughStructuredDetail && enoughSourceMaterial,
+    ready: partialIntakeTestMode || (enoughStructuredDetail && enoughSourceMaterial),
     completedCount: completed.length,
     groupCount: coveredGroups.length,
     hasSubstantiveNarrative,
@@ -828,7 +830,7 @@ function inspectIntakeQuality() {
 function updateAnalyzeReadiness() {
   const quality = inspectIntakeQuality();
   analyzeButton.classList.toggle("is-intake-ready", quality.ready);
-  analyzeButton.setAttribute("data-intake-progress", quality.ready ? "DETAILS READY" : "MORE DETAILS NEEDED");
+  analyzeButton.setAttribute("data-intake-progress", partialIntakeTestMode ? "PARTIAL INTAKE TEST" : quality.ready ? "DETAILS READY" : "MORE DETAILS NEEDED");
 }
 intakeAccordions.addEventListener("input", event => {
   if (event.target && (intakeFieldIds.includes(event.target.id) || event.target.id === "case-description")) updateAnalyzeReadiness();
