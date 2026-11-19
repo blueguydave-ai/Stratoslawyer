@@ -260,6 +260,19 @@ export default async function handler(req, res) {
     }
   };
 
+  const requiredHeadings = [
+    "## 1. POSSIBLE OUTCOMES",
+    "## 2. WEAKNESSES IN THE OTHER SIDE'S CASE",
+    "## 3. WEAKNESSES IN OUR CASE — AND HOW TO COUNTER THEM",
+    "## 4. ENDGAME — FINAL ADDRESS AND AUTHORITIES"
+  ];
+  const isCompleteAnalysis = value =>
+    typeof value === "string" && value.trim() &&
+    requiredHeadings.every(heading => value.includes(heading));
+
+  let analysisText = "";
+  let primaryFailure = null;
+
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: "POST",
@@ -274,41 +287,58 @@ export default async function handler(req, res) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      await releaseDailyReservation();
-      return jsonError(res, response.status === 429 ? 429 : 502,
-        response.status === 429
-          ? "The service is temporarily busy. Please try again shortly."
-          : "The analysis could not be completed. Please try again.");
+      const failure = new Error(`Gemini request failed with status ${response.status}`);
+      failure.status = response.status;
+      throw failure;
     }
     const candidate = payload.candidates?.[0];
     if (!candidate || candidate.finishReason === "MAX_TOKENS" ||
         candidate.finishReason === "SAFETY" || candidate.finishReason === "RECITATION") {
-      await releaseDailyReservation();
-      return jsonError(res, 502, "The analysis was incomplete and has not been presented. Please try again with fewer or smaller documents.");
+      throw new Error("Gemini returned an incomplete or blocked analysis.");
     }
-    const text = (candidate.content?.parts || []).map(part => part.text || "").join("\n").trim();
-    const requiredHeadings = [
-      "## 1. POSSIBLE OUTCOMES",
-      "## 2. WEAKNESSES IN THE OTHER SIDE'S CASE",
-      "## 3. WEAKNESSES IN OUR CASE — AND HOW TO COUNTER THEM",
-      "## 4. ENDGAME — FINAL ADDRESS AND AUTHORITIES"
-    ];
-    if (!text || requiredHeadings.some(heading => !text.includes(heading))) {
-      await releaseDailyReservation();
-      return jsonError(res, 502, "The analysis did not contain all four required sections. No incomplete result has been presented; please try again.");
+    analysisText = (candidate.content?.parts || []).map(part => part.text || "").join("\\n").trim();
+    if (!isCompleteAnalysis(analysisText)) {
+      throw new Error("Gemini response did not contain all four required sections.");
     }
-    return res.status(200).json({
-      analysis:text,
-      usage:{
-        used:Number(dailyReservation.analyses_used)||1,
-        remaining:Number(dailyReservation.analyses_remaining)||0,
-        limit:Number(dailyReservation.daily_limit)||10,
-        date:dailyReservation.usage_date
-      }
-    });
   } catch (error) {
-    await releaseDailyReservation();
-    const timedOut = error?.name === "TimeoutError" || error?.name === "AbortError";
-    return jsonError(res, timedOut ? 504 : 502, timedOut ? "Analysis timed out. Try fewer or smaller documents." : "The analysis service could not be reached.");
+    primaryFailure = error;
   }
+
+  // Free third-party providers are deliberately opt-in. Case documents and images
+  // are never forwarded to these providers by this fallback path.
+  if (!isCompleteAnalysis(analysisText) && files.length === 0 &&
+      process.env.ENABLE_FREE_LLM_FALLBACK === "true" &&
+      (primaryFailure?.status === 429 || primaryFailure?.status >= 500 ||
+       (primaryFailure && !["TimeoutError", "AbortError"].includes(primaryFailure.name) &&
+        primaryFailure.status === undefined))) {
+    try {
+      const { callFreeLlmFallback } = await import("./free-llm-fallback.js");
+      const fallbackResult = await callFreeLlmFallback({
+        systemInstructions: SYSTEM_INSTRUCTIONS,
+        userText: parts.map(part => part.text || "").join("\\n")
+      });
+      if (isCompleteAnalysis(fallbackResult.text)) {
+        analysisText = fallbackResult.text;
+      }
+    } catch (fallbackError) {
+      // Keep provider details and secrets out of the public response.
+    }
+  }
+
+  if (!isCompleteAnalysis(analysisText)) {
+    await releaseDailyReservation();
+    const status = primaryFailure?.status === 429 ? 429 : 502;
+    return jsonError(res, status,
+      "The analysis could not be completed by the available service. Your daily allowance has been restored where the account service permits.");
+  }
+
+  return res.status(200).json({
+    analysis: analysisText,
+    usage: {
+      used: Number(dailyReservation.analyses_used) || 1,
+      remaining: Number(dailyReservation.analyses_remaining) || 0,
+      limit: Number(dailyReservation.daily_limit) || 10,
+      date: dailyReservation.usage_date
+    }
+  });
 }
