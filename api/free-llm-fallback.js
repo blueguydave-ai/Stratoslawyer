@@ -95,7 +95,7 @@ export async function callFreeLlmFallback({ systemInstructions, userText, valida
 
   // Keep the fallback inside the existing 60-second Vercel function budget.
   // Authenticated providers are only attempted when their key is configured.
-  const timeoutMs = 34000;
+  const timeoutMs = 30000;
   const controllers = ordered.map(() => new AbortController());
   diagnostic("fallback_sequence_started", {
     providers: ordered.map(provider => provider.name),
