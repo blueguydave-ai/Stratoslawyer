@@ -2343,3 +2343,40 @@ html[data-theme="light"] .history-item-actions button.history-delete{color:#984e
 .waiting-quote {min-height:88px;opacity:1;transition:opacity .26s ease,border-color .5s ease,background .5s ease}
 .waiting-quote.is-transitioning {opacity:0}
 .waiting-quote-text {min-height:3.2em}
+
+
+/* Carousel end-spacers let the first and last cards centre just like the middle cards. */
+.results.focus-mode .analysis-output::before,
+.results.focus-mode .analysis-output::after {
+  content:"";
+  display:block;
+  flex:0 0 7%;
+  pointer-events:none;
+}
+.results.focus-mode .analysis-nav {order:0;display:flex;flex-flow:row nowrap;gap:7px;overflow-x:auto;max-height:none;white-space:nowrap}
+.results.focus-mode .analysis-nav-link {flex:0 0 auto;text-align:center}
+.results.focus-mode .focus-controls {
+  order:1;
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  display:flex;
+  flex-flow:row nowrap;
+  align-items:center;
+  justify-content:flex-end;
+  width:100% !important;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+.results.focus-mode .focus-controls:not([hidden]) {display:flex;flex-direction:row}
+.results.focus-mode .focus-controls .output-focus-arrows {display:flex;gap:7px}
+.results.focus-mode .focus-controls button {width:auto;min-height:36px;padding:8px 12px;text-align:center}
+.results.focus-mode .analysis-output {order:2}
+@media(max-width:760px) {
+  .results.focus-mode .analysis-output::before,
+  .results.focus-mode .analysis-output::after {flex-basis:6vw}
+  .results.focus-mode .focus-controls {padding:0 !important}
+  .results.focus-mode .focus-controls button {flex:0 1 auto;min-height:38px}
+}
