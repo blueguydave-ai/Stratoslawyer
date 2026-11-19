@@ -474,7 +474,6 @@ function resumeSavedCase(record) {
   });
   selectedFiles.splice(0,selectedFiles.length);
   if (typeof renderFiles === "function") renderFiles();
-  if (typeof updateAnalyzeReadiness === "function") 
   currentAnalysisMarkdown = record.markdown;
   currentAnalysisTitle = record.title || "Case analysis";
   currentSavedAnalysisId = record.id;
