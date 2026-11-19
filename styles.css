@@ -2400,7 +2400,7 @@ html[data-theme="light"] .history-item-actions button.history-delete{color:#984e
 .results .insight-tile.is-grey-zone .insight-tile-label{color:#d0a17e!important}
 .results .insight-tile.is-ordinary-tactic .insight-tile-label{color:#b6b7a9!important}
 .results .insight-tile .tile-body{overflow:hidden!important;-webkit-mask-image:linear-gradient(to bottom,#000 78%,transparent 100%)!important;mask-image:linear-gradient(to bottom,#000 78%,transparent 100%)!important;transition:max-height .32s cubic-bezier(.2,.7,.2,1)!important}
-.results .insight-tile.is-expanded .tile-body{max-height:none!important;overflow:visible!important;-webkit-mask-image:none!important;mask-image:none!important}
+.results .insight-tile.is-expanded .tile-body{overflow:visible!important;-webkit-mask-image:none!important;mask-image:none!important}
 .results .tile-expand{display:inline-flex!important;align-items:center;margin-top:7px!important;padding:5px 0!important;border:0!important;background:transparent!important;color:#cbb486!important;font:10px/1.4 'DM Mono',monospace!important;letter-spacing:.02em;cursor:pointer}
 .results .tile-expand:hover{color:#f0d7a7!important}
 .results .insight-tile.is-grey-zone .tile-expand{color:#d1a07e!important}
