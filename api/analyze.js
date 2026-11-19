@@ -244,17 +244,25 @@ export default async function handler(req, res) {
   }
 
   const releaseDailyReservation = async () => {
+    if (!supabaseServiceRoleKey) {
+      providerDiagnostic("daily_quota_refund_skipped_missing_service_key");
+      return;
+    }
     try {
-      if (!supabaseServiceRoleKey) return;
-      await callUsageRpc(
+      const refund = await callUsageRpc(
         "release_daily_analysis",
         {p_user_id:authenticatedUser.id,p_usage_date:dailyReservation.usage_date},
         supabaseServiceRoleKey,
         supabaseUrl,
         supabaseServiceRoleKey
       );
+      if (!refund.ok) {
+        providerDiagnostic("daily_quota_refund_failed",{status:refund.payload?.code || "unknown"});
+      } else {
+        providerDiagnostic("daily_quota_refund_succeeded");
+      }
     } catch(error) {
-      // A failed release is retained for safe accounting rather than bypassing the limit.
+      providerDiagnostic("daily_quota_refund_failed",{name:error?.name || "UnknownError"});
     }
   };
 
