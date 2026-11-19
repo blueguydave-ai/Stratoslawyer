@@ -188,12 +188,17 @@ authForm.addEventListener("submit",async event => {
     if (authMode === "signup") {
       const {data,error} = await authClient.auth.signUp({
         email,password,
-        options:{data:{full_name:authName.value.trim()}}
+        options:{
+          data:{full_name:authName.value.trim()},
+          emailRedirectTo:window.location.origin + "/"
+        }
       });
       if (error) throw error;
       if (data.session) {
         applyAuthSession(data.session);
         setAuthMessage("Your account is ready.");
+      } else if (data.user) {
+        setAuthMessage("Your account has been created. Check " + email + " for the confirmation link, open it, then return here to sign in.");
       } else {
         setAuthMessage("We couldn't complete account creation. Please try again.",true);
       }
