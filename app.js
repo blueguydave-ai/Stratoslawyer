@@ -29,6 +29,7 @@ let dailyAnalysesRemaining = null;
 let dailyUsageRequest = 0;
 let currentAnalysisMarkdown = "";
 let currentAnalysisTitle = "Case analysis";
+let currentSavedAnalysisId = null;
 let savedAnalysisRecords = [];
 let historyLoadRequest = 0;
 const authSigninTab = document.getElementById("auth-signin-tab");
@@ -239,6 +240,7 @@ authForgot.addEventListener("click",async () => {
 });
 function clearCaseWorkspace() {
   currentAnalysisMarkdown = "";
+  currentSavedAnalysisId = null;
   document.querySelectorAll(".workspace input:not([type=file]),.workspace textarea,.workspace select").forEach(field => {
     field.value = "";
   });
@@ -457,6 +459,7 @@ function resumeSavedCase(record) {
   if (typeof updateAnalyzeReadiness === "function") updateAnalyzeReadiness();
   currentAnalysisMarkdown = record.markdown;
   currentAnalysisTitle = record.title || "Case analysis";
+  currentSavedAnalysisId = record.id;
   document.getElementById("save-analysis").disabled = false;
   document.getElementById("save-analysis").textContent = "Save analysis";
   renderAnalysis(record.markdown);
@@ -578,7 +581,7 @@ document.getElementById("save-analysis").addEventListener("click",async () => {
   saveButton.textContent = "Saving…";
   const now = new Date().toISOString();
   const record = {
-    id:crypto.randomUUID(),
+    id:currentSavedAnalysisId || crypto.randomUUID(),
     title:String(currentAnalysisTitle || "Case analysis").slice(0,160),
     savedAt:now,
     updatedAt:now,
@@ -599,6 +602,7 @@ document.getElementById("save-analysis").addEventListener("click",async () => {
     menuHistoryToggle.setAttribute("aria-expanded","true");
     return;
   }
+  currentSavedAnalysisId = record.id;
   savedAnalysisRecords = [record,...savedAnalysisRecords.filter(item=>item.id!==record.id)];
   renderSavedHistory();
   historyFeedback.hidden = true;
@@ -683,8 +687,6 @@ const workspace = document.querySelector(".workspace");
 const intakeAccordions = document.querySelector(".intake-accordions");
 const output = document.getElementById("analysis-output");
 const selectedFiles = [];
-// Browser-side switch for deliberately sparse fictional test scenarios.
-const partialIntakeTestMode = new URLSearchParams(window.location.search).get("partialIntakeTest") === "1";
 
 const waitingInsights = [
   "People often defend the version of events that makes their choices look inevitable. Ask what their account quietly needs you not to examine.",
@@ -805,44 +807,12 @@ function startWaitingInsights(){
   showSet();
 }
 
-// Require enough usable material before spending an API request.
-// Unknown fields may remain blank; the gate checks breadth and substance, not every field.
-const intakeCoverageGroups = [
-  ["case-type","case-role","parties","relief","client-objective"],
-  ["case-stage","court","jurisdiction","next-date","orders-documents"],
-  ["opponent-position","opponent-conduct"],
-  ["own-evidence","own-witnesses","opponent-evidence","opponent-witnesses"]
-];
-function inspectIntakeQuality() {
-  const completed = intakeFieldIds.filter(id => String(document.getElementById(id)?.value || "").trim());
-  const coveredGroups = intakeCoverageGroups.filter(group => group.some(id => String(document.getElementById(id)?.value || "").trim()));
-  const hasSubstantiveNarrative = description.value.trim().length >= 120;
-  const hasDocuments = selectedFiles.length > 0;
-  const enoughStructuredDetail = completed.length >= 5 && coveredGroups.length >= 3;
-  const enoughSourceMaterial = hasSubstantiveNarrative || hasDocuments;
-  return {
-    ready: partialIntakeTestMode || (enoughStructuredDetail && enoughSourceMaterial),
-    completedCount: completed.length,
-    groupCount: coveredGroups.length,
-    hasSubstantiveNarrative,
-    hasDocuments,
-    message: [
-      !enoughStructuredDetail ? "Complete at least 5 relevant case fields across at least 3 different sections." : "",
-      !enoughSourceMaterial ? "Add a case description of at least 120 characters or upload at least one case document." : ""
-    ].filter(Boolean).join(" ")
-  };
-}
+// Intake is deliberately optional. The AI must work with whatever is supplied,
+// identify missing facts and state the limits of an analysis based on sparse material.
 function updateAnalyzeReadiness() {
-  const quality = inspectIntakeQuality();
-  analyzeButton.classList.toggle("is-intake-ready", quality.ready);
-  analyzeButton.setAttribute("data-intake-progress", partialIntakeTestMode ? "PARTIAL INTAKE TEST" : quality.ready ? "DETAILS READY" : "MORE DETAILS NEEDED");
+  analyzeButton.classList.add("is-intake-ready");
+  analyzeButton.setAttribute("data-intake-progress", "READY TO ANALYSE");
 }
-intakeAccordions.addEventListener("input", event => {
-  if (event.target && (intakeFieldIds.includes(event.target.id) || event.target.id === "case-description")) updateAnalyzeReadiness();
-});
-intakeAccordions.addEventListener("change", event => {
-  if (event.target && (intakeFieldIds.includes(event.target.id) || event.target.id === "case-description")) updateAnalyzeReadiness();
-});
 updateAnalyzeReadiness();
 
 const allowedTypes = new Set(["application/pdf","text/plain","text/markdown","image/jpeg","image/png","image/webp"]);
@@ -1488,17 +1458,8 @@ analyzeButton.addEventListener("click", async () => {
   errorMessage.hidden = true;
   results.hidden = true;
   const caseText = description.value.trim();
-  const intakeQuality = inspectIntakeQuality();
   if (dailyAnalysesRemaining === 0) {
     showError("You've used all 10 analyses for today. Your allowance resets at midnight Nigeria time.");
-    return;
-  }
-  if (!intakeQuality.ready) {
-    showError("There is not enough information to analyse this matter yet. " + intakeQuality.message);
-    const firstIncomplete = !intakeQuality.hasSubstantiveNarrative && !intakeQuality.hasDocuments
-      ? document.getElementById("case-description")
-      : intakeFieldIds.map(id => document.getElementById(id)).find(field => field && !String(field.value || "").trim());
-    if (firstIncomplete) firstIncomplete.focus({preventScroll:true});
     return;
   }
   analyzeButton.disabled = true;
@@ -1546,6 +1507,7 @@ analyzeButton.addEventListener("click", async () => {
     progressDetail.textContent = "Outcome branches and opposing moves have been mapped against the supplied record.";
     currentAnalysisMarkdown = data.analysis;
     currentAnalysisTitle = buildAnalysisTitle();
+    currentSavedAnalysisId = null;
     renderAnalysis(data.analysis);
     document.getElementById("save-analysis").disabled = false;
     document.getElementById("save-analysis").textContent = "Save analysis";
@@ -1569,6 +1531,7 @@ analyzeButton.addEventListener("click", async () => {
 });
 document.getElementById("new-analysis").addEventListener("click",() => {
   currentAnalysisMarkdown = "";
+  currentSavedAnalysisId = null;
   document.getElementById("save-analysis").disabled = false;
   document.getElementById("save-analysis").textContent = "Save analysis";
   results.hidden = true;
