@@ -27,6 +27,7 @@ Import this repository into Vercel and add:
 
 - `GEMINI_API_KEY` — required server-side secret.
 - `GEMINI_MODEL` — optional; defaults to `gemini-2.5-flash`.
+- `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` — required server-side environment-specific settings for the matching Production or Preview database.
 
 Redeploy after setting environment variables.
 
