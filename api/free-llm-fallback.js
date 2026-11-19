@@ -20,7 +20,7 @@ const PROVIDERS = [
   }
 ];
 
-export async function callFreeLlmFallback({ systemInstructions, userText }) {
+export async function callFreeLlmFallback({ systemInstructions, userText, validateResponse }) {
   // Start with providers that returned actual text in live anonymous tests.
   // Kilo remains a last-resort option; its free route was slow/unreliable in testing.
   const configuredOrder = (process.env.FREE_LLM_FALLBACK_ORDER || "ovh,llm7,kilo")
@@ -58,6 +58,11 @@ export async function callFreeLlmFallback({ systemInstructions, userText }) {
       }
       const text = payload.choices?.[0]?.message?.content;
       if (typeof text === "string" && text.trim()) {
+        if (typeof validateResponse === "function" && !validateResponse(text.trim())) {
+          console.warn("[analysis-diagnostic]", JSON.stringify({ event: "fallback_provider_output_invalid", provider: provider.name, outputLength: text.trim().length }));
+          failures.push(provider.name + ": incomplete analysis structure");
+          continue;
+        }
         console.info("[analysis-diagnostic]", JSON.stringify({ event: "fallback_provider_returned_text", provider: provider.name, outputLength: text.trim().length }));
         return { provider: provider.name, text: text.trim() };
       }
