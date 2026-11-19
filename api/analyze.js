@@ -332,7 +332,8 @@ export default async function handler(req, res) {
       const { callFreeLlmFallback } = await import("./free-llm-fallback.js");
       const fallbackResult = await callFreeLlmFallback({
         systemInstructions: SYSTEM_INSTRUCTIONS,
-        userText: parts.map(part => part.text || "").join("\n")
+        userText: parts.map(part => part.text || "").join("\n"),
+        validateResponse: isCompleteAnalysis
       });
       if (isCompleteAnalysis(fallbackResult.text)) {
         analysisText = fallbackResult.text;
