@@ -1,7 +1,7 @@
-const SUPABASE_URL = process.env.SUPABASE_URL || "https://jrwbthzdoibmrmqoqklg.supabase.co";
+const SUPABASE_URL = process.env.SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY ||
   process.env.SUPABASE_ANON_KEY ||
-  "sb_publishable_flbGYkCA3hUKxFXIJYV1Mw_vroE6hcp";
+  "";
 
 function send(res,status,payload) {
   return res.status(status).json(payload);
@@ -12,6 +12,8 @@ export default async function handler(req,res) {
     res.setHeader("Allow","GET");
     return send(res,405,{error:"Method not allowed."});
   }
+
+  if (!SUPABASE_URL || !SUPABASE_KEY) return send(res,503,{error:"The account service is not configured for this deployment."});
 
   const authorization = req.headers.authorization || req.headers.Authorization || "";
   const match = typeof authorization === "string" && authorization.match(/^Bearer\s+([^\s]+)$/i);
