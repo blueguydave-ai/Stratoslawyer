@@ -253,7 +253,7 @@ function clearCaseWorkspace() {
   document.getElementById("results").hidden = true;
   document.getElementById("progress-panel").hidden = true;
   document.getElementById("error-message").hidden = true;
-  updateAnalyzeReadiness();
+  
 }
 
 function getHistoryStorageKey(userId) {
@@ -474,7 +474,7 @@ function resumeSavedCase(record) {
   });
   selectedFiles.splice(0,selectedFiles.length);
   if (typeof renderFiles === "function") renderFiles();
-  if (typeof updateAnalyzeReadiness === "function") updateAnalyzeReadiness();
+  if (typeof updateAnalyzeReadiness === "function") 
   currentAnalysisMarkdown = record.markdown;
   currentAnalysisTitle = record.title || "Case analysis";
   currentSavedAnalysisId = record.id;
@@ -700,6 +700,8 @@ const fileList = document.getElementById("file-list");
 const description = document.getElementById("case-description");
 const intakeFieldIds = ["case-type","case-role","case-stage","court","jurisdiction","next-date","relief","opponent-conduct","parties","opponent-position","orders-documents","client-objective","own-evidence","own-witnesses","opponent-evidence","opponent-witnesses"];
 const analyzeButton = document.getElementById("analyze-button");
+analyzeButton.classList.add("is-intake-ready");
+analyzeButton.setAttribute("data-intake-progress", "READY TO ANALYSE");
 const errorMessage = document.getElementById("error-message");
 const progressPanel = document.getElementById("progress-panel");
 const progressTitle = document.getElementById("progress-title");
@@ -830,22 +832,12 @@ function startWaitingInsights(){
   showSet();
 }
 
-// Intake is deliberately optional. The AI must work with whatever is supplied,
-// identify missing facts and state the limits of an analysis based on sparse material.
-function updateAnalyzeReadiness() {
-  analyzeButton.classList.add("is-intake-ready");
-  analyzeButton.setAttribute("data-intake-progress", "READY TO ANALYSE");
-}
-updateAnalyzeReadiness();
-
 const allowedTypes = new Set(["application/pdf","text/plain","text/markdown","image/jpeg","image/png","image/webp"]);
 const formatSize = bytes => bytes < 1024 * 1024 ? Math.round(bytes / 1024) + " KB" : (bytes / 1024 / 1024).toFixed(1) + " MB";
 
 function showError(message) {
   const safeMessage = /daily limit|analyses for today|all ten analyses/i.test(message)
     ? "You've used all 10 analyses for today. Your allowance resets at midnight Nigeria time."
-    : /not enough information/i.test(message)
-    ? "Please add more case details before starting the analysis."
     : /session|sign in/i.test(message)
       ? "Your session has ended. Please sign in again."
       : /file|upload|document/i.test(message)
@@ -870,7 +862,7 @@ function renderFiles() {
     remove.type = "button";
     remove.setAttribute("aria-label","Remove " + file.name);
     remove.textContent = "×";
-    remove.addEventListener("click",() => { selectedFiles.splice(index,1); renderFiles(); updateAnalyzeReadiness(); });
+    remove.addEventListener("click",() => { selectedFiles.splice(index,1); renderFiles();  });
     row.append(label,remove);
     fileList.append(row);
   });
@@ -887,7 +879,7 @@ function addFiles(files) {
     selectedFiles.push(file);
   }
   renderFiles();
-  updateAnalyzeReadiness();
+  
   input.value = "";
 }
 input.addEventListener("change",event => addFiles([...event.target.files]));
