@@ -1001,11 +1001,11 @@ function addTileExpansion(tile, body) {
   const needsExpansion = body.textContent.trim().length > 0;
   if (!needsExpansion) return;
   tile.classList.add("is-collapsible");
-  body.style.maxHeight = "112px";
+  body.style.maxHeight = "148px";
   const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.className = "tile-expand";
-  toggle.textContent = "Explore details";
+  toggle.textContent = "Read full finding";
   toggle.setAttribute("aria-expanded", "false");
   toggle.addEventListener("click", () => {
     const expanded = !tile.classList.contains("is-expanded");
@@ -1015,10 +1015,10 @@ function addTileExpansion(tile, body) {
     void body.offsetHeight;
     requestAnimationFrame(() => {
       tile.classList.toggle("is-expanded", expanded);
-      body.style.maxHeight = expanded ? body.scrollHeight + "px" : "112px";
+      body.style.maxHeight = expanded ? body.scrollHeight + "px" : "148px";
     });
     toggle.setAttribute("aria-expanded", String(expanded));
-    toggle.textContent = expanded ? "Show less" : "Explore details";
+    toggle.textContent = expanded ? "Collapse finding" : "Read full finding";
   });
   body.addEventListener("transitionend", event => {
     if (event.propertyName !== "max-height") return;
@@ -1385,21 +1385,25 @@ function renderAnalysis(markdown) {
     const insightGrid = document.createElement("div");
     insightGrid.className = "insight-grid";
     let tileIndex = 0;
-    const layoutPattern = ["feature","half","half","wide","narrow","full"];
-    const makeInsightTile = (html, layout) => {
+    let activeSubsection = "";
+    const makeInsightTile = (html) => {
       const tile = document.createElement("article");
       tile.className = "insight-tile";
-      tile.dataset.layout = layout || layoutPattern[tileIndex % layoutPattern.length];
       tile.dataset.index = String(tileIndex + 1);
+      const body = document.createElement("div");
+      body.className = "tile-body";
+      body.innerHTML = html;
+      const text = body.textContent || "";
+      const greyZone = /grey[ -]?zone|grey-zone caution/i.test(activeSubsection + " " + text);
+      const ordinaryTactic = /ordinary tactics|standard tactics|lawful tactics/i.test(activeSubsection);
+      if (greyZone) tile.classList.add("is-grey-zone");
+      if (ordinaryTactic) tile.classList.add("is-ordinary-tactic");
       const topline = document.createElement("div");
       topline.className = "insight-tile-topline";
       const label = document.createElement("span");
       label.className = "insight-tile-label";
-      label.textContent = "POINT " + String(tileIndex + 1).padStart(2,"0");
+      label.textContent = greyZone ? "GREY-ZONE TACTIC" : ordinaryTactic ? "ORDINARY TACTIC" : "FINDING " + String(tileIndex + 1).padStart(2,"0");
       topline.append(label);
-      const body = document.createElement("div");
-      body.className = "tile-body";
-      body.innerHTML = html;
       tile.append(topline,body);
       tileIndex++;
       addTileExpansion(tile, body);
@@ -1422,9 +1426,14 @@ function renderAnalysis(markdown) {
         return;
       }
       if (/^H[2-4]$/.test(block.tagName)) {
+        activeSubsection = block.textContent.trim();
         const label = document.createElement("div");
         label.className = "insight-subheading";
-        label.textContent = block.textContent;
+        if (/grey[ -]?zone/i.test(activeSubsection)) label.classList.add("is-grey-zone");
+        else if (/ordinary tactics|standard tactics|lawful tactics/i.test(activeSubsection)) label.classList.add("is-ordinary-tactics");
+        else if (/blind.?spot/i.test(activeSubsection)) label.classList.add("is-blind-spot");
+        else if (/guard against|prohibited/i.test(activeSubsection)) label.classList.add("is-guardrail");
+        label.textContent = activeSubsection;
         insightGrid.append(label);
         return;
       }
