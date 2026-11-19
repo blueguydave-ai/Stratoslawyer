@@ -322,7 +322,8 @@ export default async function handler(req, res) {
   // are never forwarded to these providers by this fallback path.
   if (!isCompleteAnalysis(analysisText) && files.length === 0 &&
       process.env.ENABLE_FREE_LLM_FALLBACK === "true" &&
-      (primaryFailure?.status === 429 || primaryFailure?.status >= 500 ||
+      (primaryFailure?.status === 401 || primaryFailure?.status === 403 ||
+       primaryFailure?.status === 429 || primaryFailure?.status >= 500 ||
        (primaryFailure && primaryFailure.status === undefined))) {
     try {
       const { callFreeLlmFallback } = await import("./free-llm-fallback.js");
