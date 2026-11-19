@@ -162,7 +162,10 @@ export default async function handler(req, res) {
   // model to identify unknowns and never fill gaps with invented facts.
   if (files.length > 6) return jsonError(res, 400, "For this first version, attach no more than 6 files at a time.");
 
-  const contextText = contextEntries.map(([key,value]) => `${key}: ${value}`).join("\n");
+  const contextText = contextEntries
+    .filter(([,value]) => value.trim() && value.trim() !== "Not supplied")
+    .map(([key,value]) => `${key}: ${value}`)
+    .join("\n");
   const parts = [{ text: "STRUCTURED CASE INTAKE (user-supplied; verify, do not assume):\n" + (contextText || "No structured fields supplied.") + "\n\nLAWYER'S FURTHER CASE DESCRIPTION:\n" + (description.trim() || "No further description supplied. Analyse attached materials and identify unknowns.") }];
 
   let totalBytes = 0;
