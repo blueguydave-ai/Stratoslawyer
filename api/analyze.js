@@ -108,7 +108,6 @@ export default async function handler(req, res) {
   // Preview request to the Production Supabase project (or vice versa).
   const supabaseUrl = process.env.SUPABASE_URL || "";
   const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "";
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!supabaseUrl || !supabasePublishableKey) {
     return jsonError(res,503,"The account service is not configured for this deployment.");
   }
@@ -210,7 +209,7 @@ export default async function handler(req, res) {
   if (totalBytes > 2.7 * 1024 * 1024) return jsonError(res, 413, "The combined upload is too large for this first version. Keep the total below 2.7 MB or analyse fewer files.");
 
   // Reserve one of the user's ten daily analyses atomically before calling Gemini.
-  // The reservation is released if the analysis fails.
+  // The reservation is released through an owner-checked RPC if analysis fails.
   let dailyReservation;
   try {
     const quotaResult = await callUsageRpc(
@@ -297,7 +296,7 @@ export default async function handler(req, res) {
         contents: [{ role: "user", parts }],
         generationConfig: { temperature: 0.25, maxOutputTokens: 12288 }
       }),
-      signal: AbortSignal.timeout(25000)
+      signal: AbortSignal.timeout(20000)
     });
 
     const payload = await response.json().catch(() => ({}));
