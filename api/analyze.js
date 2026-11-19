@@ -244,17 +244,15 @@ export default async function handler(req, res) {
   }
 
   const releaseDailyReservation = async () => {
-    if (!supabaseServiceRoleKey) {
-      providerDiagnostic("daily_quota_refund_skipped_missing_service_key");
-      return;
-    }
     try {
+      // The refund RPC verifies auth.uid() against this user ID, so it can
+      // safely use the caller's session and the public publishable key.
       const refund = await callUsageRpc(
         "release_daily_analysis",
         {p_user_id:authenticatedUser.id,p_usage_date:dailyReservation.usage_date},
-        supabaseServiceRoleKey,
+        tokenMatch[1],
         supabaseUrl,
-        supabaseServiceRoleKey
+        supabasePublishableKey
       );
       if (!refund.ok) {
         providerDiagnostic("daily_quota_refund_failed",{status:refund.payload?.code || "unknown"});
