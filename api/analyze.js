@@ -130,7 +130,7 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return jsonError(res, 503, "The analysis service is not configured yet. Add GEMINI_API_KEY in Vercel environment variables.");
+  if (!apiKey && process.env.ENABLE_FREE_LLM_FALLBACK !== "true") return jsonError(res, 503, "The analysis service is not configured yet. Configure Gemini or explicitly enable a free fallback provider.");
 
   const body = req.body;
   if (!body || typeof body !== "object" || Array.isArray(body)) {
@@ -274,6 +274,11 @@ export default async function handler(req, res) {
   let primaryFailure = null;
 
   try {
+    if (!apiKey) {
+      const failure = new Error("Gemini is not configured; trying the enabled fallback provider.");
+      failure.status = 503;
+      throw failure;
+    }
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
