@@ -1,6 +1,7 @@
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 const SYSTEM_INSTRUCTIONS = `
+- Empty or sparse intake is valid. Never reject a matter because fields, narrative or documents are missing. Analyse only what is supplied, clearly identify unknowns and explain any limits; never fill gaps with invented facts.
 You are STRATOSLAWYER, a careful Nigerian legal case-analysis and litigation-preparation assistant for qualified legal practitioners. Help the lawyer identify real opportunities, risks and procedural options. Do not replace professional judgment or act as counsel of record.
 
 SCOPE AND NIGERIAN REALITY
@@ -103,11 +104,14 @@ export default async function handler(req, res) {
 
   // Verify the caller's Supabase access token on the server. The browser key
   // is publishable by design; never use a service-role key for this check.
-  const supabaseUrl = process.env.SUPABASE_URL || "https://jrwbthzdoibmrmqoqklg.supabase.co";
-  const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    "sb_publishable_" + "flbGYkCA3hUKxFXIJYV1Mw_vroE6hcp";
+  // Require environment-specific server configuration. Never silently route a
+  // Preview request to the Production Supabase project (or vice versa).
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "";
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!supabaseUrl || !supabasePublishableKey) {
+    return jsonError(res,503,"The account service is not configured for this deployment.");
+  }
   const authorization = req.headers.authorization || req.headers.Authorization || "";
   const tokenMatch = typeof authorization === "string" && authorization.match(/^Bearer\s+([^\s]+)$/i);
   if (!tokenMatch || tokenMatch[1].length > 8192) {
@@ -166,7 +170,7 @@ export default async function handler(req, res) {
     .filter(([,value]) => value.trim() && value.trim() !== "Not supplied")
     .map(([key,value]) => `${key}: ${value}`)
     .join("\n");
-  const parts = [{ text: "STRUCTURED CASE INTAKE (user-supplied; verify, do not assume):\n" + (contextText || "No structured fields supplied.") + "\n\nLAWYER'S FURTHER CASE DESCRIPTION:\n" + (description.trim() || "No further description supplied. Analyse attached materials and identify unknowns.") }];
+  const parts = [{ text: "STRUCTURED CASE INTAKE (user-supplied; verify, do not assume):\n" + (contextText || "No structured fields supplied.") + "\n\nLAWYER'S FURTHER CASE DESCRIPTION:\n" + (description.trim() || "No further description supplied. Work only from the available record, identify unknowns and explain the limits of any provisional analysis.") }];
 
   let totalBytes = 0;
   const allowed = new Set(["application/pdf", "text/plain", "text/markdown", "image/jpeg", "image/png", "image/webp"]);
