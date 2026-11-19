@@ -1393,6 +1393,9 @@ function renderAnalysis(markdown) {
       const body = document.createElement("div");
       body.className = "tile-body";
       body.innerHTML = html;
+      body.querySelectorAll("p,blockquote").forEach(paragraph => {
+        if (/GREY-ZONE CAUTION/i.test(paragraph.textContent || "")) paragraph.classList.add("grey-zone-caution");
+      });
       const text = body.textContent || "";
       const greyZone = /grey[ -]?zone|grey-zone caution/i.test(activeSubsection + " " + text);
       const ordinaryTactic = /ordinary tactics|standard tactics|lawful tactics/i.test(activeSubsection);
