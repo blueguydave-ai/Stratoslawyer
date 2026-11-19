@@ -1151,7 +1151,7 @@ function setFocusedCard(target) {
   const tiles=[...category.querySelectorAll(".insight-tile")];
   const requestedTile=target.classList.contains("insight-tile")?target:null;
   focusedPointIndex=requestedTile?Math.max(0,tiles.indexOf(requestedTile)):0;
-  slideCardToCenter(category,output);
+  category.scrollIntoView({behavior:"smooth",block:"nearest",inline:"nearest"});
   categories.forEach((card,index)=>{
     card.classList.toggle("is-focused",card===category);
     card.classList.toggle("is-dimmed",card!==category);
