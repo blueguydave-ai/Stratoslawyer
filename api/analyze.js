@@ -296,7 +296,7 @@ export default async function handler(req, res) {
         candidate.finishReason === "SAFETY" || candidate.finishReason === "RECITATION") {
       throw new Error("Gemini returned an incomplete or blocked analysis.");
     }
-    analysisText = (candidate.content?.parts || []).map(part => part.text || "").join("\\n").trim();
+    analysisText = (candidate.content?.parts || []).map(part => part.text || "").join("\n").trim();
     if (!isCompleteAnalysis(analysisText)) {
       throw new Error("Gemini response did not contain all four required sections.");
     }
@@ -315,7 +315,7 @@ export default async function handler(req, res) {
       const { callFreeLlmFallback } = await import("./free-llm-fallback.js");
       const fallbackResult = await callFreeLlmFallback({
         systemInstructions: SYSTEM_INSTRUCTIONS,
-        userText: parts.map(part => part.text || "").join("\\n")
+        userText: parts.map(part => part.text || "").join("\n")
       });
       if (isCompleteAnalysis(fallbackResult.text)) {
         analysisText = fallbackResult.text;
