@@ -244,22 +244,37 @@ export default async function handler(req, res) {
 
   const releaseDailyReservation = async () => {
     try {
-      // The refund RPC verifies auth.uid() against this user ID, so it can
-      // safely use the caller's session and the public publishable key.
       const refund = await callUsageRpc(
         "release_daily_analysis",
-        {p_user_id:authenticatedUser.id,p_usage_date:dailyReservation.usage_date},
+        {p_reservation_id:dailyReservation.reservation_id},
         tokenMatch[1],
         supabaseUrl,
         supabasePublishableKey
       );
-      if (!refund.ok) {
-        providerDiagnostic("daily_quota_refund_failed",{status:refund.payload?.code || "unknown"});
+      if (!refund.ok || refund.payload !== true) {
+        providerDiagnostic("daily_quota_refund_failed",{status:refund.payload?.code || "not_released"});
       } else {
         providerDiagnostic("daily_quota_refund_succeeded");
       }
     } catch(error) {
       providerDiagnostic("daily_quota_refund_failed",{name:error?.name || "UnknownError"});
+    }
+  };
+
+  const completeDailyReservation = async () => {
+    try {
+      const completion = await callUsageRpc(
+        "complete_daily_analysis",
+        {p_reservation_id:dailyReservation.reservation_id},
+        tokenMatch[1],
+        supabaseUrl,
+        supabasePublishableKey
+      );
+      if (!completion.ok || completion.payload !== true) {
+        providerDiagnostic("daily_quota_completion_not_confirmed");
+      }
+    } catch(error) {
+      providerDiagnostic("daily_quota_completion_failed",{name:error?.name || "UnknownError"});
     }
   };
 
@@ -376,6 +391,7 @@ export default async function handler(req, res) {
       "The analysis could not be completed by the available service. Your daily allowance has been restored where the account service permits.");
   }
 
+  await completeDailyReservation();
   providerDiagnostic("analysis_completed", { provider: analysisProvider, outputLength: analysisText.length });
   return res.status(200).json({
     analysis: analysisText,
