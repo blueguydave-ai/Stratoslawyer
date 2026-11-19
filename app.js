@@ -287,8 +287,7 @@ async function loadSavedHistory(userId) {
     const {data,error} = await authClient.from("saved_analyses")
       .select("id,title,markdown,intake_snapshot,is_favorite,deadlines,saved_at,updated_at")
       .eq("user_id",userId)
-      .order("updated_at",{ascending:false})
-      .limit(100);
+      .order("updated_at",{ascending:false});
     if (error) throw error;
     if (requestId !== historyLoadRequest || currentAuthSession?.user?.id !== userId) return;
     savedAnalysisRecords = (data || []).map(normalizeCloudAnalysis);
@@ -590,7 +589,12 @@ document.getElementById("save-analysis").addEventListener("click",async () => {
     favorite:false,
     deadlines:[]
   };
-  const saved = await persistSavedRecord(record);
+  let saved = false;
+  try {
+    saved = await persistSavedRecord(record);
+  } catch(error) {
+    saved = false;
+  }
   if (!saved) {
     saveButton.disabled = false;
     saveButton.textContent = "Save analysis";
