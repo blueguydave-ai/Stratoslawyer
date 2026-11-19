@@ -766,7 +766,6 @@ const waitingInsights = [
 ];
 const waitingInsightSlots = [...(waitingInsight?.querySelectorAll(".waiting-quote") || [])];
 let waitingInsightTimer = null;
-let waitingInsightPrevious = [];
 let waitingInsightGeneration = 0;
 const waitingInsightTimeouts = new Set();
 function scheduleInsightTask(callback,delay,generation){
@@ -779,56 +778,57 @@ function scheduleInsightTask(callback,delay,generation){
 }
 function stopWaitingInsights(){
   waitingInsightGeneration++;
-  if(waitingInsightTimer){clearTimeout(waitingInsightTimer);waitingInsightTimeouts.delete(waitingInsightTimer);waitingInsightTimer=null;}
+  if(waitingInsightTimer){
+    clearTimeout(waitingInsightTimer);
+    waitingInsightTimeouts.delete(waitingInsightTimer);
+    waitingInsightTimer=null;
+  }
   waitingInsightTimeouts.forEach(timer=>clearTimeout(timer));
   waitingInsightTimeouts.clear();
-  waitingInsightSlots.forEach(slot=>slot.classList.remove("is-writing"));
-}
-function shuffledInsights(){
-  const pool=waitingInsights.map((_,i)=>i).filter(i=>!waitingInsightPrevious.includes(i));
-  for(let i=pool.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [pool[i],pool[j]]=[pool[j],pool[i]];
-  }
-  return pool;
-}
-function typeInsight(slot,index,delay,generation){
-  const textNode=slot.querySelector(".waiting-quote-text");
-  const counter=slot.querySelector(".waiting-quote-index");
-  if(!textNode||!counter)return;
-  const fullText=waitingInsights[index];
-  textNode.textContent="";
-  counter.textContent=String(index+1).padStart(2,"0")+" / 50";
-  slot.classList.remove("is-writing");
-  scheduleInsightTask(()=>{
-    if(generation!==waitingInsightGeneration||!slot.isConnected)return;
-    slot.classList.add("is-writing");
-    let cursor=0;
-    const write=()=>{
-      if(generation!==waitingInsightGeneration||!slot.isConnected)return;
-      textNode.textContent=fullText.slice(0,cursor);
-      cursor=Math.min(fullText.length,cursor+1);
-      if(cursor<fullText.length)scheduleInsightTask(write,48,generation);
-    };
-    write();
-  },delay,generation);
+  waitingInsightSlots.forEach(slot=>{
+    slot.classList.remove("is-writing","is-transitioning");
+    const textNode=slot.querySelector(".waiting-quote-text");
+    if(textNode)textNode.textContent="";
+  });
 }
 function startWaitingInsights(){
   stopWaitingInsights();
-  if(!waitingInsight||waitingInsightSlots.length!==3)return;
-  waitingInsightPrevious=[];
+  const slot=waitingInsightSlots[0];
+  if(!slot)return;
+  const textNode=slot.querySelector(".waiting-quote-text");
+  const counter=slot.querySelector(".waiting-quote-index");
+  if(!textNode||!counter)return;
+
   const generation=waitingInsightGeneration;
-  const showSet=()=>{
-    if(generation!==waitingInsightGeneration)return;
-    const order=shuffledInsights();
-    const chosen=order.slice(0,3);
-    waitingInsightPrevious=chosen;
-    waitingInsightSlots.forEach((slot,i)=>typeInsight(slot,chosen[i],i*900,generation));
-    // A variable pause keeps the next set from feeling like a fixed carousel.
-    const pause=45000+Math.floor(Math.random()*15001);
-    waitingInsightTimer=scheduleInsightTask(showSet,pause,generation);
+  // Exactly three thoughts per analysis, shown one at a time.
+  const chosen=waitingInsights.slice(0,3);
+  let quoteIndex=0;
+
+  const showNext=()=>{
+    if(generation!==waitingInsightGeneration||quoteIndex>=chosen.length)return;
+    slot.classList.add("is-transitioning");
+    waitingInsightTimer=scheduleInsightTask(()=>{
+      textNode.textContent="";
+      counter.textContent=String(quoteIndex+1).padStart(2,"0")+" / 03";
+      slot.classList.remove("is-transitioning");
+      slot.classList.add("is-writing");
+      const fullText=chosen[quoteIndex++];
+      let cursor=0;
+      const write=()=>{
+        if(generation!==waitingInsightGeneration||!slot.isConnected)return;
+        textNode.textContent=fullText.slice(0,cursor);
+        cursor=Math.min(fullText.length,cursor+1);
+        if(cursor<fullText.length){
+          waitingInsightTimer=scheduleInsightTask(write,32,generation);
+        }else if(quoteIndex<chosen.length){
+          // The next thought begins six seconds after this one finishes.
+          waitingInsightTimer=scheduleInsightTask(showNext,6000,generation);
+        }
+      };
+      write();
+    },260,generation);
   };
-  showSet();
+  showNext();
 }
 
 const allowedTypes = new Set(["application/pdf","text/plain","text/markdown","image/jpeg","image/png","image/webp"]);
@@ -1142,7 +1142,7 @@ inputArrowControls.querySelector("[data-input-next]").addEventListener("click",(
 });
 let focusedCategoryIndex=0;
 let focusedPointIndex=0;
-function setFocusedCard(target) {
+function setFocusedCard(target, shouldScroll = true) {
   if(!results.classList.contains("focus-mode")) return;
   const categories=[...output.querySelectorAll(".analysis-card")];
   const category=target.closest(".analysis-card");
@@ -1151,7 +1151,7 @@ function setFocusedCard(target) {
   const tiles=[...category.querySelectorAll(".insight-tile")];
   const requestedTile=target.classList.contains("insight-tile")?target:null;
   focusedPointIndex=requestedTile?Math.max(0,tiles.indexOf(requestedTile)):0;
-  category.scrollIntoView({behavior:"smooth",block:"nearest",inline:"nearest"});
+  if(shouldScroll)slideCardToCenter(category,output);
   categories.forEach((card,index)=>{
     card.classList.toggle("is-focused",card===category);
     card.classList.toggle("is-dimmed",card!==category);
@@ -1234,6 +1234,24 @@ intakeAccordions.addEventListener("click",event=>{
   if(group)focusIntakeGroup(group);
 });
 updateViewModeControl();
+let outputFocusFrame=0;
+output.addEventListener("scroll",()=>{
+  if(!results.classList.contains("focus-mode")||outputFocusFrame)return;
+  outputFocusFrame=requestAnimationFrame(()=>{
+    outputFocusFrame=0;
+    const cards=[...output.querySelectorAll(".analysis-card")];
+    if(!cards.length)return;
+    const center=output.getBoundingClientRect().left+output.clientWidth/2;
+    let nearest=cards[0],distance=Infinity;
+    cards.forEach(card=>{
+      const rect=card.getBoundingClientRect();
+      const d=Math.abs(rect.left+rect.width/2-center);
+      if(d<distance){distance=d;nearest=card;}
+    });
+    if(nearest&&!nearest.classList.contains("is-focused"))setFocusedCard(nearest,false);
+  });
+},{passive:true});
+
 output.addEventListener("click",event=>{
   if(!results.classList.contains("focus-mode")) return;
   const tile=event.target.closest(".insight-tile");
