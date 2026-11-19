@@ -292,26 +292,45 @@ async function loadSavedHistory(userId) {
     if (requestId !== historyLoadRequest || currentAuthSession?.user?.id !== userId) return;
     savedAnalysisRecords = (data || []).map(normalizeCloudAnalysis);
     renderSavedHistory();
-    // Migrate older browser-only saved analyses once, without overwriting cloud records.
+    // Migrate every legacy browser record, including when cloud history already exists.
+    // Persist migration IDs first so a partial network failure can safely retry.
     const legacyKey = getHistoryStorageKey(userId);
     let legacy = [];
     try { legacy = JSON.parse(localStorage.getItem(legacyKey) || "[]"); } catch(error) {}
-    if (savedAnalysisRecords.length === 0 && Array.isArray(legacy) && legacy.length) {
-      const migrated = legacy.slice(0,30).filter(item => item && typeof item.markdown === "string").map(item => ({
-        id:crypto.randomUUID(),
-        user_id:userId,
-        title:String(item.title || "Case analysis").slice(0,160),
-        markdown:item.markdown,
-        intake_snapshot:{},
-        is_favorite:false,
-        deadlines:[],
-        saved_at:item.savedAt || new Date().toISOString()
-      }));
-      if (migrated.length) {
-        const {data:migratedRows,error:migrateError} = await authClient.from("saved_analyses").insert(migrated).select("id,title,markdown,intake_snapshot,is_favorite,deadlines,saved_at,updated_at");
+    if (Array.isArray(legacy) && legacy.length) {
+      const preparedLegacy = legacy.map(item => {
+        if (!item || typeof item !== "object") return item;
+        const stableId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(item._stratosMigrationId || "")
+          ? item._stratosMigrationId : crypto.randomUUID();
+        return {...item,_stratosMigrationId:stableId};
+      });
+      try { localStorage.setItem(legacyKey,JSON.stringify(preparedLegacy)); } catch(error) {}
+      const migratable = preparedLegacy.filter(item => item && typeof item.markdown === "string");
+      const migratedRows = [];
+      for (let offset=0; offset<migratable.length; offset+=50) {
+        const batch = migratable.slice(offset,offset+50).map(item => {
+          const savedDate = new Date(item.savedAt || "");
+          return {
+            id:item._stratosMigrationId,
+            user_id:userId,
+            title:String(item.title || "Case analysis").trim().slice(0,160) || "Case analysis",
+            markdown:item.markdown,
+            intake_snapshot:{},
+            is_favorite:false,
+            deadlines:[],
+            saved_at:Number.isNaN(savedDate.getTime()) ? new Date().toISOString() : savedDate.toISOString()
+          };
+        });
+        const {data,error:migrateError} = await authClient.from("saved_analyses")
+          .upsert(batch,{onConflict:"id"})
+          .select("id,title,markdown,intake_snapshot,is_favorite,deadlines,saved_at,updated_at");
         if (migrateError) throw migrateError;
+        migratedRows.push(...(data || []));
         if (requestId !== historyLoadRequest || currentAuthSession?.user?.id !== userId) return;
-        savedAnalysisRecords = (migratedRows || []).map(normalizeCloudAnalysis);
+      }
+      if (migratedRows.length === migratable.length) {
+        savedAnalysisRecords = [...migratedRows.map(normalizeCloudAnalysis),...savedAnalysisRecords]
+          .filter((record,index,all)=>all.findIndex(item=>item.id===record.id)===index);
         try { localStorage.removeItem(legacyKey); } catch(error) {}
         renderSavedHistory();
       }
