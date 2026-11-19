@@ -85,7 +85,7 @@ begin
 end;
 $$;
 
--- Only the server's service-role credential may refund a failed reservation.
+-- The authenticated owner may release only their own failed reservation.
 create or replace function public.release_daily_analysis(p_user_id uuid, p_usage_date date)
 returns boolean
 language plpgsql
@@ -111,4 +111,4 @@ revoke all on function public.reserve_daily_analysis(uuid) from public;
 revoke all on function public.release_daily_analysis(uuid, date) from public;
 grant execute on function public.get_daily_analysis_usage(uuid) to authenticated;
 grant execute on function public.reserve_daily_analysis(uuid) to authenticated;
-grant execute on function public.release_daily_analysis(uuid, date) to service_role;
+grant execute on function public.release_daily_analysis(uuid, date) to authenticated;
