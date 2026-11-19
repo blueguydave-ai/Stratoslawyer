@@ -30,6 +30,7 @@ export async function callFreeLlmFallback({ systemInstructions, userText }) {
     .filter((provider, index, list) => provider && list.indexOf(provider) === index);
   const deadline = Date.now() + 12000;
   const failures = [];
+  console.info("[analysis-diagnostic]", JSON.stringify({ event: "fallback_sequence_started", providers: ordered.map(p => p.name), deadlineMs: 12000 }));
 
   for (const provider of ordered) {
     const remaining = deadline - Date.now();
@@ -51,18 +52,24 @@ export async function callFreeLlmFallback({ systemInstructions, userText }) {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
+        console.warn("[analysis-diagnostic]", JSON.stringify({ event: "fallback_provider_http_failure", provider: provider.name, status: response.status }));
         failures.push(provider.name + ": HTTP " + response.status);
         continue;
       }
       const text = payload.choices?.[0]?.message?.content;
       if (typeof text === "string" && text.trim()) {
+        console.info("[analysis-diagnostic]", JSON.stringify({ event: "fallback_provider_returned_text", provider: provider.name, outputLength: text.trim().length }));
         return { provider: provider.name, text: text.trim() };
       }
+      console.warn("[analysis-diagnostic]", JSON.stringify({ event: "fallback_provider_empty_response", provider: provider.name }));
       failures.push(provider.name + ": empty response");
     } catch (error) {
-      failures.push(provider.name + ": " + (error?.name === "TimeoutError" ? "timeout" : "request failed"));
+      const reason = error?.name === "TimeoutError" || error?.name === "AbortError" ? "timeout" : "request failed";
+      console.warn("[analysis-diagnostic]", JSON.stringify({ event: "fallback_provider_request_failed", provider: provider.name, reason, errorName: error?.name || "UnknownError" }));
+      failures.push(provider.name + ": " + reason);
     }
   }
 
+  console.error("[analysis-diagnostic]", JSON.stringify({ event: "fallback_all_providers_exhausted", failures }));
   throw new Error("No no-key fallback provider returned a response (" + failures.join("; ") + ")");
 }
