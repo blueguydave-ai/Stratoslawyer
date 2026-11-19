@@ -271,6 +271,7 @@ export default async function handler(req, res) {
     requiredHeadings.every(heading => value.includes(heading));
 
   let analysisText = "";
+  let analysisProvider = "gemini";
   let primaryFailure = null;
 
   try {
@@ -314,8 +315,7 @@ export default async function handler(req, res) {
   if (!isCompleteAnalysis(analysisText) && files.length === 0 &&
       process.env.ENABLE_FREE_LLM_FALLBACK === "true" &&
       (primaryFailure?.status === 429 || primaryFailure?.status >= 500 ||
-       (primaryFailure && !["TimeoutError", "AbortError"].includes(primaryFailure.name) &&
-        primaryFailure.status === undefined))) {
+       (primaryFailure && primaryFailure.status === undefined))) {
     try {
       const { callFreeLlmFallback } = await import("./free-llm-fallback.js");
       const fallbackResult = await callFreeLlmFallback({
@@ -324,6 +324,7 @@ export default async function handler(req, res) {
       });
       if (isCompleteAnalysis(fallbackResult.text)) {
         analysisText = fallbackResult.text;
+        analysisProvider = fallbackResult.provider;
       }
     } catch (fallbackError) {
       // Keep provider details and secrets out of the public response.
@@ -339,6 +340,7 @@ export default async function handler(req, res) {
 
   return res.status(200).json({
     analysis: analysisText,
+    analysisProvider,
     usage: {
       used: Number(dailyReservation.analyses_used) || 1,
       remaining: Number(dailyReservation.analyses_remaining) || 0,
