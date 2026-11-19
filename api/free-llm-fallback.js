@@ -1,23 +1,26 @@
-// Anonymous fallback providers. Availability and free quotas can change;
-// run independent attempts concurrently so one slow endpoint cannot consume
-// the entire fallback window before the others get a chance.
-// Never pass uploaded client documents or images through this fallback.
+// Provider fallback for text-only case intake.
+// Uploaded client documents and images are never sent through this route.
+// Free provider availability, quotas and data handling can change; do not
+// submit confidential client information to third-party free endpoints.
 
 const PROVIDERS = [
   {
+    name: "kilo",
+    baseUrl: "https://ai-gateway.kilo.ai/api/v1",
+    model: process.env.KILO_MODEL || "kilo-auto/free",
+    apiKey: process.env.KILO_API_KEY || ""
+  },
+  {
     name: "ovh",
     baseUrl: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
-    model: process.env.OVH_MODEL || "gpt-oss-120b"
+    model: process.env.OVH_MODEL || "gpt-oss-120b",
+    apiKey: process.env.OVH_AI_ENDPOINTS_API_KEY || process.env.OVH_API_KEY || ""
   },
   {
     name: "llm7",
     baseUrl: "https://api.llm7.io/v1",
-    model: process.env.LLM7_MODEL || "gpt-oss:20b"
-  },
-  {
-    name: "kilo",
-    baseUrl: "https://api.kilo.ai/api/gateway",
-    model: process.env.KILO_MODEL || "kilo-auto/free"
+    model: process.env.LLM7_MODEL || "default",
+    apiKey: process.env.LLM7_API_KEY || ""
   }
 ];
 
@@ -25,10 +28,25 @@ function diagnostic(event, details = {}) {
   console.info("[analysis-diagnostic]", JSON.stringify({ event, ...details }));
 }
 
+function getConfiguredProviders() {
+  const available = PROVIDERS.filter(provider =>
+    // Kilo explicitly permits anonymous requests for its free model.
+    provider.name === "kilo" || Boolean(provider.apiKey)
+  );
+  const order = (process.env.FREE_LLM_FALLBACK_ORDER || "kilo,ovh,llm7")
+    .split(",").map(value => value.trim().toLowerCase()).filter(Boolean);
+  return order
+    .map(name => available.find(provider => provider.name === name))
+    .filter((provider, index, list) => provider && list.indexOf(provider) === index);
+}
+
 async function requestProvider(provider, systemInstructions, userText, validateResponse, signal) {
+  const headers = { "Content-Type": "application/json" };
+  if (provider.apiKey) headers.Authorization = "Bearer " + provider.apiKey;
+
   const response = await fetch(provider.baseUrl + "/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       model: provider.model,
       messages: [
@@ -36,14 +54,20 @@ async function requestProvider(provider, systemInstructions, userText, validateR
         { role: "user", content: userText }
       ],
       temperature: 0.25,
-      max_tokens: 8192
+      max_tokens: 8192,
+      stream: false
     }),
     signal
   });
 
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    diagnostic("fallback_provider_http_failure", { provider: provider.name, status: response.status });
+    const retryAfter = response.headers.get("retry-after");
+    diagnostic("fallback_provider_http_failure", {
+      provider: provider.name,
+      status: response.status,
+      retryAfter: retryAfter ? retryAfter.slice(0, 40) : null
+    });
     throw new Error("HTTP " + response.status);
   }
 
@@ -55,7 +79,10 @@ async function requestProvider(provider, systemInstructions, userText, validateR
 
   const cleanText = text.trim();
   if (typeof validateResponse === "function" && !validateResponse(cleanText)) {
-    diagnostic("fallback_provider_output_invalid", { provider: provider.name, outputLength: cleanText.length });
+    diagnostic("fallback_provider_output_invalid", {
+      provider: provider.name,
+      outputLength: cleanText.length
+    });
     throw new Error("incomplete analysis structure");
   }
 
@@ -63,15 +90,12 @@ async function requestProvider(provider, systemInstructions, userText, validateR
 }
 
 export async function callFreeLlmFallback({ systemInstructions, userText, validateResponse }) {
-  const configuredOrder = (process.env.FREE_LLM_FALLBACK_ORDER || "ovh,llm7,kilo")
-    .split(",").map(value => value.trim().toLowerCase()).filter(Boolean);
-  const ordered = configuredOrder
-    .map(name => PROVIDERS.find(provider => provider.name === name))
-    .filter((provider, index, list) => provider && list.indexOf(provider) === index);
-
+  const ordered = getConfiguredProviders();
   if (!ordered.length) throw new Error("No fallback providers are configured.");
 
-  const timeoutMs = 18000;
+  // Keep the fallback inside the existing 60-second Vercel function budget.
+  // Authenticated providers are only attempted when their key is configured.
+  const timeoutMs = 34000;
   const controllers = ordered.map(() => new AbortController());
   diagnostic("fallback_sequence_started", {
     providers: ordered.map(provider => provider.name),
@@ -101,22 +125,20 @@ export async function callFreeLlmFallback({ systemInstructions, userText, valida
       })
   );
 
+  let timer;
   const timeout = new Promise((_, reject) => {
-    const timer = setTimeout(() => reject(new Error("Fallback providers timed out.")), timeoutMs);
-    // The timer is cleared when Promise.any settles, whether it succeeds or fails.
-    Promise.any(attempts).then(
-      () => clearTimeout(timer),
-      () => clearTimeout(timer)
-    );
+    timer = setTimeout(() => reject(new Error("Fallback providers timed out.")), timeoutMs);
   });
 
   try {
     const result = await Promise.race([Promise.any(attempts), timeout]);
+    clearTimeout(timer);
     controllers.forEach((controller, index) => {
       if (ordered[index].name !== result.provider) controller.abort();
     });
     return result;
   } catch (error) {
+    clearTimeout(timer);
     controllers.forEach(controller => controller.abort());
     const failures = await Promise.allSettled(attempts);
     const reasons = failures
