@@ -44,14 +44,28 @@ begin
 end;
 $$;
 
--- Atomically reserve a slot. Concurrent requests cannot push a user over ten.
-create or replace function public.reserve_daily_analysis(p_user_id uuid)
+-- Private, one-time reservation records prevent repeated quota refunds.
+create table if not exists public.daily_analysis_reservations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  usage_date date not null,
+  status text not null default 'pending' check (status in ('pending','released','consumed')),
+  created_at timestamptz not null default now()
+);
+
+alter table public.daily_analysis_reservations enable row level security;
+revoke all on public.daily_analysis_reservations from public, anon, authenticated;
+
+-- Reservation IDs are private, one-time capabilities; the client never receives them.
+drop function if exists public.reserve_daily_analysis(uuid);
+create function public.reserve_daily_analysis(p_user_id uuid)
 returns table (
   allowed boolean,
   analyses_used integer,
   analyses_remaining integer,
   daily_limit integer,
-  usage_date date
+  usage_date date,
+  reservation_id uuid
 )
 language plpgsql
 security definer
@@ -60,6 +74,7 @@ as $$
 declare
   v_date date := (now() at time zone 'Africa/Lagos')::date;
   v_used integer := null;
+  v_reservation_id uuid := null;
 begin
   if auth.uid() is null or auth.uid() <> p_user_id then
     raise exception 'Not authorised';
@@ -78,37 +93,68 @@ begin
     select u.analyses_used into v_used
       from public.daily_analysis_usage u
       where u.user_id = p_user_id and u.usage_date = v_date;
-    return query select false, coalesce(v_used, 10), 0, 10, v_date;
+    return query select false, coalesce(v_used, 10), 0, 10, v_date, null::uuid;
   else
-    return query select true, v_used, greatest(10 - v_used, 0), 10, v_date;
+    insert into public.daily_analysis_reservations(user_id, usage_date)
+      values (p_user_id, v_date)
+      returning id into v_reservation_id;
+    return query select true, v_used, greatest(10 - v_used, 0), 10, v_date, v_reservation_id;
   end if;
 end;
 $$;
 
--- The authenticated owner may release only their own failed reservation.
-create or replace function public.release_daily_analysis(p_user_id uuid, p_usage_date date)
+drop function if exists public.release_daily_analysis(uuid, date);
+create function public.release_daily_analysis(p_reservation_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid;
+  v_usage_date date;
+begin
+  update public.daily_analysis_reservations
+    set status = 'released'
+    where id = p_reservation_id
+      and user_id = auth.uid()
+      and status = 'pending'
+    returning user_id, usage_date into v_user_id, v_usage_date;
+
+  if not found then
+    return false;
+  end if;
+
+  update public.daily_analysis_usage
+    set analyses_used = greatest(analyses_used - 1, 0),
+        updated_at = now()
+    where user_id = v_user_id and usage_date = v_usage_date;
+
+  return found;
+end;
+$$;
+
+create or replace function public.complete_daily_analysis(p_reservation_id uuid)
 returns boolean
 language plpgsql
 security definer
 set search_path = ''
 as $$
 begin
-  if auth.role() <> 'service_role' then
-    raise exception 'Not authorised';
-  end if;
-
-  update public.daily_analysis_usage
-    set analyses_used = greatest(analyses_used - 1, 0),
-        updated_at = now()
-    where user_id = p_user_id and usage_date = p_usage_date;
-
+  update public.daily_analysis_reservations
+    set status = 'consumed'
+    where id = p_reservation_id
+      and user_id = auth.uid()
+      and status = 'pending';
   return found;
 end;
 $$;
 
 revoke all on function public.get_daily_analysis_usage(uuid) from public;
 revoke all on function public.reserve_daily_analysis(uuid) from public;
-revoke all on function public.release_daily_analysis(uuid, date) from public;
+revoke all on function public.release_daily_analysis(uuid) from public;
+revoke all on function public.complete_daily_analysis(uuid) from public;
 grant execute on function public.get_daily_analysis_usage(uuid) to authenticated;
 grant execute on function public.reserve_daily_analysis(uuid) to authenticated;
-grant execute on function public.release_daily_analysis(uuid, date) to authenticated;
+grant execute on function public.release_daily_analysis(uuid) to authenticated;
+grant execute on function public.complete_daily_analysis(uuid) to authenticated;
