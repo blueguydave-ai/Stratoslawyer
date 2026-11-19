@@ -287,7 +287,7 @@ export default async function handler(req, res) {
         contents: [{ role: "user", parts }],
         generationConfig: { temperature: 0.25, maxOutputTokens: 12288 }
       }),
-      signal: AbortSignal.timeout(55000)
+      signal: AbortSignal.timeout(25000)
     });
 
     const payload = await response.json().catch(() => ({}));
