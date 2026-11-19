@@ -1,30 +1,29 @@
-# Optional free LLM fallback for STRATOSLAWYER
+# Optional no-key LLM fallback for STRATOSLAWYER
 
-The existing Gemini analysis engine remains the primary provider. An optional text-only fallback adapter is available for Z AI and Groq.
+Gemini remains the primary analysis provider. When Gemini returns a rate-limit/server error or times out, STRATOSLAWYER can try a short, bounded chain of text-only providers that the public [awesome-free-llm-apis list](https://github.com/mnfst/awesome-free-llm-apis) currently describes as usable without an API key:
 
-## Important confidentiality boundary
+1. Kilo Code — `https://api.kilo.ai/api/gateway`, model `kilo-auto/free`.
+2. OVHcloud AI Endpoints — `https://oai.endpoints.kepler.ai.cloud.ovh.net/v1`, model `gpt-oss-120b`.
+3. LLM7.io — `https://api.llm7.io/v1`, model `gpt-oss:20b`.
 
-STRATOSLAWYER processes potentially privileged and confidential client material. Free provider tiers can have different logging, retention, training and data-processing terms. Do not enable third-party fallback for real client matters until the responsible lawyer has assessed and approved the provider's current terms, confidentiality safeguards and applicable professional obligations.
+The list and provider quotas can change. A provider is considered available only if it actually returns a valid response to the live request. The fallback attempts providers sequentially, with a 4-second per-provider timeout and a 12-second total budget. The order can be changed with the server-side `FREE_LLM_FALLBACK_ORDER` variable (default: `kilo,ovh,llm7`).
 
-The fallback is disabled unless `ENABLE_FREE_LLM_FALLBACK=true`. It is only called when the Gemini request fails with a rate-limit/server/network error, and only when the request contains no uploaded files. Uploaded PDFs and images are never forwarded by this fallback adapter. This is a technical guardrail, not a guarantee that text-only case facts are non-confidential.
+## Environment variables
 
-## Vercel environment variables
+- `ENABLE_FREE_LLM_FALLBACK=true` — enables fallback.
+- `FREE_LLM_FALLBACK_ORDER=kilo,ovh,llm7` — optional provider order.
+- `KILO_MODEL`, `OVH_MODEL`, `LLM7_MODEL` — optional model overrides.
 
-Set these as server-side encrypted environment variables, never `NEXT_PUBLIC_*` or browser variables:
+No provider API keys are required for these three attempts. Do not add secret keys to browser-visible variables.
 
-- `ENABLE_FREE_LLM_FALLBACK=true` — leave unset/false until the provider has been approved.
-- `ZAI_API_KEY` — optional key from https://open.bigmodel.cn/usercenter/apikeys
-- `ZAI_MODEL` — optional; defaults to `glm-4.7-flash`.
-- `GROQ_API_KEY` — optional key from https://console.groq.com/keys
-- `GROQ_MODEL` — optional; defaults to `openai/gpt-oss-120b`.
-- `FREE_LLM_FALLBACK_ORDER` — optional comma-separated order; defaults to `zai,groq`.
+## Confidentiality boundary
 
-Only providers with configured keys are attempted, with at most two attempts. Provider model availability and free-tier quotas can change; verify current provider documentation and test each key before relying on it.
+This fallback is only used for requests with no uploaded files. Uploaded PDFs and images are never forwarded through it. Text-only case facts can still be confidential or privileged. Free providers may log prompts, route requests to other model hosts, or apply different retention/training terms. Do not use third-party fallback for real client matters until the responsible lawyer has reviewed and approved the provider's current terms and confidentiality safeguards.
 
-## Rollout
+## Rollout and testing
 
-1. Deploy with fallback disabled.
-2. Review each provider's current terms and privacy posture.
-3. Add one provider key as an encrypted Vercel environment variable in Preview first.
-4. Enable fallback only in Preview and test with synthetic, non-client sample data.
-5. Keep fallback disabled in Production until the same review and testing is complete.
+1. Keep Gemini as primary and fallback explicitly enabled only after review.
+2. Test with fictional/synthetic Nigerian legal scenarios, never real client material.
+3. Confirm the response contains all four required STRATOSLAWYER sections.
+4. The API response includes `analysisProvider` so a test can identify which provider actually returned the analysis.
+5. A configured fallback switch does not guarantee a provider will answer; free capacity, anonymous access and model availability can change.

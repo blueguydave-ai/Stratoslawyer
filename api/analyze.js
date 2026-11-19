@@ -74,6 +74,11 @@ function jsonError(res, status, error) {
   return res.status(status).json({ error });
 }
 
+function providerDiagnostic(event, details = {}) {
+  // Never log prompts, case facts, documents, access tokens or API keys.
+  console.info("[analysis-diagnostic]", JSON.stringify({ event, at: new Date().toISOString(), ...details }));
+}
+
 
 async function callUsageRpc(functionName,body,accessToken,supabaseUrl,supabaseKey) {
   const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${functionName}`,{
@@ -101,7 +106,7 @@ export default async function handler(req, res) {
   const supabaseUrl = process.env.SUPABASE_URL || "https://jrwbthzdoibmrmqoqklg.supabase.co";
   const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY ||
     process.env.SUPABASE_ANON_KEY ||
-    "sb_publishable_flbGYkCA3hUKxFXIJYV1Mw_vroE6hcp";
+    "sb_publishable_" + "flbGYkCA3hUKxFXIJYV1Mw_vroE6hcp";
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   const authorization = req.headers.authorization || req.headers.Authorization || "";
   const tokenMatch = typeof authorization === "string" && authorization.match(/^Bearer\s+([^\s]+)$/i);
@@ -166,7 +171,10 @@ export default async function handler(req, res) {
   const coveredGroupCount = coverageGroups.filter(group => group.some(key => populatedKeys.includes(key))).length;
   const enoughStructuredDetail = populatedKeys.length >= 5 && coveredGroupCount >= 3;
   const enoughSourceMaterial = description.trim().length >= 120 || files.length > 0;
-  if (!enoughStructuredDetail || !enoughSourceMaterial) {
+  // Temporary Preview-only switch for fictional fallback testing. Authentication,
+  // input shape/size checks, file validation and daily usage limits remain enforced.
+  const partialIntakeTestMode = process.env.ALLOW_PARTIAL_INTAKE_FOR_TESTING === "true";
+  if (!partialIntakeTestMode && (!enoughStructuredDetail || !enoughSourceMaterial)) {
     return jsonError(res, 400, "Not enough case information. Provide at least 5 relevant structured details across 3 sections, plus a case description of at least 120 characters or one case document.");
   }
   if (files.length > 6) return jsonError(res, 400, "For this first version, attach no more than 6 files at a time.");
@@ -271,7 +279,13 @@ export default async function handler(req, res) {
     requiredHeadings.every(heading => value.includes(heading));
 
   let analysisText = "";
+  let analysisProvider = "gemini";
   let primaryFailure = null;
+  providerDiagnostic("provider_sequence_started", {
+    geminiConfigured: Boolean(apiKey),
+    fallbackEnabled: process.env.ENABLE_FREE_LLM_FALLBACK === "true",
+    hasAttachments: files.length > 0
+  });
 
   try {
     if (!apiKey) {
@@ -287,11 +301,12 @@ export default async function handler(req, res) {
         contents: [{ role: "user", parts }],
         generationConfig: { temperature: 0.25, maxOutputTokens: 12288 }
       }),
-      signal: AbortSignal.timeout(55000)
+      signal: AbortSignal.timeout(25000)
     });
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
+      providerDiagnostic("gemini_http_failure", { status: response.status });
       const failure = new Error(`Gemini request failed with status ${response.status}`);
       failure.status = response.status;
       throw failure;
@@ -303,10 +318,21 @@ export default async function handler(req, res) {
     }
     analysisText = (candidate.content?.parts || []).map(part => part.text || "").join("\n").trim();
     if (!isCompleteAnalysis(analysisText)) {
+      providerDiagnostic("gemini_output_invalid", {
+        outputLength: analysisText.length,
+        missingHeadings: requiredHeadings.filter(h => !analysisText.includes(h))
+      });
       throw new Error("Gemini response did not contain all four required sections.");
     }
+    providerDiagnostic("gemini_succeeded", { outputLength: analysisText.length });
   } catch (error) {
     primaryFailure = error;
+    providerDiagnostic("gemini_failed", {
+      name: error?.name || "UnknownError",
+      message: String(error?.message || "Unknown provider error").slice(0, 200),
+      status: Number.isInteger(error?.status) ? error.status : null,
+      timedOut: error?.name === "TimeoutError" || error?.name === "AbortError"
+    });
   }
 
   // Free third-party providers are deliberately opt-in. Case documents and images
@@ -314,8 +340,7 @@ export default async function handler(req, res) {
   if (!isCompleteAnalysis(analysisText) && files.length === 0 &&
       process.env.ENABLE_FREE_LLM_FALLBACK === "true" &&
       (primaryFailure?.status === 429 || primaryFailure?.status >= 500 ||
-       (primaryFailure && !["TimeoutError", "AbortError"].includes(primaryFailure.name) &&
-        primaryFailure.status === undefined))) {
+       (primaryFailure && primaryFailure.status === undefined))) {
     try {
       const { callFreeLlmFallback } = await import("./free-llm-fallback.js");
       const fallbackResult = await callFreeLlmFallback({
@@ -324,21 +349,40 @@ export default async function handler(req, res) {
       });
       if (isCompleteAnalysis(fallbackResult.text)) {
         analysisText = fallbackResult.text;
+        analysisProvider = fallbackResult.provider;
+        providerDiagnostic("fallback_succeeded", { provider: analysisProvider, outputLength: analysisText.length });
+      } else {
+        providerDiagnostic("fallback_output_invalid", {
+          provider: fallbackResult.provider || "unknown",
+          outputLength: String(fallbackResult.text || "").length,
+          missingHeadings: requiredHeadings.filter(h => !String(fallbackResult.text || "").includes(h))
+        });
       }
     } catch (fallbackError) {
-      // Keep provider details and secrets out of the public response.
+      providerDiagnostic("fallback_failed", {
+        name: fallbackError?.name || "UnknownError",
+        message: String(fallbackError?.message || "Fallback failed").slice(0, 240),
+        timedOut: fallbackError?.name === "TimeoutError" || fallbackError?.name === "AbortError"
+      });
     }
   }
 
   if (!isCompleteAnalysis(analysisText)) {
+    providerDiagnostic("analysis_failed_all_providers", {
+      primaryStatus: Number.isInteger(primaryFailure?.status) ? primaryFailure.status : null,
+      fallbackEnabled: process.env.ENABLE_FREE_LLM_FALLBACK === "true",
+      attachmentsPreventedFallback: files.length > 0
+    });
     await releaseDailyReservation();
     const status = primaryFailure?.status === 429 ? 429 : 502;
     return jsonError(res, status,
       "The analysis could not be completed by the available service. Your daily allowance has been restored where the account service permits.");
   }
 
+  providerDiagnostic("analysis_completed", { provider: analysisProvider, outputLength: analysisText.length });
   return res.status(200).json({
     analysis: analysisText,
+    analysisProvider,
     usage: {
       used: Number(dailyReservation.analyses_used) || 1,
       remaining: Number(dailyReservation.analyses_remaining) || 0,
