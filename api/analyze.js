@@ -166,7 +166,10 @@ export default async function handler(req, res) {
   const coveredGroupCount = coverageGroups.filter(group => group.some(key => populatedKeys.includes(key))).length;
   const enoughStructuredDetail = populatedKeys.length >= 5 && coveredGroupCount >= 3;
   const enoughSourceMaterial = description.trim().length >= 120 || files.length > 0;
-  if (!enoughStructuredDetail || !enoughSourceMaterial) {
+  // Temporary Preview-only switch for fictional fallback testing. Authentication,
+  // input shape/size checks, file validation and daily usage limits remain enforced.
+  const partialIntakeTestMode = process.env.ALLOW_PARTIAL_INTAKE_FOR_TESTING === "true";
+  if (!partialIntakeTestMode && (!enoughStructuredDetail || !enoughSourceMaterial)) {
     return jsonError(res, 400, "Not enough case information. Provide at least 5 relevant structured details across 3 sections, plus a case description of at least 120 characters or one case document.");
   }
   if (files.length > 6) return jsonError(res, 400, "For this first version, attach no more than 6 files at a time.");
