@@ -111,7 +111,7 @@ async function callUsageRpc(functionName,body,accessToken,supabaseUrl,supabaseKe
       "Content-Type":"application/json"
     },
     body:JSON.stringify(body),
-    signal:AbortSignal.timeout(10000)
+    signal:AbortSignal.timeout(6000)
   });
   const payload = await response.json().catch(()=>null);
   return {ok:response.ok,payload};
@@ -145,7 +145,7 @@ export default async function handler(req, res) {
         "apikey":supabasePublishableKey,
         "Authorization":"Bearer " + tokenMatch[1]
       },
-      signal:AbortSignal.timeout(10000)
+      signal:AbortSignal.timeout(6000)
     });
     if (!authResponse.ok) {
       return jsonError(res, 401, "Your session is no longer valid. Please sign in again.");
@@ -332,7 +332,7 @@ export default async function handler(req, res) {
         contents: [{ role: "user", parts }],
         generationConfig: { temperature: 0.25, maxOutputTokens: 12288 }
       }),
-      signal: AbortSignal.timeout(20000)
+      signal: AbortSignal.timeout(files.length === 0 && process.env.ENABLE_FREE_LLM_FALLBACK === "true" ? 10000 : 20000)
     });
 
     const payload = await response.json().catch(() => ({}));
