@@ -166,7 +166,7 @@ export default async function handler(req, res) {
     return jsonError(res, 400, "Invalid request format.");
   }
   const { description = "", caseContext = {}, files = [] } = body;
-  if (typeof description !== "string" || description.length > 12000 ||
+  if (typeof description !== "string" || description.length > 30000 ||
       !Array.isArray(files) || !caseContext || typeof caseContext !== "object" ||
       Array.isArray(caseContext)) {
     return jsonError(res, 400, "The case information is invalid or too large.");
@@ -178,7 +178,7 @@ export default async function handler(req, res) {
   ]);
   const contextEntries = Object.entries(caseContext);
   if (contextEntries.some(([key,value]) =>
-    !allowedContextKeys.has(key) || typeof value !== "string" || value.length > 4000
+    !allowedContextKeys.has(key) || typeof value !== "string" || value.length > 8000
   )) {
     return jsonError(res, 400, "One or more case fields are invalid.");
   }
@@ -315,7 +315,11 @@ export default async function handler(req, res) {
   providerDiagnostic("provider_sequence_started", {
     geminiConfigured: Boolean(apiKey),
     fallbackEnabled: process.env.ENABLE_FREE_LLM_FALLBACK === "true",
-    hasAttachments: files.length > 0
+    hasAttachments: files.length > 0,
+    descriptionChars: description.length,
+    structuredContextChars: contextEntries.reduce((total, [, value]) => total + value.length, 0),
+    attachmentCount: files.length,
+    attachmentBytes: totalBytes
   });
 
   try {
@@ -330,9 +334,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         system_instruction: { parts: [{ text: SYSTEM_INSTRUCTIONS }] },
         contents: [{ role: "user", parts }],
-        generationConfig: { temperature: 0.25, maxOutputTokens: 12288 }
+        generationConfig: { temperature: 0.25, maxOutputTokens: 24576 }
       }),
-      signal: AbortSignal.timeout(files.length === 0 && process.env.ENABLE_FREE_LLM_FALLBACK === "true" ? 10000 : 20000)
+      signal: AbortSignal.timeout(28000)
     });
 
     const payload = await response.json().catch(() => ({}));
@@ -345,6 +349,12 @@ export default async function handler(req, res) {
     const candidate = payload.candidates?.[0];
     if (!candidate || candidate.finishReason === "MAX_TOKENS" ||
         candidate.finishReason === "SAFETY" || candidate.finishReason === "RECITATION") {
+      providerDiagnostic("gemini_candidate_incomplete", {
+        finishReason: candidate?.finishReason || "NO_CANDIDATE",
+        promptFeedbackBlocked: Boolean(payload.promptFeedback?.blockReason),
+        promptTokenCount: payload.usageMetadata?.promptTokenCount ?? null,
+        outputTokenCount: payload.usageMetadata?.candidatesTokenCount ?? null
+      });
       throw new Error("Gemini returned an incomplete or blocked analysis.");
     }
     analysisText = (candidate.content?.parts || []).map(part => part.text || "").join("\n").trim();
