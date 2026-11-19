@@ -54,7 +54,7 @@ async function requestProvider(provider, systemInstructions, userText, validateR
         { role: "user", content: userText }
       ],
       temperature: 0.25,
-      max_tokens: 8192,
+      max_tokens: 16384,
       stream: false
     }),
     signal
@@ -93,9 +93,9 @@ export async function callFreeLlmFallback({ systemInstructions, userText, valida
   const ordered = getConfiguredProviders();
   if (!ordered.length) throw new Error("No fallback providers are configured.");
 
-  // Keep the fallback inside the existing 60-second Vercel function budget.
+  // Reserve enough of the 60-second Vercel function budget for authentication, quota accounting and refund handling.
   // Authenticated providers are only attempted when their key is configured.
-  const timeoutMs = 30000;
+  const timeoutMs = 12000;
   const controllers = ordered.map(() => new AbortController());
   diagnostic("fallback_sequence_started", {
     providers: ordered.map(provider => provider.name),
